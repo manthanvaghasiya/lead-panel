@@ -1,0 +1,393 @@
+import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { Search, Plus, Filter, MoreHorizontal, Phone, X, FileText, Sparkles } from 'lucide-react';
+import { getLeads, createLead, extractLeadFromText } from '../api/apiClient';
+
+const extractCity = (address) => {
+  if (!address) return '-';
+  const parts = address.split(/[,|]/);
+  return parts[0].trim().substring(0, 20) + (parts[0].length > 20 ? '...' : '');
+};
+
+function LeadsList() {
+  const [leads, setLeads] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [viewLogsLead, setViewLogsLead] = useState(null);
+
+  useEffect(() => {
+    fetchLeads();
+  }, []);
+
+  const fetchLeads = async () => {
+    try {
+      const { data } = await getLeads();
+      setLeads(data);
+    } catch (err) {
+      console.error('Error fetching leads:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredLeads = leads.filter(lead => 
+    lead.name.toLowerCase().includes(search.toLowerCase()) || 
+    lead.mobile.includes(search)
+  );
+
+  return (
+    <div className="flex flex-col h-full">
+      {/* Header Actions */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <div className="relative w-full sm:w-72 md:w-96">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <Search size={18} className="text-gray-400" />
+          </div>
+          <input
+            type="text"
+            className="input-field pl-10"
+            placeholder="Search name, mobile..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+        <div className="flex gap-2 w-full sm:w-auto">
+          <button className="btn-secondary flex items-center gap-2 flex-1 sm:flex-none justify-center">
+            <Filter size={18} />
+            <span>Filter</span>
+          </button>
+          <button 
+            onClick={() => setIsAddModalOpen(true)}
+            className="btn-primary flex items-center gap-2 flex-1 sm:flex-none justify-center"
+          >
+            <Plus size={18} />
+            <span>Add Lead</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Leads Table */}
+      <div className="card flex-1 overflow-hidden flex flex-col p-0">
+        <div className="overflow-x-auto flex-1">
+          <table className="w-full text-left border-collapse min-w-[800px]">
+            <thead>
+              <tr className="border-b border-border bg-surface/50 text-xs uppercase tracking-wider text-gray-400">
+                <th className="p-4 font-medium">Name</th>
+                <th className="p-4 font-medium">Mobile</th>
+                <th className="p-4 font-medium">City</th>
+                <th className="p-4 font-medium">Type</th>
+                <th className="p-4 font-medium">Source</th>
+                <th className="p-4 font-medium">Status</th>
+                <th className="p-4 font-medium">Last Note</th>
+                <th className="p-4 font-medium">Logs</th>
+                <th className="p-4 font-medium text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {loading ? (
+                <tr>
+                  <td colSpan="7" className="p-8 text-center text-gray-400">Loading leads...</td>
+                </tr>
+              ) : filteredLeads.length === 0 ? (
+                <tr>
+                  <td colSpan="7" className="p-8 text-center text-gray-400">No leads found. Add one!</td>
+                </tr>
+              ) : (
+                filteredLeads.map((lead) => (
+                  <tr key={lead._id} className="hover:bg-slate-800/50 transition-colors group">
+                    <td className="p-4">
+                      <div className="font-medium text-white">{lead.name}</div>
+                      {lead.followupDate && (
+                        <div className="text-xs text-orange-400 mt-1 flex items-center gap-1">
+                          <Calendar size={12} />
+                          {new Date(lead.followupDate).toLocaleDateString()}
+                        </div>
+                      )}
+                    </td>
+                    <td className="p-4 text-gray-300">{lead.mobile}</td>
+                    <td 
+                      className="p-4 text-cyan-400 cursor-pointer hover:underline" 
+                      onClick={() => alert(`Full Address:\n${lead.address || 'No address provided'}`)}
+                      title={lead.address || 'No address'}
+                    >
+                      {extractCity(lead.address)}
+                    </td>
+                    <td className="p-4">
+                      <span className={`badge badge-${lead.type?.toLowerCase() || 'cold'}`}>
+                        {lead.type}
+                      </span>
+                    </td>
+                    <td className="p-4 text-sm text-gray-400">{lead.source}</td>
+                    <td className="p-4">
+                      <span className="text-sm px-2 py-1 bg-slate-700 rounded text-gray-200">
+                        {lead.status}
+                      </span>
+                    </td>
+                    <td className="p-4 text-sm text-gray-400 max-w-xs truncate">
+                      {lead.callLogs && lead.callLogs.length > 0 
+                        ? lead.callLogs[lead.callLogs.length - 1].note 
+                        : 'No notes yet'}
+                    </td>
+                    <td className="p-4">
+                      <button 
+                        onClick={() => setViewLogsLead(lead)}
+                        className="flex items-center gap-1.5 text-xs bg-slate-800 hover:bg-slate-700 text-cyan-400 px-3 py-1.5 rounded border border-slate-700 transition-colors"
+                      >
+                        <FileText size={14} />
+                        View Logs ({lead.callLogs ? lead.callLogs.length : 0})
+                      </button>
+                    </td>
+                    <td className="p-4 text-right">
+                      <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <a 
+                          href={`https://wa.me/91${lead.mobile}`} 
+                          target="_blank" 
+                          rel="noreferrer"
+                          className="p-2 bg-green-500/20 text-green-400 rounded hover:bg-green-500/30 transition-colors"
+                          title="WhatsApp"
+                        >
+                          <Phone size={16} />
+                        </a>
+                        <Link 
+                          to={`/leads/${lead._id}`}
+                          className="p-2 bg-slate-700 text-gray-300 rounded hover:bg-slate-600 transition-colors"
+                        >
+                          <MoreHorizontal size={16} />
+                        </Link>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Add Lead Modal */}
+      {isAddModalOpen && (
+        <AddLeadModal 
+          onClose={() => setIsAddModalOpen(false)} 
+          onSuccess={() => {
+            setIsAddModalOpen(false);
+            fetchLeads();
+          }}
+        />
+      )}
+
+      {/* View Logs Modal */}
+      {viewLogsLead && (
+        <ViewLogsModal 
+          lead={viewLogsLead} 
+          onClose={() => setViewLogsLead(null)} 
+        />
+      )}
+    </div>
+  );
+}
+
+function AddLeadModal({ onClose, onSuccess }) {
+  const [formData, setFormData] = useState({
+    name: '', mobile: '', address: '', source: 'Website', type: 'Cold', status: 'Pending'
+  });
+  const [loading, setLoading] = useState(false);
+  const [magicText, setMagicText] = useState('');
+  const [extracting, setExtracting] = useState(false);
+
+  const handleMagicFill = async () => {
+    if (!magicText.trim()) return;
+    setExtracting(true);
+    try {
+      const { data } = await extractLeadFromText(magicText);
+      setFormData(prev => ({
+        ...prev,
+        name: data.name || prev.name,
+        mobile: data.mobile || prev.mobile,
+        address: data.address || prev.address,
+        type: ['Hot', 'Warm', 'Cold'].includes(data.type) ? data.type : prev.type,
+        source: ['Website', 'CRM', 'Website+CRM', 'Other'].includes(data.source) ? data.source : prev.source,
+        status: ['Pending', 'In Process', 'Send Detail', 'Follow-up Letter', 'Contacted'].includes(data.status) ? data.status : prev.status
+      }));
+      setMagicText('');
+    } catch (err) {
+      console.error(err);
+      alert('Failed to extract data. Make sure AI is configured properly.');
+    } finally {
+      setExtracting(false);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await createLead(formData);
+      onSuccess();
+    } catch (err) {
+      console.error(err);
+      alert('Error creating lead');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <div className="bg-surface border border-border rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
+        <div className="flex justify-between items-center p-4 border-b border-border bg-slate-800/50">
+          <h3 className="font-medium text-lg">Add New Lead</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">
+            <X size={20} />
+          </button>
+        </div>
+        <div className="p-5 flex flex-col gap-4">
+          
+          {/* AI Magic Fill Section */}
+          <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-3">
+            <label className="block text-xs uppercase tracking-wider text-purple-400 font-semibold mb-2 flex items-center gap-1">
+              <Sparkles size={14}/> AI Magic Fill (Dictate or Type)
+            </label>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <textarea 
+                rows="2"
+                className="input-field text-sm resize-none flex-1"
+                placeholder="e.g. 'Rahul from Surat, 9988776655, needs a website, hot lead'"
+                value={magicText}
+                onChange={e => setMagicText(e.target.value)}
+              />
+              <button 
+                type="button"
+                onClick={handleMagicFill}
+                disabled={extracting || !magicText.trim()}
+                className="bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors flex items-center justify-center shrink-0"
+              >
+                {extracting ? 'Extracting...' : '✨ Fill Form'}
+              </button>
+            </div>
+          </div>
+
+          <div className="relative py-1">
+             <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border"></div></div>
+             <div className="relative flex justify-center text-xs"><span className="bg-surface px-2 text-gray-500 uppercase tracking-wider">Review & Edit</span></div>
+          </div>
+
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs uppercase tracking-wider text-gray-400 mb-1.5">Name</label>
+              <input required type="text" className="input-field" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
+            </div>
+            <div>
+              <label className="block text-xs uppercase tracking-wider text-gray-400 mb-1.5">Mobile</label>
+              <input required type="text" className="input-field" value={formData.mobile} onChange={e => setFormData({...formData, mobile: e.target.value})} />
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs uppercase tracking-wider text-gray-400 mb-1.5">Address</label>
+            <input type="text" className="input-field" value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} placeholder="e.g. Surat, Gujarat" />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs uppercase tracking-wider text-gray-400 mb-1.5">Type</label>
+              <select className="input-field" value={formData.type} onChange={e => setFormData({...formData, type: e.target.value})}>
+                <option value="Hot">Hot</option>
+                <option value="Warm">Warm</option>
+                <option value="Cold">Cold</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs uppercase tracking-wider text-gray-400 mb-1.5">Source</label>
+              <select className="input-field" value={formData.source} onChange={e => setFormData({...formData, source: e.target.value})}>
+                <option value="Website">Website</option>
+                <option value="CRM">CRM</option>
+                <option value="Website+CRM">Website+CRM</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs uppercase tracking-wider text-gray-400 mb-1.5">Initial Status</label>
+            <select className="input-field" value={formData.status} onChange={e => setFormData({...formData, status: e.target.value})}>
+              <option value="Pending">Pending</option>
+              <option value="In Process">In Process</option>
+              <option value="Send Detail">Send Detail</option>
+              <option value="Follow-up Letter">Follow-up Letter</option>
+              <option value="Contacted">Contacted</option>
+              <option value="Won">Won</option>
+              <option value="Lost">Lost</option>
+            </select>
+          </div>
+          <div className="mt-4 flex gap-3 justify-end">
+            <button type="button" onClick={onClose} className="btn-secondary">Cancel</button>
+            <button type="submit" disabled={loading} className="btn-primary min-w-[100px]">
+              {loading ? 'Saving...' : 'Save Lead'}
+            </button>
+          </div>
+        </form>
+      </div>
+      </div>
+    </div>
+  );
+}
+
+// Simple Calendar icon for the list since it's not imported at top
+function Calendar(props) {
+  return <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>;
+}
+
+function ViewLogsModal({ lead, onClose }) {
+  return (
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <div className="bg-surface border border-border rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col overflow-hidden">
+        <div className="flex justify-between items-center p-4 border-b border-border bg-slate-800/50">
+          <div>
+            <h3 className="font-medium text-lg text-white">Follow-up Logs</h3>
+            <p className="text-xs text-cyan-400 mt-1">{lead.name} • {lead.mobile}</p>
+          </div>
+          <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">
+            <X size={20} />
+          </button>
+        </div>
+        
+        <div className="p-5 overflow-y-auto flex-1">
+          {(!lead.callLogs || lead.callLogs.length === 0) ? (
+            <div className="text-center text-gray-500 py-8">
+              No follow-ups recorded yet.
+            </div>
+          ) : (
+            <div className="relative border-l border-slate-700 ml-3 space-y-6">
+              {lead.callLogs.map((log, idx) => (
+                <div key={idx} className="relative pl-6">
+                  {/* Timeline dot */}
+                  <div className="absolute w-3 h-3 bg-cyan-500 rounded-full -left-[6.5px] top-1.5 shadow-[0_0_10px_rgba(6,182,212,0.5)]"></div>
+                  
+                  <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-4">
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="text-xs text-gray-400 font-medium bg-slate-900 px-2 py-1 rounded">
+                        {new Date(log.date).toLocaleString()}
+                      </div>
+                      <div className="flex gap-2">
+                        {log.typeAtTime && <span className={`text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded-full ${log.typeAtTime.toLowerCase() === 'hot' ? 'bg-red-500/20 text-red-400' : log.typeAtTime.toLowerCase() === 'warm' ? 'bg-orange-500/20 text-orange-400' : 'bg-blue-500/20 text-blue-400'}`}>{log.typeAtTime}</span>}
+                        {log.statusAtTime && <span className="text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded-full bg-slate-700 text-gray-300">{log.statusAtTime}</span>}
+                      </div>
+                    </div>
+                    <p className="text-sm text-gray-200 mt-2 whitespace-pre-wrap leading-relaxed">
+                      {log.note}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        
+        <div className="p-4 border-t border-border bg-slate-800/30 flex justify-end">
+          <button onClick={onClose} className="btn-secondary">Close</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default LeadsList;

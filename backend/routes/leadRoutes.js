@@ -1,0 +1,195 @@
+const express = require('express');
+const router = express.Router();
+const Lead = require('../models/Lead');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
+
+// AI Magic Fill - Extract Lead Data from Text
+router.post('/ai-extract', async (req, res) => {
+  try {
+    if (!process.env.GEMINI_API_KEY) {
+      return res.status(500).json({ message: 'Gemini API key is missing' });
+    }
+
+    const { text } = req.body;
+    if (!text) return res.status(400).json({ message: 'Text input is required' });
+
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+
+    const prompt = `
+      You are an expert sales assistant. A salesperson has dictated or typed some messy notes about a new lead.
+      Extract the structured lead data from this text.
+      Return ONLY a JSON object with exactly these keys:
+      {
+        "name": "Extracted name or empty string if not found",
+        "mobile": "Extracted mobile number (digits only) or empty string",
+        "address": "Extracted city/address or empty string",
+        "type": "Must be 'Hot', 'Warm', or 'Cold' based on their interest level. Default to 'Cold'.",
+        "source": "Must be 'Website', 'CRM', 'Website+CRM', or 'Other'. Guess based on text, default to 'Other'.",
+        "status": "Must be 'Pending', 'In Process', 'Send Detail', 'Follow-up Letter', 'Contacted'. Guess based on text, default to 'Pending'."
+      }
+      Do not include any markdown blocks like \`\`\`json. Just the raw JSON.
+
+      Messy Notes: "${text}"
+    `;
+
+    const result = await model.generateContent(prompt);
+    let responseText = result.response.text().trim();
+    
+    if (responseText.startsWith('\`\`\`json')) {
+      responseText = responseText.replace(/^\`\`\`json/, '').replace(/\`\`\`$/, '').trim();
+    } else if (responseText.startsWith('\`\`\`')) {
+      responseText = responseText.replace(/^\`\`\`/, '').replace(/\`\`\`$/, '').trim();
+    }
+
+    const extractedData = JSON.parse(responseText);
+    res.json(extractedData);
+
+  } catch (err) {
+    console.error('AI Extract Error:', err);
+    res.status(500).json({ message: 'Failed to extract data using AI.' });
+  }
+});
+
+
+// Get all leads
+router.get('/', async (req, res) => {
+  try {
+    const leads = await Lead.find().sort({ updatedAt: -1 });
+    res.json(leads);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Get a single lead
+router.get('/:id', async (req, res) => {
+  try {
+    const lead = await Lead.findById(req.params.id);
+    if (!lead) return res.status(404).json({ message: 'Lead not found' });
+    res.json(lead);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Create a new lead
+router.post('/', async (req, res) => {
+  const lead = new Lead(req.body);
+  try {
+    const newLead = await lead.save();
+    res.status(201).json(newLead);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+});
+
+// Update a lead (general info)
+router.patch('/:id', async (req, res) => {
+  try {
+    const updatedLead = await Lead.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true, runValidators: true }
+    );
+    if (!updatedLead) return res.status(404).json({ message: 'Lead not found' });
+    res.json(updatedLead);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+});
+
+// Add a call log and update lead status/type/followup
+router.post('/:id/call-logs', async (req, res) => {
+  try {
+    const { note, typeAtTime, statusAtTime, nextFollowup, outcome } = req.body;
+    
+    const lead = await Lead.findById(req.params.id);
+    if (!lead) return res.status(404).json({ message: 'Lead not found' });
+
+    // Add to embedded call logs
+    lead.callLogs.push({
+      note,
+      typeAtTime,
+      statusAtTime,
+      nextFollowup,
+      outcome
+    });
+
+    // Update lead's main status, type and followup based on the new log
+    if (typeAtTime) lead.type = typeAtTime;
+    if (statusAtTime) lead.status = statusAtTime;
+    if (nextFollowup) lead.followupDate = nextFollowup;
+
+    const updatedLead = await lead.save();
+    res.json(updatedLead);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+});
+
+// Generate AI Insight for a lead
+router.get('/:id/ai-insight', async (req, res) => {
+  try {
+    const lead = await Lead.findById(req.params.id);
+    if (!lead) return res.status(404).json({ message: 'Lead not found' });
+
+    if (!process.env.GEMINI_API_KEY) {
+      return res.status(500).json({ message: 'Gemini API key is missing' });
+    }
+
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+
+    const formattedLogs = lead.callLogs.map(log => 
+      `Date: ${new Date(log.date).toLocaleDateString()}, Status: ${log.statusAtTime}, Note: ${log.note}`
+    ).join('\n');
+
+    const prompt = `
+      You are an expert sales assistant. Analyze the following lead and their follow-up history.
+      Provide your response as a JSON object with exactly these 3 keys:
+      {
+        "summary": "A quick 1-2 sentence summary of what the lead wants and where the deal stands.",
+        "nextAction": "A short recommendation on what the salesperson should do next.",
+        "draftMessage": "A polite, professional, and convincing WhatsApp message to send to the lead next, based on their history."
+      }
+      Do not include markdown blocks like \`\`\`json, just return the raw JSON object.
+
+      Lead Name: ${lead.name}
+      Business Type: ${lead.businessType}
+      Current Status: ${lead.status}
+      Follow-up History:
+      ${formattedLogs}
+    `;
+
+    const result = await model.generateContent(prompt);
+    let responseText = result.response.text().trim();
+    
+    // Clean up potential markdown formatting from Gemini
+    if (responseText.startsWith('\`\`\`json')) {
+      responseText = responseText.replace(/^\`\`\`json/, '').replace(/\`\`\`$/, '').trim();
+    } else if (responseText.startsWith('\`\`\`')) {
+      responseText = responseText.replace(/^\`\`\`/, '').replace(/\`\`\`$/, '').trim();
+    }
+
+    const insight = JSON.parse(responseText);
+    res.json(insight);
+
+  } catch (err) {
+    console.error('AI Insight Error:', err);
+    res.status(500).json({ message: 'Failed to generate AI insight. Ensure API key is valid.' });
+  }
+});
+
+// Delete a lead
+router.delete('/:id', async (req, res) => {
+  try {
+    const lead = await Lead.findByIdAndDelete(req.params.id);
+    if (!lead) return res.status(404).json({ message: 'Lead not found' });
+    res.json({ message: 'Lead deleted' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+module.exports = router;

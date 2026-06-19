@@ -1,0 +1,45 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-background text-gray-100 font-sans antialiased;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-primary hover:bg-cyan-600 text-white font-medium py-2 px-4 rounded-md transition-colors;
+  }
+  .btn-secondary {
+    @apply bg-surface hover:bg-slate-700 border border-border text-gray-200 font-medium py-2 px-4 rounded-md transition-colors;
+  }
+  .input-field {
+    @apply bg-surface border border-border rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent w-full;
+  }
+  .card {
+    @apply bg-surface border border-border rounded-lg p-4;
+  }
+  
+  .badge {
+    @apply px-2 py-1 rounded text-xs font-medium inline-flex items-center;
+  }
+  .badge-hot {
+    @apply bg-hot/20 text-hot border border-hot/30;
+  }
+  .badge-warm {
+    @apply bg-warm/20 text-warm border border-warm/30;
+  }
+  .badge-cold {
+    @apply bg-cold/20 text-cold border border-cold/30;
+  }
+  .badge-won {
+    @apply bg-won/20 text-won border border-won/30;
+  }
+  .badge-lost {
+    @apply bg-gray-500/20 text-gray-400 border border-gray-500/30;
+  }
+}

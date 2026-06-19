@@ -1,0 +1,247 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+.wrap{padding:1rem 0 2rem;font-family:var(--font-sans)}
+.section{margin-bottom:2rem}
+.section-label{font-size:11px;font-weight:500;color:var(--color-text-secondary);letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px}
+.stack-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.stack-card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:12px 14px}
+.stack-card .role{font-size:11px;color:var(--color-text-secondary);margin-bottom:4px}
+.stack-card .tech{font-size:14px;font-weight:500}
+.stack-card .why{font-size:11px;color:var(--color-text-tertiary);margin-top:3px}
+.pages-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+.page-card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:12px 14px;cursor:pointer}
+.page-card:hover{background:var(--color-background-secondary)}
+.page-card .pg-num{font-size:11px;color:var(--color-text-tertiary);margin-bottom:4px}
+.page-card .pg-name{font-size:14px;font-weight:500;display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.page-card .pg-feat{font-size:11px;color:var(--color-text-secondary);line-height:1.6}
+.feat-tag{display:inline-block;font-size:10px;padding:1px 7px;border-radius:20px;background:var(--color-background-secondary);color:var(--color-text-secondary);margin:2px 2px 0 0}
+.phase-list{display:flex;flex-direction:column;gap:8px}
+.phase{display:flex;gap:12px;align-items:flex-start;background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:12px 14px}
+.phase-num{min-width:26px;height:26px;border-radius:50%;background:var(--color-background-secondary);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:var(--color-text-secondary)}
+.phase-body .phase-title{font-size:13px;font-weight:500;margin-bottom:3px}
+.phase-body .phase-desc{font-size:12px;color:var(--color-text-secondary)}
+.schema-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.schema-card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden}
+.schema-header{padding:8px 12px;background:var(--color-background-secondary);border-bottom:0.5px solid var(--color-border-tertiary);font-size:12px;font-weight:500;display:flex;align-items:center;gap:6px}
+.schema-body{padding:8px 12px}
+.schema-field{font-size:11px;padding:3px 0;border-bottom:0.5px solid var(--color-border-tertiary);display:flex;justify-content:space-between;color:var(--color-text-secondary)}
+.schema-field:last-child{border-bottom:none}
+.schema-field .fname{color:var(--color-text-primary)}
+.schema-field .ftype{color:var(--color-text-tertiary);font-family:var(--font-mono)}
+.highlight{border-color:var(--color-border-info) !important;border-width:1.5px !important}
+</style>
+
+<div class="wrap">
+
+<div class="section">
+  <div class="section-label">Tech stack</div>
+  <div class="stack-grid">
+    <div class="stack-card">
+      <div class="role">Frontend</div>
+      <div class="tech">React + Vite</div>
+      <div class="why">Fast, mobile-ready, PWA support</div>
+    </div>
+    <div class="stack-card">
+      <div class="role">Styling</div>
+      <div class="tech">Tailwind CSS</div>
+      <div class="why">Rapid UI, mobile-first</div>
+    </div>
+    <div class="stack-card">
+      <div class="role">Backend API</div>
+      <div class="tech">Node.js + Express</div>
+      <div class="why">Fast REST API, easy MongoDB connect</div>
+    </div>
+    <div class="stack-card">
+      <div class="role">Database</div>
+      <div class="tech">MongoDB Atlas</div>
+      <div class="why">Your choice — cloud, free tier, flexible</div>
+    </div>
+    <div class="stack-card">
+      <div class="role">PWA</div>
+      <div class="tech">Vite PWA Plugin</div>
+      <div class="why">Install on phone like an app</div>
+    </div>
+    <div class="stack-card">
+      <div class="role">Hosting</div>
+      <div class="tech">Vercel + Railway</div>
+      <div class="why">Frontend on Vercel, backend on Railway</div>
+    </div>
+    <div class="stack-card">
+      <div class="role">State</div>
+      <div class="tech">Zustand</div>
+      <div class="why">Simple global state, no Redux complexity</div>
+    </div>
+    <div class="stack-card">
+      <div class="role">HTTP Client</div>
+      <div class="tech">Axios</div>
+      <div class="why">Clean API calls, interceptors</div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-label">Pages (7 total)</div>
+  <div class="pages-grid">
+    <div class="page-card highlight" onclick="sendPrompt('Tell me more about the Dashboard page — what charts and widgets should it show?')">
+      <div class="pg-num">Page 1</div>
+      <div class="pg-name"><i class="ti ti-layout-dashboard" style="font-size:16px" aria-hidden="true"></i> Dashboard</div>
+      <div class="pg-feat">
+        <span class="feat-tag">Pipeline funnel</span>
+        <span class="feat-tag">Hot/Warm/Cold counts</span>
+        <span class="feat-tag">Won vs Lost chart</span>
+        <span class="feat-tag">Today's follow-ups</span>
+        <span class="feat-tag">Recent activity</span>
+      </div>
+    </div>
+    <div class="page-card" onclick="sendPrompt('Tell me more about the Leads List page — what columns, filters, and actions should it have?')">
+      <div class="pg-num">Page 2</div>
+      <div class="pg-name"><i class="ti ti-list" style="font-size:16px" aria-hidden="true"></i> Leads list</div>
+      <div class="pg-feat">
+        <span class="feat-tag">Table + Kanban toggle</span>
+        <span class="feat-tag">Filter by type/status/source</span>
+        <span class="feat-tag">Search</span>
+        <span class="feat-tag">Sort columns</span>
+        <span class="feat-tag">Bulk actions</span>
+        <span class="feat-tag">Quick status update</span>
+      </div>
+    </div>
+    <div class="page-card" onclick="sendPrompt('Tell me more about the Lead Detail page — what should it show and what can I do there?')">
+      <div class="pg-num">Page 3</div>
+      <div class="pg-name"><i class="ti ti-user" style="font-size:16px" aria-hidden="true"></i> Lead detail</div>
+      <div class="pg-feat">
+        <span class="feat-tag">Full lead profile</span>
+        <span class="feat-tag">Call history timeline</span>
+        <span class="feat-tag">Add note / call log</span>
+        <span class="feat-tag">Change status</span>
+        <span class="feat-tag">Set follow-up date</span>
+        <span class="feat-tag">WhatsApp button</span>
+      </div>
+    </div>
+    <div class="page-card" onclick="sendPrompt('Tell me more about the Follow-ups page — how should reminders and scheduling work?')">
+      <div class="pg-num">Page 4</div>
+      <div class="pg-name"><i class="ti ti-calendar" style="font-size:16px" aria-hidden="true"></i> Follow-ups</div>
+      <div class="pg-feat">
+        <span class="feat-tag">Calendar view</span>
+        <span class="feat-tag">Due today alert</span>
+        <span class="feat-tag">Overdue list</span>
+        <span class="feat-tag">Upcoming 7 days</span>
+        <span class="feat-tag">1-click reschedule</span>
+      </div>
+    </div>
+    <div class="page-card" onclick="sendPrompt('Tell me more about the Add/Edit Lead page — what form fields are needed?')">
+      <div class="pg-num">Page 5</div>
+      <div class="pg-name"><i class="ti ti-plus" style="font-size:16px" aria-hidden="true"></i> Add / Edit lead</div>
+      <div class="pg-feat">
+        <span class="feat-tag">Quick add form</span>
+        <span class="feat-tag">All fields</span>
+        <span class="feat-tag">Auto-save draft</span>
+        <span class="feat-tag">Source picker</span>
+        <span class="feat-tag">Mobile-optimized</span>
+      </div>
+    </div>
+    <div class="page-card" onclick="sendPrompt('Tell me more about the Import/Export page — what formats and options should it support?')">
+      <div class="pg-num">Page 6</div>
+      <div class="pg-name"><i class="ti ti-file-import" style="font-size:16px" aria-hidden="true"></i> Import / Export</div>
+      <div class="pg-feat">
+        <span class="feat-tag">Upload Excel / CSV</span>
+        <span class="feat-tag">Column mapping</span>
+        <span class="feat-tag">Preview before import</span>
+        <span class="feat-tag">Export filtered leads</span>
+        <span class="feat-tag">Duplicate detection</span>
+      </div>
+    </div>
+    <div class="page-card" onclick="sendPrompt('Tell me more about the Analytics page — what reports and charts should it show?')">
+      <div class="pg-num">Page 7</div>
+      <div class="pg-name"><i class="ti ti-chart-bar" style="font-size:16px" aria-hidden="true"></i> Analytics</div>
+      <div class="pg-feat">
+        <span class="feat-tag">Leads per day chart</span>
+        <span class="feat-tag">Conversion rate</span>
+        <span class="feat-tag">Source performance</span>
+        <span class="feat-tag">Won vs Lost trend</span>
+        <span class="feat-tag">Hot/Warm/Cold ratio</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-label">MongoDB data model</div>
+  <div class="schema-grid">
+    <div class="schema-card">
+      <div class="schema-header"><i class="ti ti-database" style="font-size:14px" aria-hidden="true"></i> leads</div>
+      <div class="schema-body">
+        <div class="schema-field"><span class="fname">_id</span><span class="ftype">ObjectId</span></div>
+        <div class="schema-field"><span class="fname">name</span><span class="ftype">String</span></div>
+        <div class="schema-field"><span class="fname">mobile</span><span class="ftype">String</span></div>
+        <div class="schema-field"><span class="fname">businessType</span><span class="ftype">String</span></div>
+        <div class="schema-field"><span class="fname">city</span><span class="ftype">String</span></div>
+        <div class="schema-field"><span class="fname">address</span><span class="ftype">String</span></div>
+        <div class="schema-field"><span class="fname">source</span><span class="ftype">String</span></div>
+        <div class="schema-field"><span class="fname">type</span><span class="ftype">Hot|Warm|Cold</span></div>
+        <div class="schema-field"><span class="fname">status</span><span class="ftype">String</span></div>
+        <div class="schema-field"><span class="fname">followupDate</span><span class="ftype">Date</span></div>
+        <div class="schema-field"><span class="fname">callLogs</span><span class="ftype">Array</span></div>
+        <div class="schema-field"><span class="fname">tags</span><span class="ftype">Array</span></div>
+        <div class="schema-field"><span class="fname">createdAt</span><span class="ftype">Date</span></div>
+        <div class="schema-field"><span class="fname">updatedAt</span><span class="ftype">Date</span></div>
+      </div>
+    </div>
+    <div class="schema-card">
+      <div class="schema-header"><i class="ti ti-notes" style="font-size:14px" aria-hidden="true"></i> callLogs (embedded)</div>
+      <div class="schema-body">
+        <div class="schema-field"><span class="fname">date</span><span class="ftype">Date</span></div>
+        <div class="schema-field"><span class="fname">note</span><span class="ftype">String</span></div>
+        <div class="schema-field"><span class="fname">statusAtTime</span><span class="ftype">String</span></div>
+        <div class="schema-field"><span class="fname">typeAtTime</span><span class="ftype">Hot|Warm|Cold</span></div>
+        <div class="schema-field"><span class="fname">nextFollowup</span><span class="ftype">Date</span></div>
+        <div class="schema-field"><span class="fname">outcome</span><span class="ftype">String</span></div>
+      </div>
+    </div>
+    <div class="schema-card">
+      <div class="schema-header"><i class="ti ti-settings" style="font-size:14px" aria-hidden="true"></i> settings</div>
+      <div class="schema-body">
+        <div class="schema-field"><span class="fname">sources</span><span class="ftype">Array</span></div>
+        <div class="schema-field"><span class="fname">statusOptions</span><span class="ftype">Array</span></div>
+        <div class="schema-field"><span class="fname">businessTypes</span><span class="ftype">Array</span></div>
+        <div class="schema-field"><span class="fname">defaultFollowupDays</span><span class="ftype">Number</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-label">Build order (4 phases)</div>
+  <div class="phase-list">
+    <div class="phase">
+      <div class="phase-num">1</div>
+      <div class="phase-body">
+        <div class="phase-title">Backend foundation</div>
+        <div class="phase-desc">MongoDB Atlas setup → Express API → CRUD routes for leads → callLogs embedded → REST endpoints ready</div>
+      </div>
+    </div>
+    <div class="phase">
+      <div class="phase-num">2</div>
+      <div class="phase-body">
+        <div class="phase-title">Core frontend — leads list + add/edit + detail</div>
+        <div class="phase-desc">React + Vite project → Leads list page with filters → Add/Edit form → Lead detail with call timeline → Connect to API</div>
+      </div>
+    </div>
+    <div class="phase">
+      <div class="phase-num">3</div>
+      <div class="phase-body">
+        <div class="phase-title">Dashboard + follow-ups + analytics</div>
+        <div class="phase-desc">Dashboard stats + charts → Follow-up calendar → Overdue alerts → Analytics page with Recharts</div>
+      </div>
+    </div>
+    <div class="phase">
+      <div class="phase-num">4</div>
+      <div class="phase-body">
+        <div class="phase-title">PWA + import/export + polish</div>
+        <div class="phase-desc">Vite PWA plugin → Install on phone → Excel/CSV import with column mapping → Export → Mobile UI polish → Deploy</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
