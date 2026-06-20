@@ -37,18 +37,7 @@ function LeadsList() {
   );
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Header Actions */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <div className="relative w-full sm:w-72 md:w-96">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search size={18} className="text-gray-400" />
-          </div>
-          <input
-            type="text"
-            className="input-field pl-10"
-            placeholder="Search name, mobile..."
-      <div className="space-y-6">
+    <div className="space-y-6">
       {/* Header & Controls */}
       <div className="glass-panel p-6 mb-8 relative overflow-hidden group">
         <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none group-hover:bg-primary/20 transition-all duration-700"></div>
