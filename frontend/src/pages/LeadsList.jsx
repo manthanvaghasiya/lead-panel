@@ -69,8 +69,8 @@ function LeadsList() {
         </div>
       </div>
 
-      {/* Leads Table */}
-      <div className="flex-1 flex flex-col -mx-4 sm:mx-0 overflow-hidden">
+      {/* Leads Table (Desktop) */}
+      <div className="hidden md:flex flex-1 flex-col -mx-4 sm:mx-0 overflow-hidden">
         <div className="overflow-y-auto overflow-x-hidden flex-1 bg-white sm:rounded-xl sm:border sm:border-slate-200 shadow-sm">
           <table className="w-full text-left border-collapse table-fixed">
             <thead className="sticky top-0 z-10">
@@ -209,6 +209,68 @@ function LeadsList() {
           </table>
         </div>
       </div>
+
+      {/* Leads List (Mobile Card View) */}
+      <div className="md:hidden flex-1 overflow-y-auto pb-20 space-y-3 -mx-2">
+        {loading ? (
+          <div className="p-12 text-center text-slate-500 font-medium">Loading leads...</div>
+        ) : filteredLeads.length === 0 ? (
+          <div className="p-12 text-center text-slate-500 font-medium">No leads found. Add one!</div>
+        ) : (
+          filteredLeads.map((lead) => (
+            <div key={lead._id} className="bg-white p-4 border border-slate-100 rounded-xl shadow-sm flex flex-col gap-3">
+              <div className="flex justify-between items-start gap-2">
+                <div className="flex flex-col min-w-0">
+                  <h3 className="font-bold text-slate-900 truncate">{lead.name}</h3>
+                  <div className="text-xs text-slate-500 mt-0.5 flex flex-wrap items-center gap-1.5">
+                    <span className="font-medium text-slate-700">{lead.mobile}</span>
+                    <span className="text-slate-300">•</span>
+                    <span className="truncate">{lead.city || 'No City'}</span>
+                  </div>
+                </div>
+                <div className="flex flex-col items-end gap-1.5 shrink-0">
+                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold border
+                    ${lead.status?.toLowerCase() === 'won' ? 'bg-green-50 text-green-700 border-green-200' : 
+                      lead.status?.toLowerCase() === 'lost' ? 'bg-slate-100 text-slate-600 border-slate-200' : 
+                      'bg-cyan-50 text-cyan-700 border-cyan-200'}`}>
+                    <span className={`w-1 h-1 rounded-full ${lead.status?.toLowerCase() === 'won' ? 'bg-green-500' : lead.status?.toLowerCase() === 'lost' ? 'bg-slate-400' : 'bg-cyan-500'}`}></span>
+                    {lead.status || 'Pending'}
+                  </span>
+                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold border 
+                    ${lead.type?.toLowerCase() === 'hot' ? 'bg-red-50 text-red-600 border-red-200' :
+                      lead.type?.toLowerCase() === 'warm' ? 'bg-orange-50 text-orange-600 border-orange-200' :
+                      'bg-blue-50 text-blue-600 border-blue-200'}`}>
+                    {lead.type || 'Cold'}
+                  </span>
+                </div>
+              </div>
+              
+              <div className="text-xs text-slate-500 bg-slate-50/80 border border-slate-100 p-2.5 rounded-lg line-clamp-2 leading-relaxed">
+                {lead.callLogs && lead.callLogs.length > 0 
+                  ? lead.callLogs[lead.callLogs.length - 1].note 
+                  : <span className="italic text-slate-400">No notes recorded yet.</span>}
+              </div>
+
+              <div className="flex justify-between items-center pt-2 border-t border-slate-100 mt-1">
+                <button 
+                  onClick={() => setViewLogsLead(lead)} 
+                  className="text-[11px] uppercase tracking-wider font-bold text-cyan-600 flex items-center gap-1.5"
+                >
+                  <FileText size={14} />
+                  Logs ({lead.callLogs ? lead.callLogs.length : 0})
+                </button>
+                <div className="flex gap-2">
+                  <a href={`tel:${lead.mobile}`} className="p-2 bg-blue-50 text-blue-600 rounded-lg border border-blue-200 shadow-sm"><FaPhoneAlt size={14} /></a>
+                  <a href={`https://wa.me/91${lead.mobile}`} target="_blank" rel="noreferrer" className="p-2 bg-green-50 text-green-600 rounded-lg border border-green-200 shadow-sm"><FaWhatsapp size={16} /></a>
+                  <button onClick={() => setLogModalLead(lead)} className="p-2 bg-indigo-50 text-indigo-600 rounded-lg border border-indigo-200 shadow-sm"><MessageSquarePlus size={16} /></button>
+                  <Link to={`/leads/${lead._id}`} className="p-2 bg-slate-800 text-white rounded-lg shadow-sm"><MoreHorizontal size={16} /></Link>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
 
       {/* Add Lead Modal */}
       {isAddModalOpen && (
