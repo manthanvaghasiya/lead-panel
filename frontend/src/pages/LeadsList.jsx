@@ -98,8 +98,17 @@ function LeadsList() {
                       <div className="flex items-center gap-3">
                         <div className="flex flex-col min-w-0">
                           <span className="font-semibold text-slate-900 truncate">{lead.name}</span>
-                          <span className="text-xs text-slate-500 truncate flex items-center gap-1">
-                            {lead.source} • {new Date(lead.createdAt).toLocaleDateString()}
+                          <span className="text-xs text-slate-500 truncate flex items-center gap-1 mt-0.5">
+                            {lead.source}
+                            {lead.followupDate && (
+                              <>
+                                <span className="mx-1 text-slate-300">•</span>
+                                <span className="text-orange-500 flex items-center gap-1 font-medium">
+                                  <Calendar size={10} className="mb-0.5" />
+                                  {new Date(lead.followupDate).toLocaleDateString()}
+                                </span>
+                              </>
+                            )}
                           </span>
                         </div>
                       </div>
@@ -116,12 +125,6 @@ function LeadsList() {
                         >
                           {extractCity(lead.address)}
                         </span>
-                        {lead.followupDate && (
-                          <span className="text-xs text-orange-500 mt-0.5 flex items-center gap-1 font-medium">
-                            <Calendar size={10} className="mb-0.5" />
-                            {new Date(lead.followupDate).toLocaleDateString()}
-                          </span>
-                        )}
                       </div>
                     </td>
 
