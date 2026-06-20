@@ -853,7 +853,7 @@ function UpdateLeadModal({ lead, onClose, onSuccess }) {
       onSuccess(data);
     } catch (err) {
       console.error(err);
-      alert('Error updating lead');
+      alert(err.response?.data?.message || 'Error updating lead');
     } finally {
       setLoading(false);
     }

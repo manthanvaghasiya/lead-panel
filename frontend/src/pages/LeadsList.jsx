@@ -368,7 +368,7 @@ function AddLeadModal({ onClose, onSuccess }) {
       onSuccess();
     } catch (err) {
       console.error(err);
-      alert('Error creating lead');
+      alert(err.response?.data?.message || 'Error creating lead');
     } finally {
       setLoading(false);
     }

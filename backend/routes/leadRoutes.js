@@ -405,8 +405,31 @@ router.post('/bulk-import', async (req, res) => {
 
 // Create a new lead
 router.post('/', async (req, res) => {
-  const lead = new Lead(req.body);
   try {
+    if (!req.body.mobile) {
+      return res.status(400).json({ message: 'Mobile number is required.' });
+    }
+
+    let mobileClean = req.body.mobile.toString().replace(/\D/g, '');
+    if (mobileClean.startsWith('91') && mobileClean.length === 12) {
+      mobileClean = mobileClean.substring(2);
+    }
+    if (mobileClean.startsWith('0')) {
+      mobileClean = mobileClean.substring(1);
+    }
+
+    if (!mobileClean) {
+      return res.status(400).json({ message: 'Valid mobile number is required.' });
+    }
+
+    // Check if lead with this mobile already exists
+    const existing = await Lead.findOne({ mobile: mobileClean });
+    if (existing) {
+      return res.status(400).json({ message: `A lead with mobile number ${mobileClean} already exists (Lead name: "${existing.name}").` });
+    }
+
+    const leadData = { ...req.body, mobile: mobileClean };
+    const lead = new Lead(leadData);
     const newLead = await lead.save();
     res.status(201).json(newLead);
   } catch (err) {
@@ -417,9 +440,27 @@ router.post('/', async (req, res) => {
 // Update a lead (general info)
 router.patch('/:id', async (req, res) => {
   try {
+    let updateData = { ...req.body };
+    if (req.body.mobile) {
+      let mobileClean = req.body.mobile.toString().replace(/\D/g, '');
+      if (mobileClean.startsWith('91') && mobileClean.length === 12) {
+        mobileClean = mobileClean.substring(2);
+      }
+      if (mobileClean.startsWith('0')) {
+        mobileClean = mobileClean.substring(1);
+      }
+      updateData.mobile = mobileClean;
+
+      // Check if another lead has this mobile number
+      const existing = await Lead.findOne({ mobile: mobileClean, _id: { $ne: req.params.id } });
+      if (existing) {
+        return res.status(400).json({ message: `A lead with mobile number ${mobileClean} already exists (Lead name: "${existing.name}").` });
+      }
+    }
+
     const updatedLead = await Lead.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      updateData,
       { returnDocument: 'after', runValidators: true }
     );
     if (!updatedLead) return res.status(404).json({ message: 'Lead not found' });
