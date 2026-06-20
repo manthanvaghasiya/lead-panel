@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Phone, Calendar, Clock, MapPin, Briefcase, Activity, Sparkles, BrainCircuit, MessageSquare, Target, Globe, Tags, X } from 'lucide-react';
-import { getLead, addCallLog, updateLead, getLeadAiInsight } from '../api/apiClient';
+import { ArrowLeft, Phone, Calendar, Clock, MapPin, Briefcase, Activity, Sparkles, BrainCircuit, MessageSquare, Target, Globe, Tags, X, Edit, ImagePlus } from 'lucide-react';
+import { getLead, addCallLog, updateLead, getLeadAiInsight, extractLeadFromText } from '../api/apiClient';
 
 function LeadDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [lead, setLead] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
   
   // Call Log Form
   const [note, setNote] = useState('');
@@ -152,7 +153,14 @@ function LeadDetail() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3 w-full md:w-auto z-10 border-t border-slate-100 pt-4 md:pt-0 md:border-none">
+        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto z-10 border-t border-slate-100 pt-4 md:pt-0 md:border-none">
+          <button 
+            onClick={() => setIsUpdateModalOpen(true)}
+            className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-800 text-white rounded-lg font-medium shadow-sm hover:bg-slate-900 transition-colors"
+          >
+            <Edit size={16} />
+            <span>Edit Profile</span>
+          </button>
           <a 
             href={`https://wa.me/91${lead.mobile}`} 
             target="_blank" 
@@ -476,6 +484,219 @@ function LeadDetail() {
             </div>
           </div>
 
+        </div>
+      </div>
+
+      {/* Update Lead Modal */}
+      {isUpdateModalOpen && (
+        <UpdateLeadModal 
+          lead={lead}
+          onClose={() => setIsUpdateModalOpen(false)}
+          onSuccess={(updatedData) => {
+            setLead(updatedData);
+            setIsUpdateModalOpen(false);
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function UpdateLeadModal({ lead, onClose, onSuccess }) {
+  const [formData, setFormData] = useState({
+    name: lead.name || '', 
+    mobile: lead.mobile || '', 
+    address: lead.address || '', 
+    businessType: lead.businessType || '',
+    city: lead.city || '',
+    source: lead.source || 'Website', 
+    type: lead.type || 'Cold', 
+    status: lead.status || 'Pending'
+  });
+  const [loading, setLoading] = useState(false);
+  const [magicText, setMagicText] = useState('');
+  const [extracting, setExtracting] = useState(false);
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => setImagePreview(reader.result);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleMagicFill = async () => {
+    if (!magicText.trim() && !imageFile) return;
+    setExtracting(true);
+    try {
+      let imageBase64 = null;
+      let mimeType = null;
+      if (imageFile && imagePreview) {
+        imageBase64 = imagePreview.split(',')[1];
+        mimeType = imageFile.type;
+      }
+
+      const { data } = await extractLeadFromText(magicText, imageBase64, mimeType);
+      setFormData(prev => ({
+        ...prev,
+        name: data.name || prev.name,
+        mobile: data.mobile || prev.mobile,
+        address: data.address || prev.address,
+        type: ['Hot', 'Warm', 'Cold'].includes(data.type) ? data.type : prev.type,
+        source: ['Website', 'CRM', 'Website+CRM', 'Other'].includes(data.source) ? data.source : prev.source,
+        status: ['Pending', 'In Process', 'Send Detail', 'Follow-up Letter', 'Contacted'].includes(data.status) ? data.status : prev.status
+      }));
+      setMagicText('');
+      setImageFile(null);
+      setImagePreview(null);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to extract data. Make sure AI is configured properly.');
+    } finally {
+      setExtracting(false);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const { data } = await updateLead(lead._id, formData);
+      onSuccess(data);
+    } catch (err) {
+      console.error(err);
+      alert('Error updating lead');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <div className="bg-white border border-slate-200 rounded-xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col max-h-[90vh]">
+        <div className="flex justify-between items-center p-4 border-b border-slate-100 bg-slate-50">
+          <h3 className="font-bold text-slate-800">Update Lead Profile</h3>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-700 transition-colors">
+            <X size={20} />
+          </button>
+        </div>
+        <div className="p-5 flex flex-col gap-4 overflow-y-auto">
+          
+          {/* AI Magic Fill Section */}
+          <div className="bg-purple-50 border border-purple-100 rounded-lg p-3">
+            <div className="flex justify-between items-center mb-2">
+              <label className="text-xs uppercase tracking-wider text-purple-700 font-bold flex items-center gap-1">
+                <Sparkles size={14}/> AI Magic Fill
+              </label>
+              <label className="cursor-pointer text-purple-600 hover:text-purple-800 transition-colors flex items-center gap-1 text-xs font-semibold">
+                <ImagePlus size={16} /> 
+                <span>Upload Photo</span>
+                <input type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
+              </label>
+            </div>
+
+            {imagePreview && (
+              <div className="relative inline-block mb-2">
+                <img src={imagePreview} alt="Preview" className="h-16 rounded border border-purple-200 object-cover" />
+                <button 
+                  type="button" 
+                  onClick={() => { setImageFile(null); setImagePreview(null); }}
+                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-0.5 hover:bg-red-600 shadow-md"
+                >
+                  <X size={12} />
+                </button>
+              </div>
+            )}
+
+            <div className="flex flex-col sm:flex-row gap-2">
+              <textarea 
+                rows="2"
+                className="w-full border border-purple-200 rounded-md p-2 text-sm focus:outline-none focus:ring-1 focus:ring-purple-400 resize-none flex-1 bg-white"
+                placeholder="Paste updated text or upload a photo!"
+                value={magicText}
+                onChange={e => setMagicText(e.target.value)}
+              />
+              <button 
+                type="button"
+                onClick={handleMagicFill}
+                disabled={extracting || (!magicText.trim() && !imageFile)}
+                className="bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white rounded-lg px-3 py-2 text-sm font-semibold transition-colors flex items-center justify-center shrink-0"
+              >
+                {extracting ? 'Extracting...' : '✨ Fill Form'}
+              </button>
+            </div>
+          </div>
+
+          <form id="updateForm" onSubmit={handleSubmit} className="flex flex-col gap-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs uppercase tracking-wider text-slate-500 font-semibold mb-1.5">Name</label>
+                <input required type="text" className="w-full border border-slate-200 rounded-md p-2 text-sm focus:border-primary focus:outline-none" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
+              </div>
+              <div>
+                <label className="block text-xs uppercase tracking-wider text-slate-500 font-semibold mb-1.5">Mobile</label>
+                <input required type="text" className="w-full border border-slate-200 rounded-md p-2 text-sm focus:border-primary focus:outline-none" value={formData.mobile} onChange={e => setFormData({...formData, mobile: e.target.value})} />
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs uppercase tracking-wider text-slate-500 font-semibold mb-1.5">Business Type</label>
+                <input type="text" className="w-full border border-slate-200 rounded-md p-2 text-sm focus:border-primary focus:outline-none" value={formData.businessType} onChange={e => setFormData({...formData, businessType: e.target.value})} />
+              </div>
+              <div>
+                <label className="block text-xs uppercase tracking-wider text-slate-500 font-semibold mb-1.5">City</label>
+                <input type="text" className="w-full border border-slate-200 rounded-md p-2 text-sm focus:border-primary focus:outline-none" value={formData.city} onChange={e => setFormData({...formData, city: e.target.value})} />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs uppercase tracking-wider text-slate-500 font-semibold mb-1.5">Address</label>
+              <input type="text" className="w-full border border-slate-200 rounded-md p-2 text-sm focus:border-primary focus:outline-none" value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs uppercase tracking-wider text-slate-500 font-semibold mb-1.5">Type</label>
+                <select className="w-full border border-slate-200 rounded-md p-2 text-sm bg-white focus:border-primary focus:outline-none" value={formData.type} onChange={e => setFormData({...formData, type: e.target.value})}>
+                  <option value="Hot">Hot</option>
+                  <option value="Warm">Warm</option>
+                  <option value="Cold">Cold</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs uppercase tracking-wider text-slate-500 font-semibold mb-1.5">Source</label>
+                <select className="w-full border border-slate-200 rounded-md p-2 text-sm bg-white focus:border-primary focus:outline-none" value={formData.source} onChange={e => setFormData({...formData, source: e.target.value})}>
+                  <option value="Website">Website</option>
+                  <option value="CRM">CRM</option>
+                  <option value="Website+CRM">Website+CRM</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs uppercase tracking-wider text-slate-500 font-semibold mb-1.5">Status</label>
+              <select className="w-full border border-slate-200 rounded-md p-2 text-sm bg-white focus:border-primary focus:outline-none" value={formData.status} onChange={e => setFormData({...formData, status: e.target.value})}>
+                <option value="Pending">Pending</option>
+                <option value="In Process">In Process</option>
+                <option value="Send Detail">Send Detail</option>
+                <option value="Follow-up Letter">Follow-up Letter</option>
+                <option value="Contacted">Contacted</option>
+                <option value="Won">Won</option>
+                <option value="Lost">Lost</option>
+              </select>
+            </div>
+          </form>
+        </div>
+        <div className="p-4 border-t border-slate-100 bg-slate-50 flex gap-3 justify-end mt-auto">
+          <button type="button" onClick={onClose} className="px-4 py-2 text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 font-medium text-sm transition-colors">Cancel</button>
+          <button type="submit" form="updateForm" disabled={loading} className="px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 font-medium text-sm transition-colors min-w-[100px]">
+            {loading ? 'Saving...' : 'Save Updates'}
+          </button>
         </div>
       </div>
     </div>
