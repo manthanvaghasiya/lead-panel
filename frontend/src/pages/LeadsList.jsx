@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getLeads, createLead, extractLeadFromText, addCallLog, extractLogFromText } from '../api/apiClient';
-import { Search, Plus, Filter, MoreHorizontal, FileText, MessageSquarePlus, X, Sparkles, ImagePlus } from 'lucide-react';
+import { Search, Plus, Filter, MoreHorizontal, FileText, MessageSquarePlus, X, Sparkles, ImagePlus, ChevronDown, RotateCcw } from 'lucide-react';
 import { FaWhatsapp, FaPhoneAlt } from 'react-icons/fa';
 
 const extractCity = (address) => {
@@ -17,6 +17,14 @@ function LeadsList() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [viewLogsLead, setViewLogsLead] = useState(null);
   const [logModalLead, setLogModalLead] = useState(null);
+  const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
+  const [filters, setFilters] = useState({
+    status: '',
+    type: '',
+    businessType: '',
+    city: '',
+    source: ''
+  });
 
   useEffect(() => {
     fetchLeads();
@@ -33,31 +41,76 @@ function LeadsList() {
     }
   };
 
-  const filteredLeads = leads.filter(lead => 
-    lead.name.toLowerCase().includes(search.toLowerCase()) || 
-    lead.mobile.includes(search)
-  );
+  // Extract unique values dynamically for filters
+  const uniqueStatuses = [...new Set(leads.map(lead => lead.status).filter(Boolean))].sort();
+  const uniqueTypes = ['Hot', 'Warm', 'Cold'];
+  const uniqueBusinessTypes = [...new Set(leads.map(lead => lead.businessType).filter(Boolean))].sort();
+  const uniqueCities = [...new Set(leads.map(lead => lead.city).filter(Boolean))].sort();
+  const uniqueSources = [...new Set(leads.map(lead => lead.source).filter(Boolean))].sort();
+
+  const activeFilterCount = Object.values(filters).filter(Boolean).length;
+
+  const filteredLeads = leads.filter(lead => {
+    // 1. Search Query
+    const searchLower = search.toLowerCase();
+    const matchesSearch = 
+      lead.name.toLowerCase().includes(searchLower) || 
+      (lead.mobile || '').includes(search) ||
+      (lead.city || '').toLowerCase().includes(searchLower) ||
+      (lead.businessType || '').toLowerCase().includes(searchLower);
+
+    if (!matchesSearch) return false;
+
+    // 2. Status Filter
+    if (filters.status && lead.status !== filters.status) return false;
+
+    // 3. Lead Type Filter
+    if (filters.type && lead.type !== filters.type) return false;
+
+    // 4. Business Type Filter
+    if (filters.businessType && lead.businessType !== filters.businessType) return false;
+
+    // 5. City Filter
+    if (filters.city && lead.city !== filters.city) return false;
+
+    // 6. Source Filter
+    if (filters.source && lead.source !== filters.source) return false;
+
+    return true;
+  });
 
   return (
     <div className="flex flex-col h-full">
       {/* Header Actions */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
         <div className="relative w-full sm:w-72 md:w-96">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search size={18} className="text-slate-500" />
+            <Search size={18} className="text-slate-400" />
           </div>
           <input
             type="text"
-            className="input-field pl-10"
-            placeholder="Search name, mobile..."
+            className="input-field pl-10 bg-white border border-slate-200 focus:border-cyan-500 transition-colors"
+            placeholder="Search name, mobile, city, type..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
-          <button className="btn-secondary flex items-center gap-2 flex-1 sm:flex-none justify-center">
-            <Filter size={18} />
+          <button 
+            onClick={() => setIsFilterPanelOpen(!isFilterPanelOpen)}
+            className={`flex items-center gap-2 flex-1 sm:flex-none justify-center px-4 py-2 text-sm font-semibold rounded-lg border transition-all duration-200 shadow-sm
+              ${isFilterPanelOpen || activeFilterCount > 0 
+                ? 'bg-cyan-50 border-cyan-300 text-cyan-700 hover:bg-cyan-100/70' 
+                : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'}`}
+          >
+            <Filter size={16} />
             <span>Filter</span>
+            {activeFilterCount > 0 && (
+              <span className="flex items-center justify-center bg-cyan-600 text-white rounded-full text-[10px] w-5 h-5 font-bold animate-pulse">
+                {activeFilterCount}
+              </span>
+            )}
+            <ChevronDown size={14} className={`transition-transform duration-200 ${isFilterPanelOpen ? 'rotate-180' : ''}`} />
           </button>
           <button 
             onClick={() => setIsAddModalOpen(true)}
@@ -68,6 +121,130 @@ function LeadsList() {
           </button>
         </div>
       </div>
+
+      {/* Expandable Filter Drawer UI */}
+      <div 
+        className={`overflow-hidden transition-all duration-300 ease-in-out bg-white border border-slate-200 rounded-xl shadow-sm mb-4
+          ${isFilterPanelOpen ? 'max-h-[500px] p-4 opacity-100 visible' : 'max-h-0 p-0 opacity-0 invisible border-none'}`}
+      >
+        <div className="flex justify-between items-center pb-3 border-b border-slate-100 mb-4">
+          <h4 className="text-sm font-bold text-slate-800 flex items-center gap-1.5">
+            <Filter size={14} className="text-cyan-600" />
+            Filter Leads
+          </h4>
+          {activeFilterCount > 0 && (
+            <button 
+              onClick={() => setFilters({ status: '', type: '', businessType: '', city: '', source: '' })}
+              className="text-xs font-semibold text-rose-500 hover:text-rose-600 flex items-center gap-1 hover:underline transition-colors"
+            >
+              <RotateCcw size={12} />
+              Reset All
+            </button>
+          )}
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
+          {/* Status Filter */}
+          <div className="flex flex-col">
+            <label className="text-[10px] uppercase tracking-wider font-semibold text-slate-400 mb-1.5">Lead Status</label>
+            <select 
+              className="input-field py-1.5 text-xs bg-white border border-slate-200 rounded-lg focus:border-cyan-500 focus:outline-none"
+              value={filters.status}
+              onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+            >
+              <option value="">All Statuses</option>
+              {uniqueStatuses.map(status => (
+                <option key={status} value={status}>{status}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Type Filter */}
+          <div className="flex flex-col">
+            <label className="text-[10px] uppercase tracking-wider font-semibold text-slate-400 mb-1.5">Interest Type</label>
+            <select 
+              className="input-field py-1.5 text-xs bg-white border border-slate-200 rounded-lg focus:border-cyan-500 focus:outline-none"
+              value={filters.type}
+              onChange={(e) => setFilters({ ...filters, type: e.target.value })}
+            >
+              <option value="">All Types</option>
+              {uniqueTypes.map(type => (
+                <option key={type} value={type}>{type}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Business Type Filter */}
+          <div className="flex flex-col">
+            <label className="text-[10px] uppercase tracking-wider font-semibold text-slate-400 mb-1.5">Business Type</label>
+            <select 
+              className="input-field py-1.5 text-xs bg-white border border-slate-200 rounded-lg focus:border-cyan-500 focus:outline-none"
+              value={filters.businessType}
+              onChange={(e) => setFilters({ ...filters, businessType: e.target.value })}
+            >
+              <option value="">All Businesses</option>
+              {uniqueBusinessTypes.map(bType => (
+                <option key={bType} value={bType}>{bType}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* City Filter */}
+          <div className="flex flex-col">
+            <label className="text-[10px] uppercase tracking-wider font-semibold text-slate-400 mb-1.5">City</label>
+            <select 
+              className="input-field py-1.5 text-xs bg-white border border-slate-200 rounded-lg focus:border-cyan-500 focus:outline-none"
+              value={filters.city}
+              onChange={(e) => setFilters({ ...filters, city: e.target.value })}
+            >
+              <option value="">All Cities</option>
+              {uniqueCities.map(city => (
+                <option key={city} value={city}>{city}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Source Filter */}
+          <div className="flex flex-col">
+            <label className="text-[10px] uppercase tracking-wider font-semibold text-slate-400 mb-1.5">Source</label>
+            <select 
+              className="input-field py-1.5 text-xs bg-white border border-slate-200 rounded-lg focus:border-cyan-500 focus:outline-none"
+              value={filters.source}
+              onChange={(e) => setFilters({ ...filters, source: e.target.value })}
+            >
+              <option value="">All Sources</option>
+              {uniqueSources.map(src => (
+                <option key={src} value={src}>{src}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* Active Filter Tags */}
+      {activeFilterCount > 0 && (
+        <div className="flex flex-wrap items-center gap-2 mb-4">
+          <span className="text-xs text-slate-400 font-semibold mr-1">Active filters:</span>
+          {Object.entries(filters).map(([key, val]) => {
+            if (!val) return null;
+            return (
+              <span 
+                key={key} 
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 border border-slate-200 text-slate-600 shadow-sm transition-all hover:bg-slate-200/60"
+              >
+                <span className="text-slate-400 uppercase text-[9px] tracking-wider">{key}:</span>
+                <span>{val}</span>
+                <button 
+                  onClick={() => setFilters({ ...filters, [key]: '' })}
+                  className="text-slate-400 hover:text-slate-700 transition-colors bg-white hover:bg-slate-300/40 rounded-full p-0.5"
+                >
+                  <X size={10} />
+                </button>
+              </span>
+            );
+          })}
+        </div>
+      )}
 
       {/* Leads Table (Desktop) */}
       <div className="hidden md:flex flex-1 flex-col -mx-4 sm:mx-0 overflow-hidden">

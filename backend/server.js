@@ -18,7 +18,7 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Routes
 const leadRoutes = require('./routes/leadRoutes');
-app.use('/api/leads', leadRoutes);
+app.use(['/_/backend/api/leads', '/api/leads'], leadRoutes);
 
 // Database connection
 const PORT = process.env.PORT || 5000;
@@ -35,11 +35,17 @@ if (MONGODB_URI) {
   MONGODB_URI = MONGODB_URI.replace(/\?&/, '?').replace(/\?$/, '');
 }
 
+// Connect to MongoDB asynchronously
 mongoose.connect(MONGODB_URI).then(() => {
   console.log('Connected to MongoDB');
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-  });
 }).catch((error) => {
   console.error('Error connecting to MongoDB:', error.message);
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}
+
+module.exports = app;

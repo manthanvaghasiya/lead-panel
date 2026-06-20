@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Phone, Calendar, Clock, MapPin, Briefcase, Activity, Sparkles, BrainCircuit, MessageSquare, Target, Globe, Tags, X, Edit, ImagePlus, Star } from 'lucide-react';
+import { ArrowLeft, Phone, Calendar, Clock, MapPin, Briefcase, Activity, Sparkles, BrainCircuit, MessageSquare, Target, Globe, Tags, X, Edit, ImagePlus, Star, Search } from 'lucide-react';
 import { FaInstagram, FaFacebook, FaYoutube, FaLinkedin } from 'react-icons/fa';
 import { getLead, addCallLog, updateLead, getLeadAiInsight, extractLeadFromText, extractLogFromText, autoCleanLead, extractSocialProfiles } from '../api/apiClient';
 
@@ -16,6 +16,11 @@ function LeadDetail() {
   const [logType, setLogType] = useState('Cold');
   const [logStatus, setLogStatus] = useState('Pending');
   const [nextFollowup, setNextFollowup] = useState('');
+
+  // Advanced Log Filters
+  const [logSearch, setLogSearch] = useState('');
+  const [logFilterType, setLogFilterType] = useState('');
+  const [logFilterStatus, setLogFilterStatus] = useState('');
 
   // AI Call Logger
   const [magicLogText, setMagicLogText] = useState('');
@@ -145,6 +150,19 @@ function LeadDetail() {
       setLoading(false);
     }
   };
+
+  const filteredLogs = (lead?.callLogs || []).filter(log => {
+    if (logSearch && !log.note.toLowerCase().includes(logSearch.toLowerCase())) {
+      return false;
+    }
+    if (logFilterType && log.typeAtTime !== logFilterType) {
+      return false;
+    }
+    if (logFilterStatus && log.statusAtTime !== logFilterStatus) {
+      return false;
+    }
+    return true;
+  });
 
   if (loading) return <div className="p-12 text-center text-slate-500 font-medium">Loading Enterprise Profile...</div>;
   if (!lead) return null;
@@ -508,12 +526,70 @@ function LeadDetail() {
 
           {/* Activity Timeline */}
           <div className="bg-white border border-border rounded-xl shadow-sm flex-1 overflow-hidden flex flex-col">
-            <div className="p-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+            <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
               <h3 className="font-semibold text-slate-800">Interaction Timeline</h3>
               <span className="text-xs font-medium text-slate-500 bg-white border border-slate-200 px-2 py-1 rounded">
-                {lead.callLogs ? lead.callLogs.length : 0} Records
+                {filteredLogs.length} of {lead.callLogs ? lead.callLogs.length : 0} Records
               </span>
             </div>
+
+            {/* Advanced Log Filter Controls */}
+            {lead.callLogs && lead.callLogs.length > 0 && (
+              <div className="px-5 py-3 bg-slate-50/30 border-b border-slate-100 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
+                    <Search size={14} className="text-slate-400" />
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Search logs..."
+                    className="w-full pl-8 pr-7 py-1 text-xs border border-slate-200 rounded focus:border-cyan-500 focus:outline-none bg-white text-slate-700 placeholder:text-slate-300"
+                    value={logSearch}
+                    onChange={(e) => setLogSearch(e.target.value)}
+                  />
+                  {logSearch && (
+                    <button 
+                      onClick={() => setLogSearch('')} 
+                      className="absolute inset-y-0 right-0 pr-2 flex items-center text-slate-400 hover:text-slate-600 transition-colors"
+                    >
+                      <X size={12} />
+                    </button>
+                  )}
+                </div>
+                
+                <div>
+                  <select
+                    className="w-full px-2 py-1 text-xs border border-slate-200 rounded focus:border-cyan-500 focus:outline-none bg-white font-medium text-slate-600"
+                    value={logFilterType}
+                    onChange={(e) => setLogFilterType(e.target.value)}
+                  >
+                    <option value="">All Types (Hot/Cold)</option>
+                    <option value="Hot">Hot</option>
+                    <option value="Warm">Warm</option>
+                    <option value="Cold">Cold</option>
+                    <option value="Won">Won</option>
+                    <option value="Lost">Lost</option>
+                  </select>
+                </div>
+
+                <div>
+                  <select
+                    className="w-full px-2 py-1 text-xs border border-slate-200 rounded focus:border-cyan-500 focus:outline-none bg-white font-medium text-slate-600"
+                    value={logFilterStatus}
+                    onChange={(e) => setLogFilterStatus(e.target.value)}
+                  >
+                    <option value="">All Statuses</option>
+                    <option value="Pending">Pending</option>
+                    <option value="In Process">In Process</option>
+                    <option value="Send Detail">Send Detail</option>
+                    <option value="Follow-up Letter">Follow-up Letter</option>
+                    <option value="Contacted">Contacted</option>
+                    <option value="Won">Won</option>
+                    <option value="Lost">Lost</option>
+                  </select>
+                </div>
+              </div>
+            )}
             
             <div className="p-6 flex-1 overflow-y-auto">
               {!lead.callLogs || lead.callLogs.length === 0 ? (
@@ -524,9 +600,17 @@ function LeadDetail() {
                   <h4 className="text-slate-700 font-medium mb-1">No interactions yet</h4>
                   <p className="text-sm text-slate-400 max-w-xs">Log a call, message, or note using the form on the left to start building the timeline.</p>
                 </div>
+              ) : filteredLogs.length === 0 ? (
+                <div className="text-center py-16 flex flex-col items-center">
+                  <div className="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center mb-4 border border-slate-100">
+                    <Clock size={24} className="text-slate-300" />
+                  </div>
+                  <h4 className="text-slate-700 font-medium mb-1">No matching logs</h4>
+                  <p className="text-sm text-slate-400 max-w-xs">Try clearing or adjusting your search filters to see all interactions.</p>
+                </div>
               ) : (
                 <div className="space-y-8 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px before:h-full before:w-0.5 before:bg-slate-100">
-                  {[...lead.callLogs].reverse().map((log, i) => (
+                  {[...filteredLogs].reverse().map((log, i) => (
                     <div key={log._id || i} className="relative flex items-start gap-4 group">
                       
                       {/* Timeline Node */}
