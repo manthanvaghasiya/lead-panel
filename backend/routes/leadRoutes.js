@@ -120,6 +120,66 @@ router.post('/ai-extract-log', async (req, res) => {
 });
 
 
+// Auto-clean lead data
+router.post('/:id/auto-clean', async (req, res) => {
+  try {
+    const lead = await Lead.findById(req.params.id);
+    if (!lead) return res.status(404).json({ message: 'Lead not found' });
+
+    if (!process.env.GEMINI_API_KEY) {
+      return res.status(500).json({ message: 'Gemini API key is missing' });
+    }
+
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+
+    const prompt = `
+      Analyze this lead data:
+      Name: ${lead.name || ''}
+      Address: ${lead.address || ''}
+
+      Please extract:
+      1. A clean "businessType" based on the name (e.g. if name is "Hariram Motors", type is "Automotive"). If you can't guess, return "Business".
+      2. A clean "city" name extracted from the address. If address is "MAIN G.T ROAD KARNAL..", city is "Karnal".
+
+      Return ONLY raw JSON:
+      {
+        "businessType": "...",
+        "city": "..."
+      }
+    `;
+
+    const result = await model.generateContent(prompt);
+    let responseText = result.response.text().trim();
+    if (responseText.startsWith('\`\`\`json')) {
+      responseText = responseText.replace(/^\`\`\`json/, '').replace(/\`\`\`$/, '').trim();
+    } else if (responseText.startsWith('\`\`\`')) {
+      responseText = responseText.replace(/^\`\`\`/, '').replace(/\`\`\`$/, '').trim();
+    }
+
+    const extractedData = JSON.parse(responseText);
+
+    let updated = false;
+    if (!lead.businessType && extractedData.businessType) {
+      lead.businessType = extractedData.businessType;
+      updated = true;
+    }
+    if (!lead.city && extractedData.city) {
+      lead.city = extractedData.city;
+      updated = true;
+    }
+
+    if (updated) {
+      await lead.save();
+    }
+
+    res.json(lead);
+  } catch (err) {
+    console.error('Auto Clean Error:', err);
+    res.status(500).json({ message: err.message });
+  }
+});
+
 // Get all leads
 router.get('/', async (req, res) => {
   try {

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Phone, Calendar, Clock, MapPin, Briefcase, Activity, Sparkles, BrainCircuit, MessageSquare, Target, Globe, Tags, X, Edit, ImagePlus } from 'lucide-react';
-import { getLead, addCallLog, updateLead, getLeadAiInsight, extractLeadFromText, extractLogFromText } from '../api/apiClient';
+import { getLead, addCallLog, updateLead, getLeadAiInsight, extractLeadFromText, extractLogFromText, autoCleanLead } from '../api/apiClient';
 
 function LeadDetail() {
   const { id } = useParams();
@@ -80,7 +80,18 @@ function LeadDetail() {
 
   const fetchLead = async () => {
     try {
-      const { data } = await getLead(id);
+      let { data } = await getLead(id);
+
+      // Auto-clean if missing city or business type
+      if (!data.city || !data.businessType) {
+        try {
+          const cleanRes = await autoCleanLead(id);
+          data = cleanRes.data;
+        } catch(e) {
+          console.error("Auto clean failed", e);
+        }
+      }
+
       setLead(data);
       setLogType(data.type || 'Cold');
       setLogStatus(data.status || 'Pending');
