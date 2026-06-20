@@ -533,64 +533,7 @@ function LeadDetail() {
               </span>
             </div>
 
-            {/* Advanced Log Filter Controls */}
-            {lead.callLogs && lead.callLogs.length > 0 && (
-              <div className="px-5 py-3 bg-slate-50/30 border-b border-slate-100 grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
-                    <Search size={14} className="text-slate-400" />
-                  </div>
-                  <input
-                    type="text"
-                    placeholder="Search logs..."
-                    className="w-full pl-8 pr-7 py-1 text-xs border border-slate-200 rounded focus:border-cyan-500 focus:outline-none bg-white text-slate-700 placeholder:text-slate-300"
-                    value={logSearch}
-                    onChange={(e) => setLogSearch(e.target.value)}
-                  />
-                  {logSearch && (
-                    <button 
-                      onClick={() => setLogSearch('')} 
-                      className="absolute inset-y-0 right-0 pr-2 flex items-center text-slate-400 hover:text-slate-600 transition-colors"
-                    >
-                      <X size={12} />
-                    </button>
-                  )}
-                </div>
-                
-                <div>
-                  <select
-                    className="w-full px-2 py-1 text-xs border border-slate-200 rounded focus:border-cyan-500 focus:outline-none bg-white font-medium text-slate-600"
-                    value={logFilterType}
-                    onChange={(e) => setLogFilterType(e.target.value)}
-                  >
-                    <option value="">All Types (Hot/Cold)</option>
-                    <option value="Hot">Hot</option>
-                    <option value="Warm">Warm</option>
-                    <option value="Cold">Cold</option>
-                    <option value="Won">Won</option>
-                    <option value="Lost">Lost</option>
-                  </select>
-                </div>
 
-                <div>
-                  <select
-                    className="w-full px-2 py-1 text-xs border border-slate-200 rounded focus:border-cyan-500 focus:outline-none bg-white font-medium text-slate-600"
-                    value={logFilterStatus}
-                    onChange={(e) => setLogFilterStatus(e.target.value)}
-                  >
-                    <option value="">All Statuses</option>
-                    <option value="Pending">Pending</option>
-                    <option value="In Process">In Process</option>
-                    <option value="Send Detail">Send Detail</option>
-                    <option value="Follow-up Letter">Follow-up Letter</option>
-                    <option value="Contacted">Contacted</option>
-                    <option value="Won">Won</option>
-                    <option value="Lost">Lost</option>
-                  </select>
-                </div>
-              </div>
-            )}
-            
             <div className="p-6 flex-1 overflow-y-auto">
               {!lead.callLogs || lead.callLogs.length === 0 ? (
                 <div className="text-center py-16 flex flex-col items-center">
