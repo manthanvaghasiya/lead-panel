@@ -291,116 +291,6 @@ function LeadDetail() {
             </div>
           </div>
 
-          {/* Activity Logger */}
-          <div className="bg-white border border-border rounded-xl shadow-sm overflow-hidden">
-            <div className="p-4 border-b border-slate-100 bg-slate-50/50">
-              <h3 className="font-semibold text-slate-800 flex items-center gap-2">
-                <Activity size={16} className="text-primary" />
-                Log Interaction
-              </h3>
-            </div>
-            <div className="p-5 flex flex-col gap-4">
-              
-              {/* AI Magic Fill Section for Logs */}
-              <div className="bg-indigo-50 border border-indigo-100 rounded-lg p-3">
-                <div className="flex justify-between items-center mb-2">
-                  <label className="text-[11px] uppercase tracking-wider text-indigo-700 font-bold flex items-center gap-1">
-                    <Sparkles size={12}/> AI Call Logger
-                  </label>
-                  
-                  <label className="cursor-pointer text-indigo-600 hover:text-indigo-800 transition-colors flex items-center gap-1 text-[11px] font-semibold">
-                    <ImagePlus size={14} /> 
-                    <span>Upload Note</span>
-                    <input type="file" accept="image/*" className="hidden" onChange={handleLogImageChange} />
-                  </label>
-                </div>
-
-                {logImagePreview && (
-                  <div className="relative inline-block mb-2">
-                    <img src={logImagePreview} alt="Preview" className="h-12 rounded border border-indigo-200 object-cover" />
-                    <button 
-                      type="button" 
-                      onClick={() => { setLogImageFile(null); setLogImagePreview(null); }}
-                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-0.5 hover:bg-red-600 shadow-md"
-                    >
-                      <X size={10} />
-                    </button>
-                  </div>
-                )}
-
-                <div className="flex flex-col sm:flex-row gap-2">
-                  <textarea 
-                    rows="2"
-                    className="w-full border border-indigo-200 rounded-md p-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-400 resize-none flex-1 bg-white placeholder:text-indigo-300"
-                    placeholder="Dictate your notes e.g. 'Client is hot...'"
-                    value={magicLogText}
-                    onChange={e => setMagicLogText(e.target.value)}
-                  />
-                  <button 
-                    type="button"
-                    onClick={handleMagicLogFill}
-                    disabled={extractingLog || (!magicLogText.trim() && !logImageFile)}
-                    className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-lg px-3 py-2 text-[11px] font-semibold transition-colors flex items-center justify-center shrink-0"
-                  >
-                    {extractingLog ? 'Processing...' : '✨ Auto-Fill'}
-                  </button>
-                </div>
-              </div>
-
-              <form onSubmit={handleCallLogSubmit} className="flex flex-col gap-4">
-                <div>
-                  <textarea 
-                    required
-                    rows={3} 
-                    className="w-full border border-slate-200 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none bg-slate-50 focus:bg-white" 
-                    placeholder="What did you discuss?"
-                    value={note}
-                    onChange={e => setNote(e.target.value)}
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Type</label>
-                    <select className="w-full border border-slate-200 rounded-md p-2 text-sm bg-white focus:outline-none focus:border-primary" value={logType} onChange={e => setLogType(e.target.value)}>
-                      <option value="Hot">Hot</option>
-                      <option value="Warm">Warm</option>
-                      <option value="Cold">Cold</option>
-                      <option value="Won">Won</option>
-                      <option value="Lost">Lost</option>
-                    </select>
-                  </div>
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Status</label>
-                    <select 
-                      className="w-full border border-slate-200 rounded-md p-2 text-sm bg-white focus:outline-none focus:border-primary" 
-                      value={logStatus}
-                      onChange={e => setLogStatus(e.target.value)}
-                    >
-                      <option value="Pending">Pending</option>
-                      <option value="In Process">In Process</option>
-                      <option value="Send Detail">Send Detail</option>
-                      <option value="Follow-up Letter">Follow-up Letter</option>
-                      <option value="Contacted">Contacted</option>
-                      <option value="Won">Won</option>
-                      <option value="Lost">Lost</option>
-                    </select>
-                  </div>
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Set Next Follow-up</label>
-                  <input 
-                    type="date" 
-                    className="w-full border border-slate-200 rounded-md p-2 text-sm bg-white focus:outline-none focus:border-primary" 
-                    value={nextFollowup}
-                    onChange={e => setNextFollowup(e.target.value)}
-                  />
-                </div>
-                <button type="submit" disabled={savingLog} className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg font-medium shadow-sm transition-colors mt-2 text-sm">
-                  {savingLog ? 'Saving...' : 'Save Interaction'}
-                </button>
-              </form>
-            </div>
-          </div>
         </div>
 
         {/* RIGHT COLUMN: AI & Timeline */}
@@ -540,6 +430,117 @@ function LeadDetail() {
                 </div>
               )}
             </div>
+          {/* Activity Logger */}
+          <div className="bg-white border border-border rounded-xl shadow-sm overflow-hidden">
+            <div className="p-4 border-b border-slate-100 bg-slate-50/50">
+              <h3 className="font-semibold text-slate-800 flex items-center gap-2">
+                <Activity size={16} className="text-primary" />
+                Log Interaction
+              </h3>
+            </div>
+            <div className="p-5 flex flex-col gap-4">
+              
+              {/* AI Magic Fill Section for Logs */}
+              <div className="bg-indigo-50 border border-indigo-100 rounded-lg p-3">
+                <div className="flex justify-between items-center mb-2">
+                  <label className="text-[11px] uppercase tracking-wider text-indigo-700 font-bold flex items-center gap-1">
+                    <Sparkles size={12}/> AI Call Logger
+                  </label>
+                  
+                  <label className="cursor-pointer text-indigo-600 hover:text-indigo-800 transition-colors flex items-center gap-1 text-[11px] font-semibold">
+                    <ImagePlus size={14} /> 
+                    <span>Upload Note</span>
+                    <input type="file" accept="image/*" className="hidden" onChange={handleLogImageChange} />
+                  </label>
+                </div>
+
+                {logImagePreview && (
+                  <div className="relative inline-block mb-2">
+                    <img src={logImagePreview} alt="Preview" className="h-12 rounded border border-indigo-200 object-cover" />
+                    <button 
+                      type="button" 
+                      onClick={() => { setLogImageFile(null); setLogImagePreview(null); }}
+                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-0.5 hover:bg-red-600 shadow-md"
+                    >
+                      <X size={10} />
+                    </button>
+                  </div>
+                )}
+
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <textarea 
+                    rows="2"
+                    className="w-full border border-indigo-200 rounded-md p-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-400 resize-none flex-1 bg-white placeholder:text-indigo-300"
+                    placeholder="Dictate your notes e.g. 'Client is hot...'"
+                    value={magicLogText}
+                    onChange={e => setMagicLogText(e.target.value)}
+                  />
+                  <button 
+                    type="button"
+                    onClick={handleMagicLogFill}
+                    disabled={extractingLog || (!magicLogText.trim() && !logImageFile)}
+                    className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-lg px-3 py-2 text-[11px] font-semibold transition-colors flex items-center justify-center shrink-0"
+                  >
+                    {extractingLog ? 'Processing...' : '✨ Auto-Fill'}
+                  </button>
+                </div>
+              </div>
+
+              <form onSubmit={handleCallLogSubmit} className="flex flex-col gap-4">
+                <div>
+                  <textarea 
+                    required
+                    rows={3} 
+                    className="w-full border border-slate-200 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none bg-slate-50 focus:bg-white" 
+                    placeholder="What did you discuss?"
+                    value={note}
+                    onChange={e => setNote(e.target.value)}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Type</label>
+                    <select className="w-full border border-slate-200 rounded-md p-2 text-sm bg-white focus:outline-none focus:border-primary" value={logType} onChange={e => setLogType(e.target.value)}>
+                      <option value="Hot">Hot</option>
+                      <option value="Warm">Warm</option>
+                      <option value="Cold">Cold</option>
+                      <option value="Won">Won</option>
+                      <option value="Lost">Lost</option>
+                    </select>
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Status</label>
+                    <select 
+                      className="w-full border border-slate-200 rounded-md p-2 text-sm bg-white focus:outline-none focus:border-primary" 
+                      value={logStatus}
+                      onChange={e => setLogStatus(e.target.value)}
+                    >
+                      <option value="Pending">Pending</option>
+                      <option value="In Process">In Process</option>
+                      <option value="Send Detail">Send Detail</option>
+                      <option value="Follow-up Letter">Follow-up Letter</option>
+                      <option value="Contacted">Contacted</option>
+                      <option value="Won">Won</option>
+                      <option value="Lost">Lost</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Set Next Follow-up</label>
+                  <input 
+                    type="date" 
+                    className="w-full border border-slate-200 rounded-md p-2 text-sm bg-white focus:outline-none focus:border-primary" 
+                    value={nextFollowup}
+                    onChange={e => setNextFollowup(e.target.value)}
+                  />
+                </div>
+                <button type="submit" disabled={savingLog} className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg font-medium shadow-sm transition-colors mt-2 text-sm">
+                  {savingLog ? 'Saving...' : 'Save Interaction'}
+                </button>
+              </form>
+            </div>
+          </div>
+
           </div>
 
         </div>
