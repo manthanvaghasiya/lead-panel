@@ -21,7 +21,15 @@ const leadSchema = new mongoose.Schema({
   status: { type: String, default: 'Pending' },
   followupDate: { type: Date },
   callLogs: [callLogSchema],
-  tags: [{ type: String }]
+  tags: [{ type: String }],
+  socials: {
+    instagram: { type: String },
+    facebook: { type: String },
+    youtube: { type: String },
+    linkedin: { type: String },
+    rating: { type: String },
+    reviews: { type: String }
+  }
 }, {
   timestamps: true
 });
