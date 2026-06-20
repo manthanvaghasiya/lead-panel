@@ -240,7 +240,7 @@ function LeadsList() {
 
 function AddLeadModal({ onClose, onSuccess }) {
   const [formData, setFormData] = useState({
-    name: '', mobile: '', address: '', city: '', businessType: '', source: 'Website', type: 'Cold', status: 'Pending'
+    name: '', ownerName: '', mobile: '', address: '', city: '', businessType: '', source: 'Website', type: 'Cold', status: 'Pending'
   });
   const [loading, setLoading] = useState(false);
   const [magicText, setMagicText] = useState('');
@@ -273,6 +273,7 @@ function AddLeadModal({ onClose, onSuccess }) {
       setFormData(prev => ({
         ...prev,
         name: data.name || prev.name,
+        ownerName: data.ownerName || prev.ownerName,
         mobile: data.mobile || prev.mobile,
         address: data.address || prev.address,
         city: data.city || prev.city,
@@ -378,13 +379,17 @@ function AddLeadModal({ onClose, onSuccess }) {
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs uppercase tracking-wider text-slate-500 mb-1.5">Name</label>
+              <label className="block text-xs uppercase tracking-wider text-slate-500 mb-1.5">Business Name</label>
               <input required type="text" className="input-field" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
             </div>
             <div>
               <label className="block text-xs uppercase tracking-wider text-slate-500 mb-1.5">Mobile</label>
               <input required type="text" className="input-field" value={formData.mobile} onChange={e => setFormData({...formData, mobile: e.target.value})} />
             </div>
+            </div>
+            <div>
+              <label className="block text-xs uppercase tracking-wider text-slate-500 mb-1.5">Owner / Contact Name</label>
+              <input type="text" className="input-field" value={formData.ownerName} onChange={e => setFormData({...formData, ownerName: e.target.value})} placeholder="e.g. Sandeep Bhai" />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>

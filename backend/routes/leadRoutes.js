@@ -21,7 +21,8 @@ router.post('/ai-extract', async (req, res) => {
       Extract the structured lead data from this.
       Return ONLY a JSON object with exactly these keys:
       {
-        "name": "Extracted name or empty string if not found",
+        "name": "Extracted business name or main entity name, or empty string if not found",
+        "ownerName": "Extracted owner/contact person name, or empty string",
         "mobile": "Extracted mobile number (digits only) or empty string",
         "address": "Extracted full address/location or empty string",
         "city": "Extract JUST the City name from the address (e.g. Surat, Delhi, Karnal) or empty string",

@@ -11,6 +11,7 @@ const callLogSchema = new mongoose.Schema({
 
 const leadSchema = new mongoose.Schema({
   name: { type: String, required: true },
+  ownerName: { type: String },
   mobile: { type: String, required: true },
   businessType: { type: String },
   city: { type: String },
