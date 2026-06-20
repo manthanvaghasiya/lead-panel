@@ -376,6 +376,7 @@ function ImportExport() {
                   <option value="Contacted">Contacted</option>
                   <option value="Won">Won</option>
                   <option value="Lost">Lost</option>
+                  <option value="Permanently Lost">Permanently Lost</option>
                 </select>
               </div>
 

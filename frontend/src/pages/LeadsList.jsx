@@ -682,6 +682,7 @@ function AddLeadModal({ onClose, onSuccess }) {
               <option value="Contacted">Contacted</option>
               <option value="Won">Won</option>
               <option value="Lost">Lost</option>
+              <option value="Permanently Lost">Permanently Lost</option>
             </select>
           </div>
           <div className="mt-4 flex gap-3 justify-end">
@@ -926,6 +927,7 @@ function AddCallLogModal({ lead, onClose, onSuccess }) {
                   <option value="Contacted">Contacted</option>
                   <option value="Won">Won</option>
                   <option value="Lost">Lost</option>
+                  <option value="Permanently Lost">Permanently Lost</option>
                 </select>
               </div>
             </div>

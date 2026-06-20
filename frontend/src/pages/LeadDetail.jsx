@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Phone, Calendar, Clock, MapPin, Briefcase, Activity, Sparkles, BrainCircuit, MessageSquare, Target, Globe, Tags, X, Edit, ImagePlus, Star, Search } from 'lucide-react';
 import { FaInstagram, FaFacebook, FaYoutube, FaLinkedin } from 'react-icons/fa';
-import { getLead, addCallLog, updateLead, getLeadAiInsight, extractLeadFromText, extractLogFromText, autoCleanLead, extractSocialProfiles } from '../api/apiClient';
+import { getLead, addCallLog, updateLead, getLeadAiInsight, extractLeadFromText, extractLogFromText, autoCleanLead, extractSocialProfiles, deleteLead } from '../api/apiClient';
 
 function LeadDetail() {
   const { id } = useParams();
@@ -10,6 +10,7 @@ function LeadDetail() {
   const [lead, setLead] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   // Call Log Form
   const [note, setNote] = useState('');
@@ -151,6 +152,20 @@ function LeadDetail() {
     }
   };
 
+  const handleDelete = async () => {
+    if (window.confirm('Are you sure you want to permanently delete this lead? This action cannot be undone.')) {
+      try {
+        setIsDeleting(true);
+        await deleteLead(id);
+        navigate('/leads');
+      } catch (err) {
+        console.error(err);
+        alert('Failed to delete lead');
+        setIsDeleting(false);
+      }
+    }
+  };
+
   const filteredLogs = (lead?.callLogs || []).filter(log => {
     if (logSearch && !log.note.toLowerCase().includes(logSearch.toLowerCase())) {
       return false;
@@ -207,8 +222,17 @@ function LeadDetail() {
 
         <div className="grid grid-cols-2 md:flex md:flex-wrap md:items-center gap-2 md:gap-3 w-full md:w-auto z-10 border-t border-slate-100 pt-4 md:pt-0 md:border-none">
           <button 
+            onClick={handleDelete}
+            disabled={isDeleting}
+            className="md:flex-none flex items-center justify-center gap-2 px-3 py-2.5 bg-red-50 text-red-600 rounded-lg font-medium shadow-sm hover:bg-red-100 transition-colors"
+            title="Delete Lead"
+          >
+            <X size={16} />
+            <span className="md:hidden">Delete</span>
+          </button>
+          <button 
             onClick={() => setIsUpdateModalOpen(true)}
-            className="col-span-2 md:col-span-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-800 text-white rounded-lg font-medium shadow-sm hover:bg-slate-900 transition-colors"
+            className="md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-800 text-white rounded-lg font-medium shadow-sm hover:bg-slate-900 transition-colors"
           >
             <Edit size={16} />
             <span>Edit Profile</span>
@@ -705,6 +729,7 @@ function LeadDetail() {
                       <option value="Contacted">Contacted</option>
                       <option value="Won">Won</option>
                       <option value="Lost">Lost</option>
+                      <option value="Permanently Lost">Permanently Lost</option>
                     </select>
                   </div>
                 </div>
@@ -1009,6 +1034,7 @@ function UpdateLeadModal({ lead, onClose, onSuccess }) {
                 <option value="Contacted">Contacted</option>
                 <option value="Won">Won</option>
                 <option value="Lost">Lost</option>
+                <option value="Permanently Lost">Permanently Lost</option>
               </select>
             </div>
 
