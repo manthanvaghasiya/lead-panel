@@ -73,15 +73,15 @@ function LeadsList() {
           <table className="w-full text-left border-collapse min-w-[800px]">
             <thead>
               <tr className="border-b border-border bg-white/50 text-xs uppercase tracking-wider text-slate-500">
-                <th className="p-4 font-medium">Name</th>
-                <th className="p-4 font-medium">Mobile</th>
-                <th className="p-4 font-medium">City</th>
-                <th className="p-4 font-medium">Type</th>
-                <th className="p-4 font-medium">Source</th>
-                <th className="p-4 font-medium">Status</th>
-                <th className="p-4 font-medium">Last Note</th>
-                <th className="p-4 font-medium">Logs</th>
-                <th className="p-4 font-medium text-right">Actions</th>
+                <th className="px-4 py-3 font-medium">Name</th>
+                <th className="px-4 py-3 font-medium">Mobile</th>
+                <th className="px-4 py-3 font-medium">City</th>
+                <th className="px-4 py-3 font-medium">Type</th>
+                <th className="px-4 py-3 font-medium">Source</th>
+                <th className="px-4 py-3 font-medium">Status</th>
+                <th className="px-4 py-3 font-medium">Last Note</th>
+                <th className="px-4 py-3 font-medium">Logs</th>
+                <th className="px-4 py-3 font-medium text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -96,7 +96,7 @@ function LeadsList() {
               ) : (
                 filteredLeads.map((lead) => (
                   <tr key={lead._id} className="hover:bg-white/50 transition-colors group">
-                    <td className="p-4">
+                    <td className="px-4 py-2">
                       <div className="font-medium text-slate-900">{lead.name}</div>
                       {lead.followupDate && (
                         <div className="text-xs text-orange-400 mt-1 flex items-center gap-1">
@@ -105,7 +105,7 @@ function LeadsList() {
                         </div>
                       )}
                     </td>
-                    <td className="p-4 text-slate-700">{lead.mobile}</td>
+                    <td className="px-4 py-2 text-slate-700">{lead.mobile}</td>
                     <td 
                       className="p-4 text-cyan-400 cursor-pointer hover:underline" 
                       onClick={() => alert(`Full Address:\n${lead.address || 'No address provided'}`)}
@@ -113,23 +113,23 @@ function LeadsList() {
                     >
                       {extractCity(lead.address)}
                     </td>
-                    <td className="p-4">
+                    <td className="px-4 py-2">
                       <span className={`badge badge-${lead.type?.toLowerCase() || 'cold'}`}>
                         {lead.type}
                       </span>
                     </td>
-                    <td className="p-4 text-sm text-slate-500">{lead.source}</td>
-                    <td className="p-4">
+                    <td className="px-4 py-2 text-sm text-slate-500">{lead.source}</td>
+                    <td className="px-4 py-2">
                       <span className="text-sm px-2 py-1 bg-slate-100 rounded text-slate-800">
                         {lead.status}
                       </span>
                     </td>
-                    <td className="p-4 text-sm text-slate-500 max-w-xs truncate">
+                    <td className="px-4 py-2 text-sm text-slate-500 max-w-xs truncate">
                       {lead.callLogs && lead.callLogs.length > 0 
                         ? lead.callLogs[lead.callLogs.length - 1].note 
                         : 'No notes yet'}
                     </td>
-                    <td className="p-4">
+                    <td className="px-4 py-2">
                       <button 
                         onClick={() => setViewLogsLead(lead)}
                         className="flex items-center gap-1.5 text-xs bg-white hover:bg-slate-100 text-cyan-400 px-3 py-1.5 rounded border border-slate-300 transition-colors"
@@ -138,7 +138,7 @@ function LeadsList() {
                         View Logs ({lead.callLogs ? lead.callLogs.length : 0})
                       </button>
                     </td>
-                    <td className="p-4 text-right">
+                    <td className="px-4 py-2 text-right">
                       <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                         <a 
                           href={`https://wa.me/91${lead.mobile}`} 
