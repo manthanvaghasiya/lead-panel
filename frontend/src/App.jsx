@@ -74,7 +74,7 @@ function Layout({ children }) {
         <div className="p-4 border-t border-slate-800/80 bg-slate-900/50">
           <div className="flex items-center gap-3 p-2 rounded-xl hover:bg-slate-800 transition-all duration-200 cursor-pointer group">
             <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center shrink-0 border-2 border-slate-700 group-hover:border-slate-500 transition-colors overflow-hidden">
-              <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Admin&backgroundColor=1e293b" alt="Admin" className="w-full h-full object-cover" />
+              <img src="/IMG_20251110_151125[1].jpg" alt="Admin" className="w-full h-full object-cover" />
             </div>
             <div className="hidden md:block flex-1 min-w-0">
               <p className="text-sm font-semibold text-slate-200 truncate">Admin User</p>
