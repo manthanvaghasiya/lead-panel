@@ -83,7 +83,8 @@ function LeadDetail() {
       setLead(res.data);
     } catch (e) {
       console.error(e);
-      if (e.response?.status === 429) {
+      const isRateLimit = e.response?.status === 429 || e.response?.data?.message?.includes('429') || e.response?.data?.message?.includes('quota');
+      if (isRateLimit) {
         alert('Google API Rate Limit Reached! The free tier allows 15 requests per minute. Please wait 30 seconds and try again.');
       } else {
         alert('Failed to extract social profiles. Make sure API key is valid.');
