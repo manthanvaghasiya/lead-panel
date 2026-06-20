@@ -85,9 +85,12 @@ function LeadDetail() {
       console.error(e);
       const isRateLimit = e.response?.status === 429 || e.response?.data?.message?.includes('429') || e.response?.data?.message?.includes('quota');
       if (isRateLimit) {
-        alert('Google API Rate Limit Reached! The free tier allows 15 requests per minute. Please wait 30 seconds and try again.');
+        const errorMsg = e.response?.data?.message || '';
+        const waitTimeMatch = errorMsg.match(/Please retry in (.*?)\./);
+        const waitTime = waitTimeMatch ? waitTimeMatch[1] : 'some time';
+        alert(`Google API Quota Reached!\n\nGoogle says: "You exceeded your current quota."\n\nGoogle's strict rule: Please wait ${waitTime} before trying again.\n\n(If it continues failing after waiting, your Google Cloud Free Tier daily limit of 1500 requests is permanently exhausted for today).`);
       } else {
-        alert('Failed to extract social profiles. Make sure API key is valid.');
+        alert(`API Error: ${e.response?.data?.message || 'Make sure API key is valid.'}`);
       }
     } finally {
       setExtractingSocials(false);
