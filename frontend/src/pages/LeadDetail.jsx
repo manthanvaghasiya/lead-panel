@@ -153,42 +153,44 @@ function LeadDetail() {
     <div className="max-w-7xl mx-auto flex flex-col gap-6 pb-12">
       
       {/* 1. HERO HEADER */}
-      <div className="bg-white border border-border rounded-xl shadow-sm p-6 flex flex-col md:flex-row gap-6 items-start md:items-center relative overflow-hidden">
+      <div className="bg-white border border-border rounded-xl shadow-sm p-5 md:p-6 flex flex-col md:flex-row gap-5 md:gap-6 items-start md:items-center relative overflow-hidden">
         {/* Subtle Background Accent */}
         <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 blur-[80px] rounded-full pointer-events-none"></div>
 
-        <button onClick={() => navigate('/leads')} className="p-2 bg-slate-50 border border-slate-200 text-slate-500 rounded-lg hover:bg-slate-100 hover:text-slate-800 transition-colors shrink-0 z-10">
-          <ArrowLeft size={20} />
-        </button>
+        <div className="flex items-start md:items-center gap-4 w-full md:w-auto flex-1 z-10">
+          <button onClick={() => navigate('/leads')} className="mt-1 md:mt-0 p-2 bg-slate-50 border border-slate-200 text-slate-500 rounded-lg hover:bg-slate-100 hover:text-slate-800 transition-colors shrink-0">
+            <ArrowLeft size={20} />
+          </button>
 
-        <div className="flex items-center gap-5 flex-1 z-10">
-          <div className="w-16 h-16 rounded-full bg-indigo-50 border border-indigo-100 text-primary flex items-center justify-center text-2xl font-bold shadow-sm shrink-0">
-            {lead.name.charAt(0).toUpperCase()}
-          </div>
-          <div className="flex flex-col">
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">{lead.name}</h1>
-            <div className="flex items-center gap-3 mt-1.5 text-sm font-medium text-slate-500 flex-wrap">
-              {lead.businessType && (
-                <>
-                  <span className="flex items-center gap-1.5 text-slate-700">
-                    <Briefcase size={14} className="text-slate-400" />
-                    {lead.businessType}
-                  </span>
-                  <span className="text-slate-300">•</span>
-                </>
-              )}
-              <span className="flex items-center gap-1.5 text-slate-700">
-                <MapPin size={14} className="text-slate-400" />
-                {lead.city || (lead.address ? lead.address.split(/[,|]/)[0].trim() : 'Location Unknown')}
-              </span>
+          <div className="flex items-center gap-4 md:gap-5 flex-1 min-w-0">
+            <div className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-indigo-50 border border-indigo-100 text-primary flex items-center justify-center text-xl md:text-2xl font-bold shadow-sm shrink-0">
+              {lead.name.charAt(0).toUpperCase()}
+            </div>
+            <div className="flex flex-col min-w-0">
+              <h1 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight truncate">{lead.name}</h1>
+              <div className="flex items-center gap-2 md:gap-3 mt-1 text-xs md:text-sm font-medium text-slate-500 flex-wrap">
+                {lead.businessType && (
+                  <>
+                    <span className="flex items-center gap-1 text-slate-700 truncate">
+                      <Briefcase size={14} className="text-slate-400 shrink-0" />
+                      <span className="truncate max-w-[100px] sm:max-w-none">{lead.businessType}</span>
+                    </span>
+                    <span className="text-slate-300 hidden sm:inline">•</span>
+                  </>
+                )}
+                <span className="flex items-center gap-1 text-slate-700 truncate">
+                  <MapPin size={14} className="text-slate-400 shrink-0" />
+                  <span className="truncate max-w-[120px] sm:max-w-none">{lead.city || (lead.address ? lead.address.split(/[,|]/)[0].trim() : 'Location Unknown')}</span>
+                </span>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto z-10 border-t border-slate-100 pt-4 md:pt-0 md:border-none">
+        <div className="grid grid-cols-2 md:flex md:flex-wrap md:items-center gap-2 md:gap-3 w-full md:w-auto z-10 border-t border-slate-100 pt-4 md:pt-0 md:border-none">
           <button 
             onClick={() => setIsUpdateModalOpen(true)}
-            className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-800 text-white rounded-lg font-medium shadow-sm hover:bg-slate-900 transition-colors"
+            className="col-span-2 md:col-span-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-800 text-white rounded-lg font-medium shadow-sm hover:bg-slate-900 transition-colors"
           >
             <Edit size={16} />
             <span>Edit Profile</span>
@@ -197,14 +199,14 @@ function LeadDetail() {
             href={`https://wa.me/91${lead.mobile}`} 
             target="_blank" 
             rel="noreferrer"
-            className="flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 bg-[#25D366] text-white rounded-lg font-medium shadow-sm hover:bg-[#128C7E] transition-colors"
+            className="flex items-center justify-center gap-2 px-3 sm:px-5 py-2.5 bg-[#25D366] text-white rounded-lg font-medium shadow-sm hover:bg-[#128C7E] transition-colors"
           >
             <MessageSquare size={16} />
             <span>WhatsApp</span>
           </a>
           <a 
             href={`tel:${lead.mobile}`} 
-            className="flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-lg font-medium shadow-sm hover:bg-slate-50 transition-colors"
+            className="flex items-center justify-center gap-2 px-3 sm:px-5 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-lg font-medium shadow-sm hover:bg-slate-50 transition-colors"
           >
             <Phone size={16} />
             <span>Call</span>
@@ -329,7 +331,7 @@ function LeadDetail() {
 
           {/* Web Presence Panel */}
           <div className="bg-white border border-border rounded-xl shadow-sm overflow-hidden mt-6">
-            <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+            <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row sm:justify-between items-start sm:items-center gap-3 sm:gap-0">
               <h3 className="font-semibold text-slate-800 flex items-center gap-2">
                 <Globe size={16} className="text-blue-500" />
                 Web Presence
@@ -337,7 +339,7 @@ function LeadDetail() {
               <button 
                 onClick={handleExtractSocials}
                 disabled={extractingSocials}
-                className="flex items-center gap-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 px-2.5 py-1 rounded border border-blue-200 text-[10px] font-bold uppercase tracking-wider transition-colors disabled:opacity-50"
+                className="w-full sm:w-auto flex justify-center items-center gap-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 px-3 py-1.5 rounded border border-blue-200 text-[10px] font-bold uppercase tracking-wider transition-colors disabled:opacity-50"
               >
                 {extractingSocials ? <Activity size={12} className="animate-spin" /> : <Sparkles size={12} />}
                 {extractingSocials ? 'Scanning...' : 'AI Search Web'}
@@ -424,7 +426,7 @@ function LeadDetail() {
             <div className="absolute -top-20 -right-20 w-64 h-64 bg-purple-500/20 blur-[80px] rounded-full pointer-events-none"></div>
             <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-cyan-500/10 blur-[80px] rounded-full pointer-events-none"></div>
 
-            <div className="p-5 border-b border-indigo-500/20 flex items-center justify-between relative z-10 bg-black/10">
+            <div className="p-4 sm:p-5 border-b border-indigo-500/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 relative z-10 bg-black/10">
               <h3 className="font-medium text-indigo-50 flex items-center gap-2">
                 <BrainCircuit size={18} className="text-purple-400"/> 
                 Lead AI Copilot
@@ -432,7 +434,7 @@ function LeadDetail() {
               <button 
                 onClick={generateAiInsight}
                 disabled={loadingAi}
-                className="flex items-center gap-2 bg-white/10 hover:bg-white/20 border border-white/10 text-white px-3 py-1.5 rounded-lg text-xs font-medium backdrop-blur-sm transition-all disabled:opacity-50"
+                className="w-full sm:w-auto flex justify-center items-center gap-2 bg-white/10 hover:bg-white/20 border border-white/10 text-white px-4 sm:px-3 py-2 sm:py-1.5 rounded-lg text-xs font-medium backdrop-blur-sm transition-all disabled:opacity-50"
               >
                 <Sparkles size={14} className="text-cyan-300" />
                 {loadingAi ? 'Analyzing Profile...' : 'Generate Insight'}
