@@ -356,7 +356,9 @@ function LeadDetail() {
                     <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Rating</span>
                     {lead.socials?.rating ? (
                       <div className="flex items-baseline gap-1">
-                        <span className="font-black text-xl text-slate-800">{lead.socials.rating}</span>
+                        <span className="font-black text-xl text-slate-800">
+                          {lead.socials.rating.replace(/(\/.*|out of.*)/gi, '').trim()}
+                        </span>
                         <span className="text-sm font-semibold text-amber-600">/ 5</span>
                       </div>
                     ) : (
