@@ -546,6 +546,8 @@ function UpdateLeadModal({ lead, onClose, onSuccess }) {
         name: data.name || prev.name,
         mobile: data.mobile || prev.mobile,
         address: data.address || prev.address,
+        city: data.city || prev.city,
+        businessType: data.businessType || prev.businessType,
         type: ['Hot', 'Warm', 'Cold'].includes(data.type) ? data.type : prev.type,
         source: ['Website', 'CRM', 'Website+CRM', 'Other'].includes(data.source) ? data.source : prev.source,
         status: ['Pending', 'In Process', 'Send Detail', 'Follow-up Letter', 'Contacted'].includes(data.status) ? data.status : prev.status

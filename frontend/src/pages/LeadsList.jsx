@@ -120,11 +120,11 @@ function LeadsList() {
                       <div className="flex flex-col">
                         <span className="font-medium text-slate-700">{lead.mobile}</span>
                         <span 
-                          className="text-xs text-cyan-600 cursor-pointer hover:underline truncate max-w-[150px]"
+                          className="text-xs text-cyan-600 cursor-pointer hover:underline truncate max-w-[150px] flex items-center gap-1"
                           onClick={() => alert(`Full Address:\n${lead.address || 'No address provided'}`)}
                           title={lead.address || 'No address'}
                         >
-                          {extractCity(lead.address)}
+                          {lead.city || 'No City'}
                         </span>
                       </div>
                     </td>
@@ -240,7 +240,7 @@ function LeadsList() {
 
 function AddLeadModal({ onClose, onSuccess }) {
   const [formData, setFormData] = useState({
-    name: '', mobile: '', address: '', source: 'Website', type: 'Cold', status: 'Pending'
+    name: '', mobile: '', address: '', city: '', businessType: '', source: 'Website', type: 'Cold', status: 'Pending'
   });
   const [loading, setLoading] = useState(false);
   const [magicText, setMagicText] = useState('');
@@ -275,6 +275,8 @@ function AddLeadModal({ onClose, onSuccess }) {
         name: data.name || prev.name,
         mobile: data.mobile || prev.mobile,
         address: data.address || prev.address,
+        city: data.city || prev.city,
+        businessType: data.businessType || prev.businessType,
         type: ['Hot', 'Warm', 'Cold'].includes(data.type) ? data.type : prev.type,
         source: ['Website', 'CRM', 'Website+CRM', 'Other'].includes(data.source) ? data.source : prev.source,
         status: ['Pending', 'In Process', 'Send Detail', 'Follow-up Letter', 'Contacted'].includes(data.status) ? data.status : prev.status
@@ -383,12 +385,21 @@ function AddLeadModal({ onClose, onSuccess }) {
               <label className="block text-xs uppercase tracking-wider text-slate-500 mb-1.5">Mobile</label>
               <input required type="text" className="input-field" value={formData.mobile} onChange={e => setFormData({...formData, mobile: e.target.value})} />
             </div>
-          </div>
-          <div>
-            <label className="block text-xs uppercase tracking-wider text-slate-500 mb-1.5">Address</label>
-            <input type="text" className="input-field" value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} placeholder="e.g. Surat, Gujarat" />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs uppercase tracking-wider text-slate-500 mb-1.5">Business Type</label>
+                <input type="text" className="input-field" value={formData.businessType} onChange={e => setFormData({...formData, businessType: e.target.value})} />
+              </div>
+              <div>
+                <label className="block text-xs uppercase tracking-wider text-slate-500 mb-1.5">City</label>
+                <input type="text" className="input-field" value={formData.city} onChange={e => setFormData({...formData, city: e.target.value})} placeholder="e.g. Surat" />
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs uppercase tracking-wider text-slate-500 mb-1.5">Full Address</label>
+              <input type="text" className="input-field" value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} placeholder="e.g. 123 Main G.T Road" />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs uppercase tracking-wider text-slate-500 mb-1.5">Type</label>
               <select className="input-field" value={formData.type} onChange={e => setFormData({...formData, type: e.target.value})}>
