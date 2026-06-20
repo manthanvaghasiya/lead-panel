@@ -171,12 +171,12 @@ function ImportExport() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto flex flex-col gap-6">
-      <h1 className="text-2xl font-bold mb-2">Import / Export Data</h1>
+    <div className="flex flex-col gap-6 max-w-7xl mx-auto animate-fade-in-up">
+      <h1 className="text-3xl font-display font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-300">Import / Export</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Import Section */}
-        <div className="card flex flex-col gap-4">
+        <div className="glass-panel flex flex-col gap-4">
           <div className="flex items-center gap-3 border-b border-border pb-3">
             <div className="p-2 bg-primary/20 text-primary rounded"><Upload size={20} /></div>
             <h2 className="text-lg font-medium">Import Leads</h2>

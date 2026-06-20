@@ -74,8 +74,8 @@ function FollowUps() {
   );
 
   return (
-    <div className="max-w-4xl mx-auto flex flex-col gap-8">
-      <h1 className="text-2xl font-bold mb-2">Follow-ups</h1>
+    <div className="flex flex-col gap-6 max-w-7xl mx-auto animate-fade-in-up">
+      <h1 className="text-3xl font-display font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-300">Follow-ups</h1>
 
       {overdue.length > 0 && (
         <section>

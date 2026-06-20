@@ -44,8 +44,10 @@ function Dashboard() {
   });
 
   return (
-    <div className="flex flex-col gap-6 max-w-6xl mx-auto">
-      <h1 className="text-2xl font-bold mb-2">Dashboard</h1>
+    <div className="flex flex-col gap-6 max-w-7xl mx-auto">
+      <div className="flex justify-between items-center mb-2">
+        <h1 className="text-3xl font-display font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-300">Dashboard</h1>
+      </div>
 
       {/* Overdue Alerts */}
       {overdueFollowUps.length > 0 && (
@@ -67,67 +69,74 @@ function Dashboard() {
       )}
 
       {/* Top Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="card bg-gradient-to-br from-surface to-slate-800">
-          <div className="flex justify-between items-start">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+        <div className="glass-panel p-6 relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/20 rounded-full blur-3xl -mr-10 -mt-10 group-hover:bg-indigo-500/30 transition-all duration-500"></div>
+          <div className="flex justify-between items-start relative z-10">
             <div>
-              <p className="text-xs uppercase tracking-wider text-gray-400 mb-1">Total Leads</p>
-              <h3 className="text-3xl font-bold">{totalLeads}</h3>
+              <p className="text-[11px] uppercase tracking-widest text-gray-400 mb-1.5 font-bold">Total Leads</p>
+              <h3 className="text-4xl font-display font-bold text-transparent bg-clip-text bg-gradient-to-br from-white to-gray-400">{totalLeads}</h3>
             </div>
-            <div className="p-2 bg-primary/20 text-primary rounded-lg"><Users size={20} /></div>
+            <div className="p-3 bg-indigo-500/10 text-indigo-400 rounded-2xl shadow-[0_0_15px_rgba(99,102,241,0.2)]"><Users size={22} /></div>
           </div>
         </div>
-        <div className="card bg-gradient-to-br from-surface to-slate-800 border-l-4 border-l-hot">
-          <div className="flex justify-between items-start">
+        <div className="glass-panel p-6 relative overflow-hidden group border-l-4 border-l-red-500">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/20 rounded-full blur-3xl -mr-10 -mt-10 group-hover:bg-red-500/30 transition-all duration-500"></div>
+          <div className="flex justify-between items-start relative z-10">
             <div>
-              <p className="text-xs uppercase tracking-wider text-gray-400 mb-1">Hot Leads</p>
-              <h3 className="text-3xl font-bold">{hotLeads}</h3>
+              <p className="text-[11px] uppercase tracking-widest text-red-400 mb-1.5 font-bold">Hot Leads</p>
+              <h3 className="text-4xl font-display font-bold text-transparent bg-clip-text bg-gradient-to-br from-white to-red-100">{hotLeads}</h3>
             </div>
-            <div className="p-2 bg-hot/20 text-hot rounded-lg"><TrendingUp size={20} /></div>
+            <div className="p-3 bg-red-500/10 text-red-400 rounded-2xl shadow-[0_0_15px_rgba(239,68,68,0.2)]"><TrendingUp size={22} /></div>
           </div>
         </div>
-        <div className="card bg-gradient-to-br from-surface to-slate-800 border-l-4 border-l-warm">
-          <div className="flex justify-between items-start">
+        <div className="glass-panel p-6 relative overflow-hidden group border-l-4 border-l-amber-500">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/20 rounded-full blur-3xl -mr-10 -mt-10 group-hover:bg-amber-500/30 transition-all duration-500"></div>
+          <div className="flex justify-between items-start relative z-10">
             <div>
-              <p className="text-xs uppercase tracking-wider text-gray-400 mb-1">Warm Leads</p>
-              <h3 className="text-3xl font-bold">{warmLeads}</h3>
+              <p className="text-[11px] uppercase tracking-widest text-amber-400 mb-1.5 font-bold">Warm Leads</p>
+              <h3 className="text-4xl font-display font-bold text-transparent bg-clip-text bg-gradient-to-br from-white to-amber-100">{warmLeads}</h3>
             </div>
-            <div className="p-2 bg-warm/20 text-warm rounded-lg"><PhoneCall size={20} /></div>
+            <div className="p-3 bg-amber-500/10 text-amber-400 rounded-2xl shadow-[0_0_15px_rgba(245,158,11,0.2)]"><PhoneCall size={22} /></div>
           </div>
         </div>
-        <div className="card bg-gradient-to-br from-surface to-slate-800 border-l-4 border-l-won">
-          <div className="flex justify-between items-start">
+        <div className="glass-panel p-6 relative overflow-hidden group border-l-4 border-l-emerald-500">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/20 rounded-full blur-3xl -mr-10 -mt-10 group-hover:bg-emerald-500/30 transition-all duration-500"></div>
+          <div className="flex justify-between items-start relative z-10">
             <div>
-              <p className="text-xs uppercase tracking-wider text-gray-400 mb-1">Total Won</p>
-              <h3 className="text-3xl font-bold">{wonLeads}</h3>
+              <p className="text-[11px] uppercase tracking-widest text-emerald-400 mb-1.5 font-bold">Total Won</p>
+              <h3 className="text-4xl font-display font-bold text-transparent bg-clip-text bg-gradient-to-br from-white to-emerald-100">{wonLeads}</h3>
             </div>
-            <div className="p-2 bg-won/20 text-won rounded-lg"><CheckCircle size={20} /></div>
+            <div className="p-3 bg-emerald-500/10 text-emerald-400 rounded-2xl shadow-[0_0_15px_rgba(16,185,129,0.2)]"><CheckCircle size={22} /></div>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-2">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-4">
         {/* Today's Follow-ups */}
-        <div className="card flex flex-col h-[400px]">
-          <div className="flex justify-between items-center mb-4 pb-3 border-b border-border">
-            <h3 className="font-medium flex items-center gap-2">
-              <Clock size={18} className="text-primary" />
+        <div className="glass-panel flex flex-col h-[420px] p-0 overflow-hidden">
+          <div className="flex justify-between items-center p-6 border-b border-white/5 bg-black/10 backdrop-blur-md">
+            <h3 className="font-display font-semibold flex items-center gap-2 text-lg">
+              <Clock size={20} className="text-purple-400" />
               Today's Follow-ups
             </h3>
-            <span className="badge bg-slate-700 text-gray-200">{todayFollowUps.length}</span>
+            <span className="badge bg-purple-500/20 text-purple-300 border border-purple-500/30">{todayFollowUps.length}</span>
           </div>
-          <div className="flex-1 overflow-y-auto pr-2 space-y-3">
+          <div className="flex-1 overflow-y-auto p-4 space-y-3">
             {todayFollowUps.length === 0 ? (
-              <div className="text-center py-10 text-gray-500">No follow-ups scheduled for today.</div>
+              <div className="text-center py-10 text-gray-500 flex flex-col items-center">
+                <CheckCircle size={32} className="text-emerald-500/50 mb-3" />
+                No follow-ups scheduled for today!
+              </div>
             ) : (
               todayFollowUps.map(lead => (
-                <Link key={lead._id} to={`/leads/${lead._id}`} className="block bg-surface border border-border p-3 rounded hover:border-primary/50 transition-colors group">
+                <Link key={lead._id} to={`/leads/${lead._id}`} className="block bg-white/5 border border-white/10 p-4 rounded-xl hover:bg-white/10 hover:border-purple-500/50 transition-all group">
                   <div className="flex justify-between items-start">
-                    <div className="font-medium group-hover:text-primary transition-colors">{lead.name}</div>
-                    <span className={`badge badge-${lead.type?.toLowerCase()}`}>{lead.type}</span>
+                    <div className="font-semibold text-white group-hover:text-purple-300 transition-colors">{lead.name}</div>
+                    <span className={`badge ${lead.type === 'Hot' ? 'badge-hot' : lead.type === 'Warm' ? 'badge-warm' : 'badge-cold'}`}>{lead.type}</span>
                   </div>
-                  <div className="text-sm text-gray-400 mt-1">{lead.mobile}</div>
-                  <div className="text-xs text-gray-500 mt-2 truncate">
+                  <div className="text-sm font-mono text-gray-400 mt-1">{lead.mobile}</div>
+                  <div className="text-xs text-gray-500 mt-3 truncate bg-black/20 p-2 rounded-lg border border-white/5">
                     {lead.callLogs?.length > 0 ? lead.callLogs[lead.callLogs.length - 1].note : 'No previous notes'}
                   </div>
                 </Link>
@@ -136,24 +145,24 @@ function Dashboard() {
           </div>
         </div>
 
-        {/* Recent Activity (Placeholder for now, just shows recent leads) */}
-        <div className="card flex flex-col h-[400px]">
-          <div className="flex justify-between items-center mb-4 pb-3 border-b border-border">
-            <h3 className="font-medium">Recently Added Leads</h3>
-            <Link to="/leads" className="text-sm text-primary hover:underline flex items-center gap-1">View all <ArrowRight size={14} /></Link>
+        {/* Recent Activity */}
+        <div className="glass-panel flex flex-col h-[420px] p-0 overflow-hidden">
+          <div className="flex justify-between items-center p-6 border-b border-white/5 bg-black/10 backdrop-blur-md">
+            <h3 className="font-display font-semibold text-lg">Recently Added Leads</h3>
+            <Link to="/leads" className="text-xs text-purple-400 hover:text-purple-300 font-semibold uppercase tracking-wider flex items-center gap-1 transition-colors">View all <ArrowRight size={14} /></Link>
           </div>
-          <div className="flex-1 overflow-y-auto pr-2 space-y-3">
-            {leads.slice(0, 5).map(lead => (
-              <div key={lead._id} className="flex items-center gap-3 p-2 hover:bg-slate-800/50 rounded transition-colors">
-                <div className="w-8 h-8 rounded bg-slate-700 flex items-center justify-center shrink-0">
-                  <span className="text-xs font-bold text-gray-300">{lead.name.charAt(0)}</span>
+          <div className="flex-1 overflow-y-auto p-4 space-y-2">
+            {leads.slice(0, 7).map(lead => (
+              <div key={lead._id} className="flex items-center gap-4 p-3 hover:bg-white/5 rounded-xl transition-all border border-transparent hover:border-white/10 group cursor-pointer">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-slate-700 to-slate-800 border border-white/10 flex items-center justify-center shrink-0 shadow-inner group-hover:from-purple-600 group-hover:to-indigo-600 transition-colors">
+                  <span className="text-sm font-bold text-white">{lead.name.charAt(0)}</span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium truncate">{lead.name}</div>
-                  <div className="text-xs text-gray-400 truncate">{lead.source} • {new Date(lead.createdAt).toLocaleDateString()}</div>
+                  <div className="text-sm font-medium text-gray-200 truncate group-hover:text-white transition-colors">{lead.name}</div>
+                  <div className="text-xs text-gray-500 truncate">{lead.source} • {new Date(lead.createdAt).toLocaleDateString()}</div>
                 </div>
-                <div className={`text-xs px-2 py-1 rounded bg-${lead.type?.toLowerCase()}/20 text-${lead.type?.toLowerCase()}`}>
-                  {lead.status}
+                <div className="text-right">
+                  <div className="text-xs font-semibold text-gray-400">{lead.status}</div>
                 </div>
               </div>
             ))}

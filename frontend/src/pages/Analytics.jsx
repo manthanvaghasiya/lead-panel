@@ -59,7 +59,7 @@ function Analytics() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         
         {/* Lead Types Chart */}
-        <div className="card">
+        <div className="glass-panel">
           <h3 className="font-medium mb-4 text-center">Lead Temperature</h3>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
