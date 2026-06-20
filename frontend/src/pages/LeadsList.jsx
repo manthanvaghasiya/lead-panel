@@ -74,11 +74,11 @@ function LeadsList() {
           <table className="w-full text-left border-collapse table-fixed">
             <thead className="sticky top-0 z-10">
               <tr className="border-b border-border bg-slate-50 text-xs uppercase tracking-wider text-slate-500 shadow-sm">
-                <th className="px-4 py-4 font-semibold w-[25%]">Lead Profile</th>
-                <th className="px-4 py-4 font-semibold w-[20%]">Contact Info</th>
+                <th className="px-4 py-4 font-semibold w-[22%]">Lead Profile</th>
+                <th className="px-4 py-4 font-semibold w-[14%]">Contact Info</th>
                 <th className="px-4 py-4 font-semibold w-[10%]">Type</th>
                 <th className="px-4 py-4 font-semibold w-[12%]">Status</th>
-                <th className="px-4 py-4 font-semibold w-[23%]">Latest Activity</th>
+                <th className="px-4 py-4 font-semibold w-[32%]">Latest Activity</th>
                 <th className="px-4 py-4 font-semibold w-[10%] text-right">Actions</th>
               </tr>
             </thead>
