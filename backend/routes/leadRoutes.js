@@ -10,30 +10,40 @@ router.post('/ai-extract', async (req, res) => {
       return res.status(500).json({ message: 'Gemini API key is missing' });
     }
 
-    const { text } = req.body;
-    if (!text) return res.status(400).json({ message: 'Text input is required' });
+    const { text, imageBase64, mimeType } = req.body;
+    if (!text && !imageBase64) return res.status(400).json({ message: 'Text or image input is required' });
 
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
     const prompt = `
-      You are an expert sales assistant. A salesperson has dictated or typed some messy notes about a new lead.
-      Extract the structured lead data from this text.
+      You are an expert sales assistant. A salesperson has provided an image (like a business card) and/or dictated some messy notes about a new lead.
+      Extract the structured lead data from this.
       Return ONLY a JSON object with exactly these keys:
       {
         "name": "Extracted name or empty string if not found",
         "mobile": "Extracted mobile number (digits only) or empty string",
         "address": "Extracted city/address or empty string",
         "type": "Must be 'Hot', 'Warm', or 'Cold' based on their interest level. Default to 'Cold'.",
-        "source": "Must be 'Website', 'CRM', 'Website+CRM', or 'Other'. Guess based on text, default to 'Other'.",
-        "status": "Must be 'Pending', 'In Process', 'Send Detail', 'Follow-up Letter', 'Contacted'. Guess based on text, default to 'Pending'."
+        "source": "Must be 'Website', 'CRM', 'Website+CRM', or 'Other'. Guess based on text/image, default to 'Other'.",
+        "status": "Must be 'Pending', 'In Process', 'Send Detail', 'Follow-up Letter', 'Contacted'. Guess based on text/image, default to 'Pending'."
       }
       Do not include any markdown blocks like \`\`\`json. Just the raw JSON.
 
-      Messy Notes: "${text}"
+      Messy Notes: "${text || 'No text provided'}"
     `;
 
-    const result = await model.generateContent(prompt);
+    const parts = [prompt];
+    if (imageBase64 && mimeType) {
+      parts.push({
+        inlineData: {
+          data: imageBase64,
+          mimeType: mimeType
+        }
+      });
+    }
+
+    const result = await model.generateContent(parts);
     let responseText = result.response.text().trim();
     
     if (responseText.startsWith('\`\`\`json')) {

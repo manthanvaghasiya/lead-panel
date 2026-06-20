@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Plus, Filter, MoreHorizontal, Phone, X, FileText, Sparkles } from 'lucide-react';
+import { Search, Plus, Filter, MoreHorizontal, Phone, X, FileText, Sparkles, ImagePlus } from 'lucide-react';
 import { getLeads, createLead, extractLeadFromText } from '../api/apiClient';
 
 const extractCity = (address) => {
@@ -194,12 +194,31 @@ function AddLeadModal({ onClose, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [magicText, setMagicText] = useState('');
   const [extracting, setExtracting] = useState(false);
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => setImagePreview(reader.result);
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleMagicFill = async () => {
-    if (!magicText.trim()) return;
+    if (!magicText.trim() && !imageFile) return;
     setExtracting(true);
     try {
-      const { data } = await extractLeadFromText(magicText);
+      let imageBase64 = null;
+      let mimeType = null;
+      if (imageFile && imagePreview) {
+        imageBase64 = imagePreview.split(',')[1];
+        mimeType = imageFile.type;
+      }
+
+      const { data } = await extractLeadFromText(magicText, imageBase64, mimeType);
       setFormData(prev => ({
         ...prev,
         name: data.name || prev.name,
@@ -210,6 +229,8 @@ function AddLeadModal({ onClose, onSuccess }) {
         status: ['Pending', 'In Process', 'Send Detail', 'Follow-up Letter', 'Contacted'].includes(data.status) ? data.status : prev.status
       }));
       setMagicText('');
+      setImageFile(null);
+      setImagePreview(null);
     } catch (err) {
       console.error(err);
       alert('Failed to extract data. Make sure AI is configured properly.');
@@ -245,21 +266,50 @@ function AddLeadModal({ onClose, onSuccess }) {
           
           {/* AI Magic Fill Section */}
           <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-3">
-            <label className="block text-xs uppercase tracking-wider text-purple-400 font-semibold mb-2 flex items-center gap-1">
-              <Sparkles size={14}/> AI Magic Fill (Dictate or Type)
-            </label>
+            <div className="flex justify-between items-center mb-2">
+              <label className="text-xs uppercase tracking-wider text-purple-400 font-semibold flex items-center gap-1">
+                <Sparkles size={14}/> AI Magic Fill
+              </label>
+              
+              {/* Image Upload Button */}
+              <label className="cursor-pointer text-purple-400 hover:text-purple-300 transition-colors flex items-center gap-1 text-xs">
+                <ImagePlus size={16} /> 
+                <span>Upload Photo</span>
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  className="hidden" 
+                  onChange={handleImageChange}
+                />
+              </label>
+            </div>
+
+            {/* Image Preview */}
+            {imagePreview && (
+              <div className="relative inline-block mb-2">
+                <img src={imagePreview} alt="Preview" className="h-16 rounded border border-purple-500/30 object-cover" />
+                <button 
+                  type="button" 
+                  onClick={() => { setImageFile(null); setImagePreview(null); }}
+                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-0.5 hover:bg-red-600 shadow-md"
+                >
+                  <X size={12} />
+                </button>
+              </div>
+            )}
+
             <div className="flex flex-col sm:flex-row gap-2">
               <textarea 
                 rows="2"
                 className="input-field text-sm resize-none flex-1"
-                placeholder="e.g. 'Rahul from Surat, 9988776655, needs a website, hot lead'"
+                placeholder="e.g. 'Rahul from Surat, 9988776655' or just upload a photo!"
                 value={magicText}
                 onChange={e => setMagicText(e.target.value)}
               />
               <button 
                 type="button"
                 onClick={handleMagicFill}
-                disabled={extracting || !magicText.trim()}
+                disabled={extracting || (!magicText.trim() && !imageFile)}
                 className="bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors flex items-center justify-center shrink-0"
               >
                 {extracting ? 'Extracting...' : '✨ Fill Form'}
