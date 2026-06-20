@@ -270,7 +270,6 @@ function LeadsList() {
           ))
         )}
       </div>
-    </div>
 
       {/* Add Lead Modal */}
       {isAddModalOpen && (
