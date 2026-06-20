@@ -60,7 +60,7 @@ router.post('/ai-extract', async (req, res) => {
 
   } catch (err) {
     console.error('AI Extract Error:', err);
-    res.status(500).json({ message: 'Failed to extract data using AI.' });
+    res.status(err.status || 500).json({ message: err.message || 'Failed to extract data using AI.' });
   }
 });
 
@@ -116,7 +116,7 @@ router.post('/ai-extract-log', async (req, res) => {
 
   } catch (err) {
     console.error('AI Log Extract Error:', err);
-    res.status(500).json({ message: 'Failed to extract log data using AI.' });
+    res.status(err.status || 500).json({ message: err.message || 'Failed to extract log data using AI.' });
   }
 });
 
@@ -177,7 +177,7 @@ router.post('/:id/auto-clean', async (req, res) => {
     res.json(lead);
   } catch (err) {
     console.error('Auto Clean Error:', err);
-    res.status(500).json({ message: err.message });
+    res.status(err.status || 500).json({ message: err.message });
   }
 });
 

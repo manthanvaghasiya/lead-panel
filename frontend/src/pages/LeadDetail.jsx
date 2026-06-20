@@ -109,11 +109,20 @@ function LeadDetail() {
 
       // Auto-clean if missing city or business type
       if (!data.city || !data.businessType) {
-        try {
-          const cleanRes = await autoCleanLead(id);
-          data = cleanRes.data;
-        } catch(e) {
-          console.error("Auto clean failed", e);
+        const cooldown = localStorage.getItem('ai_cooldown_until');
+        if (!cooldown || Date.now() > parseInt(cooldown)) {
+          try {
+            const cleanRes = await autoCleanLead(id);
+            data = cleanRes.data;
+          } catch(e) {
+            console.error("Auto clean failed", e);
+            if (e.response?.status === 429) {
+              // Block background AI tasks for 60 seconds to save quota
+              localStorage.setItem('ai_cooldown_until', Date.now() + 60000);
+            }
+          }
+        } else {
+          console.log("Background AI paused due to rate limit.");
         }
       }
 
