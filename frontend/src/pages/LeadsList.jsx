@@ -385,6 +385,7 @@ function AddLeadModal({ onClose, onSuccess }) {
               <label className="block text-xs uppercase tracking-wider text-slate-500 mb-1.5">Mobile</label>
               <input required type="text" className="input-field" value={formData.mobile} onChange={e => setFormData({...formData, mobile: e.target.value})} />
             </div>
+            </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs uppercase tracking-wider text-slate-500 mb-1.5">Business Type</label>

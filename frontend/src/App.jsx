@@ -22,7 +22,7 @@ function Layout({ children }) {
     <div className="flex h-screen bg-background font-sans text-slate-800">
       {/* Sidebar */}
       <div className="w-16 md:w-64 bg-[#0f172a] border-r border-slate-800 flex flex-col shadow-2xl z-10 transition-all duration-300">
-        
+
         {/* Logo Section */}
         <div className="h-20 flex items-center justify-center md:justify-start md:px-6 border-b border-slate-800/80">
           <img src="/WEBIOX%20LOGO.png" alt="WEBIOX Logo" className="h-10 md:mr-3 shrink-0 object-contain drop-shadow-md" />
@@ -34,29 +34,28 @@ function Layout({ children }) {
           {navItems.map((item) => {
             const Icon = item.icon;
             // Exact match for root, startsWith for other routes
-            const isActive = item.path === '/' 
-              ? location.pathname === '/' 
+            const isActive = item.path === '/'
+              ? location.pathname === '/'
               : location.pathname.startsWith(item.path);
 
             return (
               <Link
                 key={item.path}
                 to={item.path}
-                className={`relative flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-300 group overflow-hidden ${
-                  isActive 
-                    ? 'bg-primary/10 text-primary' 
+                className={`relative flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-300 group overflow-hidden ${isActive
+                    ? 'bg-primary/10 text-primary'
                     : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'
-                }`}
+                  }`}
               >
                 {/* Active Indicator Bar */}
                 {isActive && (
                   <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-r-md shadow-[0_0_10px_rgba(6,182,212,0.8)]" />
                 )}
-                
+
                 <div className={`flex items-center justify-center shrink-0 ${isActive ? 'text-primary' : 'text-slate-400 group-hover:text-slate-300 transition-colors'}`}>
                   <Icon size={20} strokeWidth={isActive ? 2.5 : 2} />
                 </div>
-                
+
                 <span className={`hidden md:block text-sm transition-all duration-200 ${isActive ? 'font-semibold tracking-wide' : 'font-medium'}`}>
                   {item.label}
                 </span>
@@ -78,7 +77,7 @@ function Layout({ children }) {
             </div>
             <div className="hidden md:block flex-1 min-w-0">
               <p className="text-sm font-semibold text-slate-200 truncate">Admin User</p>
-              <p className="text-xs text-slate-500 truncate group-hover:text-slate-400 transition-colors">admin@webiox.com</p>
+              <p className="text-xs text-slate-500 truncate group-hover:text-slate-400 transition-colors">manthanvaghasiya@webiox.tech</p>
             </div>
             <button className="hidden md:flex items-center justify-center w-8 h-8 rounded-lg hover:bg-red-500/10 hover:text-red-400 text-slate-500 transition-colors">
               <LogOut size={18} />
@@ -86,7 +85,7 @@ function Layout({ children }) {
           </div>
         </div>
       </div>
-      
+
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden relative">
         <main className="flex-1 overflow-y-auto p-4 md:p-8">
