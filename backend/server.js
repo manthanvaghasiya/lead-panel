@@ -35,12 +35,21 @@ if (MONGODB_URI) {
   MONGODB_URI = MONGODB_URI.replace(/\?&/, '?').replace(/\?$/, '');
 }
 
-// Connect to MongoDB asynchronously
-mongoose.connect(MONGODB_URI).then(() => {
-  console.log('Connected to MongoDB');
-}).catch((error) => {
-  console.error('Error connecting to MongoDB:', error.message);
+// Middleware to ensure DB connection is ready on every request (crucial for Serverless environments)
+app.use(async (req, res, next) => {
+  if (mongoose.connection.readyState === 1) {
+    return next();
+  }
+  try {
+    await mongoose.connect(MONGODB_URI);
+    console.log('Connected to MongoDB via middleware');
+    next();
+  } catch (error) {
+    console.error('Database connection failed in middleware:', error.message);
+    res.status(500).json({ message: "Database connection failed: " + error.message });
+  }
 });
+
 
 if (process.env.NODE_ENV !== 'production') {
   app.listen(PORT, () => {
