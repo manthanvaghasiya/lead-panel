@@ -232,13 +232,13 @@ function LeadDetail() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="flex flex-col lg:grid lg:grid-cols-3 gap-6">
         
         {/* LEFT COLUMN: 360 Data & Logging */}
-        <div className="lg:col-span-1 flex flex-col gap-6">
+        <div className="contents lg:flex lg:flex-col lg:col-span-1 gap-6">
           
           {/* Intelligence Panel */}
-          <div className="bg-white border border-border rounded-xl shadow-sm overflow-hidden">
+          <div className="bg-white border border-border rounded-xl shadow-sm overflow-hidden order-1 lg:order-none">
             <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
               <h3 className="font-semibold text-slate-800">Lead Intelligence</h3>
               <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border
@@ -360,7 +360,7 @@ function LeadDetail() {
           </div>
 
           {/* Web Presence Panel */}
-          <div className="bg-white border border-border rounded-xl shadow-sm overflow-hidden mt-6">
+          <div className="bg-white border border-border rounded-xl shadow-sm overflow-hidden order-5 lg:order-none">
             <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row sm:justify-between items-start sm:items-center gap-3 sm:gap-0">
               <h3 className="font-semibold text-slate-800 flex items-center gap-2">
                 <Globe size={16} className="text-blue-500" />
@@ -466,10 +466,10 @@ function LeadDetail() {
         </div>
 
         {/* RIGHT COLUMN: AI & Timeline */}
-        <div className="lg:col-span-2 flex flex-col gap-6">
+        <div className="contents lg:flex lg:flex-col lg:col-span-2 gap-6">
           
           {/* AI Insight Section */}
-          <div className="bg-gradient-to-br from-indigo-900 to-slate-900 rounded-xl shadow-lg border border-indigo-500/20 overflow-hidden relative">
+          <div className="bg-gradient-to-br from-indigo-900 to-slate-900 rounded-xl shadow-lg border border-indigo-500/20 overflow-hidden relative order-4 lg:order-none">
             {/* Background Orbs */}
             <div className="absolute -top-20 -right-20 w-64 h-64 bg-purple-500/20 blur-[80px] rounded-full pointer-events-none"></div>
             <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-cyan-500/10 blur-[80px] rounded-full pointer-events-none"></div>
@@ -525,7 +525,7 @@ function LeadDetail() {
           </div>
 
           {/* Activity Timeline */}
-          <div className="bg-white border border-border rounded-xl shadow-sm flex-1 overflow-hidden flex flex-col">
+          <div className="bg-white border border-border rounded-xl shadow-sm flex-1 overflow-hidden flex flex-col order-2 lg:order-none">
             <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
               <h3 className="font-semibold text-slate-800">Interaction Timeline</h3>
               <span className="text-xs font-medium text-slate-500 bg-white border border-slate-200 px-2 py-1 rounded">
@@ -671,7 +671,7 @@ function LeadDetail() {
           </div>
           
           {/* Activity Logger */}
-          <div className="bg-white border border-border rounded-xl shadow-sm overflow-hidden">
+          <div className="bg-white border border-border rounded-xl shadow-sm overflow-hidden order-3 lg:order-none">
             <div className="p-4 border-b border-slate-100 bg-slate-50/50">
               <h3 className="font-semibold text-slate-800 flex items-center gap-2">
                 <Activity size={16} className="text-primary" />
