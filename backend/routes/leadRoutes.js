@@ -236,7 +236,7 @@ router.post('/:id/ai-social-extract', async (req, res) => {
     res.json(lead);
   } catch (err) {
     console.error('AI Social Extract Error:', err);
-    res.status(500).json({ message: err.message });
+    res.status(err.status || 500).json({ message: err.message });
   }
 });
 

@@ -83,7 +83,11 @@ function LeadDetail() {
       setLead(res.data);
     } catch (e) {
       console.error(e);
-      alert('Failed to extract social profiles. Make sure API key is valid.');
+      if (e.response?.status === 429) {
+        alert('Google API Rate Limit Reached! The free tier allows 15 requests per minute. Please wait 30 seconds and try again.');
+      } else {
+        alert('Failed to extract social profiles. Make sure API key is valid.');
+      }
     } finally {
       setExtractingSocials(false);
     }

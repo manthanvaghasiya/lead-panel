@@ -121,11 +121,7 @@ function LeadsList() {
                         <span className="font-medium text-slate-700">
                           {lead.mobile?.length > 10 ? lead.mobile.match(/.{1,10}/g).join(', ') : lead.mobile}
                         </span>
-                        <span 
-                          className="text-xs text-cyan-600 cursor-pointer hover:underline truncate max-w-[150px] flex items-center gap-1"
-                          onClick={() => alert(`Full Address:\n${lead.address || 'No address provided'}`)}
-                          title={lead.address || 'No address'}
-                        >
+                        <span className="text-xs text-slate-500 truncate max-w-[150px] flex items-center gap-1 mt-0.5">
                           {lead.city || 'No City'}
                         </span>
                       </div>
