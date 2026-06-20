@@ -69,17 +69,17 @@ function LeadsList() {
       </div>
 
       {/* Leads Table */}
-      <div className="card flex-1 overflow-hidden flex flex-col p-0">
-        <div className="overflow-x-auto flex-1">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b border-border bg-slate-50 text-xs uppercase tracking-wider text-slate-500">
-                <th className="px-3 py-3 font-semibold w-[25%]">Lead Profile</th>
-                <th className="px-3 py-3 font-semibold w-[18%]">Contact Info</th>
-                <th className="px-3 py-3 font-semibold w-[8%]">Type</th>
-                <th className="px-3 py-3 font-semibold w-[12%]">Status</th>
-                <th className="px-3 py-3 font-semibold min-w-[200px]">Latest Activity</th>
-                <th className="px-3 py-3 font-semibold w-[10%] text-right">Actions</th>
+      <div className="flex-1 flex flex-col -mx-4 sm:mx-0 overflow-hidden">
+        <div className="overflow-y-auto overflow-x-hidden flex-1 bg-white sm:rounded-xl sm:border sm:border-slate-200 shadow-sm">
+          <table className="w-full text-left border-collapse table-fixed">
+            <thead className="sticky top-0 z-10">
+              <tr className="border-b border-border bg-slate-50 text-xs uppercase tracking-wider text-slate-500 shadow-sm">
+                <th className="px-4 py-4 font-semibold w-[25%]">Lead Profile</th>
+                <th className="px-4 py-4 font-semibold w-[20%]">Contact Info</th>
+                <th className="px-4 py-4 font-semibold w-[10%]">Type</th>
+                <th className="px-4 py-4 font-semibold w-[12%]">Status</th>
+                <th className="px-4 py-4 font-semibold w-[23%]">Latest Activity</th>
+                <th className="px-4 py-4 font-semibold w-[10%] text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 bg-white">
