@@ -152,9 +152,13 @@ function Dashboard() {
                   <div className="text-sm font-medium truncate">{lead.name}</div>
                   <div className="text-xs text-slate-500 truncate">{lead.source} • {new Date(lead.createdAt).toLocaleDateString()}</div>
                 </div>
-                <div className={`text-xs px-2 py-1 rounded bg-${lead.type?.toLowerCase()}/20 text-${lead.type?.toLowerCase()}`}>
-                  {lead.status}
-                </div>
+                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border shrink-0
+                  ${lead.status?.toLowerCase() === 'won' ? 'bg-green-50 text-green-700 border-green-200' : 
+                    lead.status?.toLowerCase() === 'lost' ? 'bg-slate-100 text-slate-600 border-slate-200' : 
+                    'bg-cyan-50 text-cyan-700 border-cyan-200'}`}>
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${lead.status?.toLowerCase() === 'won' ? 'bg-green-500' : lead.status?.toLowerCase() === 'lost' ? 'bg-slate-400' : 'bg-cyan-500 animate-pulse'}`}></span>
+                  <span>{lead.status || 'Pending'}</span>
+                </span>
               </div>
             ))}
           </div>

@@ -307,7 +307,7 @@ function LeadsList() {
 
 function AddLeadModal({ onClose, onSuccess }) {
   const [formData, setFormData] = useState({
-    name: '', ownerName: '', mobile: '', address: '', city: '', businessType: '', source: 'Website', type: 'Cold', status: 'Pending'
+    name: '', ownerName: '', mobile: '', address: '', mapsUrl: '', city: '', businessType: '', source: 'Website', type: 'Cold', status: 'Pending'
   });
   const [loading, setLoading] = useState(false);
   const [magicText, setMagicText] = useState('');
@@ -471,6 +471,10 @@ function AddLeadModal({ onClose, onSuccess }) {
             <div>
               <label className="block text-xs uppercase tracking-wider text-slate-500 mb-1.5">Full Address</label>
               <input type="text" className="input-field" value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} placeholder="e.g. 123 Main G.T Road" />
+            </div>
+            <div>
+              <label className="block text-xs uppercase tracking-wider text-slate-500 mb-1.5">Google Maps URL</label>
+              <input type="text" className="input-field" value={formData.mapsUrl} onChange={e => setFormData({...formData, mapsUrl: e.target.value})} placeholder="e.g. https://google.com/maps/..." />
             </div>
             <div className="grid grid-cols-2 gap-4">
             <div>

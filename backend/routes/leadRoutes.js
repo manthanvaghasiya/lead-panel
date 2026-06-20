@@ -290,6 +290,119 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+// Bulk import leads (skipping duplicates based on mobile number)
+router.post('/bulk-import', async (req, res) => {
+  try {
+    const leads = req.body;
+    if (!Array.isArray(leads)) {
+      return res.status(400).json({ message: 'Input data must be an array of leads.' });
+    }
+
+    // Filter out invalid leads (missing name or mobile)
+    const validLeads = leads.filter(l => l.name && l.mobile);
+
+    // Clean and standardize mobile numbers
+    validLeads.forEach(lead => {
+      let cleanMobile = lead.mobile.toString().replace(/\D/g, '');
+      if (cleanMobile.startsWith('91') && cleanMobile.length === 12) {
+        cleanMobile = cleanMobile.substring(2);
+      }
+      if (cleanMobile.startsWith('0')) {
+        cleanMobile = cleanMobile.substring(1);
+      }
+      lead.mobile = cleanMobile || '0000000000';
+    });
+
+    // Get all mobile numbers from incoming list to check database
+    const incomingMobiles = validLeads.map(l => l.mobile);
+
+    // Fetch existing leads with these mobile numbers
+    const existingLeads = await Lead.find({ mobile: { $in: incomingMobiles } });
+    const existingMobiles = new Set(existingLeads.map(l => l.mobile));
+
+    // Filter out leads that already exist in DB or are duplicates within the incoming array
+    const uniqueIncomingLeads = [];
+    const seenIncomingMobiles = new Set();
+
+    for (const lead of validLeads) {
+      const mobileClean = lead.mobile.toString().trim();
+      if (!existingMobiles.has(mobileClean) && !seenIncomingMobiles.has(mobileClean)) {
+        seenIncomingMobiles.add(mobileClean);
+        
+        // Standardize status
+        let standardizedStatus = 'Pending';
+        const rawStatus = (lead.status || '').toLowerCase().trim();
+        if (rawStatus) {
+          if (rawStatus.includes('won') || rawStatus === 'won') {
+            standardizedStatus = 'Won';
+          } else if (rawStatus.includes('lost') || rawStatus.includes('not interested') || rawStatus.includes('closed lost')) {
+            standardizedStatus = 'Lost';
+          } else if (rawStatus.includes('detail') || rawStatus.includes('send detail') || rawStatus.includes('update')) {
+            standardizedStatus = 'Send Detail';
+          } else if (rawStatus.includes('call back') || rawStatus.includes('follow up') || rawStatus.includes('waiting') || rawStatus.includes('in progress') || rawStatus.includes('contacted') || rawStatus.includes('process')) {
+            standardizedStatus = 'In Process';
+          } else if (rawStatus.includes('pending')) {
+            standardizedStatus = 'Pending';
+          } else {
+            standardizedStatus = lead.status.charAt(0).toUpperCase() + lead.status.slice(1);
+          }
+        }
+
+        // Standardize type
+        let standardizedType = 'Cold';
+        const rawType = (lead.type || '').toLowerCase().trim();
+        if (rawType.includes('hot')) {
+          standardizedType = 'Hot';
+        } else if (rawType.includes('warm')) {
+          standardizedType = 'Warm';
+        } else if (rawType.includes('won')) {
+          standardizedType = 'Won';
+        } else if (rawType.includes('lost')) {
+          standardizedType = 'Lost';
+        }
+
+        const structuredLead = {
+          name: lead.name,
+          mobile: mobileClean,
+          source: lead.source || 'Website',
+          type: standardizedType,
+          status: standardizedStatus,
+          businessType: lead.businessType,
+          city: lead.city,
+          address: lead.address,
+          mapsUrl: lead.mapsUrl,
+          socials: {
+            rating: lead.rating || lead.socials?.rating || '',
+            reviews: lead.reviews || lead.socials?.reviews || '',
+            instagram: lead.socials?.instagram || '',
+            facebook: lead.socials?.facebook || '',
+            youtube: lead.socials?.youtube || '',
+            linkedin: lead.socials?.linkedin || ''
+          }
+        };
+        uniqueIncomingLeads.push(structuredLead);
+      }
+    }
+
+    const skippedCount = leads.length - uniqueIncomingLeads.length;
+
+    let importedCount = 0;
+    if (uniqueIncomingLeads.length > 0) {
+      const inserted = await Lead.insertMany(uniqueIncomingLeads);
+      importedCount = inserted.length;
+    }
+
+    res.json({
+      imported: importedCount,
+      skipped: skippedCount
+    });
+
+  } catch (err) {
+    console.error('Bulk Import Error:', err);
+    res.status(500).json({ message: err.message || 'Failed to bulk import leads.' });
+  }
+});
+
 // Create a new lead
 router.post('/', async (req, res) => {
   const lead = new Lead(req.body);
@@ -307,7 +420,7 @@ router.patch('/:id', async (req, res) => {
     const updatedLead = await Lead.findByIdAndUpdate(
       req.params.id,
       req.body,
-      { new: true, runValidators: true }
+      { returnDocument: 'after', runValidators: true }
     );
     if (!updatedLead) return res.status(404).json({ message: 'Lead not found' });
     res.json(updatedLead);

@@ -10,6 +10,7 @@ const apiClient = axios.create({
 export const getLeads = () => apiClient.get('/leads');
 export const getLead = (id) => apiClient.get(`/leads/${id}`);
 export const createLead = (data) => apiClient.post('/leads', data);
+export const bulkImportLeads = (data) => apiClient.post('/leads/bulk-import', data);
 export const updateLead = (id, data) => apiClient.patch(`/leads/${id}`, data);
 export const addCallLog = (id, data) => apiClient.post(`/leads/${id}/call-logs`, data);
 export const getLeadAiInsight = (id) => apiClient.get(`/leads/${id}/ai-insight`);

@@ -1,4 +1,10 @@
 require('dotenv').config();
+const dns = require('dns');
+try {
+  dns.setServers(['8.8.8.8', '1.1.1.1']);
+} catch (e) {
+  console.warn('Failed to set public DNS servers:', e.message);
+}
 const mongoose = require('mongoose');
 const xlsx = require('xlsx');
 const Lead = require('./models/Lead');
@@ -6,13 +12,17 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const run = async () => {
   try {
-    await mongoose.connect(process.env.MONGODB_URI);
+    let URI = process.env.MONGODB_URI;
+    if (!URI && process.env.MONGODB_USERNAME && process.env.MONGODB_PASSWORD) {
+      URI = `mongodb+srv://${encodeURIComponent(process.env.MONGODB_USERNAME)}:${encodeURIComponent(process.env.MONGODB_PASSWORD)}@cluster0.bdba3mi.mongodb.net/?appName=Cluster0`;
+    }
+    await mongoose.connect(URI);
     console.log('Connected to DB');
 
     await Lead.deleteMany({});
     console.log('Deleted all existing leads');
 
-    const workbook = xlsx.readFile('d:\\webiox lead panel\\frontend\\public\\lead data.xlsx');
+    const workbook = xlsx.readFile('d:\\webiox lead panel\\frontend\\public\\lead data - Sheet1.csv');
     const data = xlsx.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
     console.log(`Found ${data.length} rows to import`);
 

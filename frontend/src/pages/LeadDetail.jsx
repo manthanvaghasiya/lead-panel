@@ -266,7 +266,19 @@ function LeadDetail() {
                   </div>
                   <div className="flex flex-col pt-1">
                     <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-0.5">Full Address</span>
-                    <span className="font-medium text-slate-900 leading-relaxed">{lead.address || 'No address provided'}</span>
+                    <span className="font-medium text-slate-900 leading-relaxed">
+                      {lead.address || 'No address provided'}
+                      {lead.mapsUrl && (
+                        <a 
+                          href={lead.mapsUrl} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="ml-2 text-indigo-600 hover:text-indigo-800 text-xs font-bold underline inline-flex items-center gap-0.5"
+                        >
+                          View on Google Maps 🗺️
+                        </a>
+                      )}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -767,6 +779,7 @@ function UpdateLeadModal({ lead, onClose, onSuccess }) {
     ownerName: lead.ownerName || '',
     mobile: lead.mobile || '', 
     address: lead.address || '', 
+    mapsUrl: lead.mapsUrl || '', 
     businessType: lead.businessType || '',
     city: lead.city || '',
     source: lead.source || 'Website', 
@@ -933,6 +946,11 @@ function UpdateLeadModal({ lead, onClose, onSuccess }) {
             <div>
               <label className="block text-xs uppercase tracking-wider text-slate-500 font-semibold mb-1.5">Address</label>
               <input type="text" className="w-full border border-slate-200 rounded-md p-2 text-sm focus:border-primary focus:outline-none" value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} />
+            </div>
+
+            <div>
+              <label className="block text-xs uppercase tracking-wider text-slate-500 font-semibold mb-1.5">Google Maps URL</label>
+              <input type="text" className="w-full border border-slate-200 rounded-md p-2 text-sm focus:border-primary focus:outline-none" value={formData.mapsUrl} onChange={e => setFormData({...formData, mapsUrl: e.target.value})} />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
