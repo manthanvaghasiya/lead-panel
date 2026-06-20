@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getLeads, createLead, extractLeadFromText, addCallLog, extractLogFromText } from '../api/apiClient';
-import { Search, Plus, Filter, MoreHorizontal, Phone, X, FileText, Sparkles, ImagePlus, MessageSquarePlus } from 'lucide-react';
+import { Search, Plus, Filter, MoreHorizontal, FileText, MessageSquarePlus, X, Sparkles, ImagePlus } from 'lucide-react';
+import { FaWhatsapp, FaPhoneAlt } from 'react-icons/fa';
 
 const extractCity = (address) => {
   if (!address) return '-';
@@ -170,13 +171,20 @@ function LeadsList() {
                     <td className="px-3 py-3 text-right">
                       <div className="flex items-center justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
                         <a 
+                          href={`tel:${lead.mobile}`} 
+                          className="p-1.5 bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 transition-colors border border-blue-200 shadow-sm"
+                          title="Call"
+                        >
+                          <FaPhoneAlt size={12} />
+                        </a>
+                        <a 
                           href={`https://wa.me/91${lead.mobile}`} 
                           target="_blank" 
                           rel="noreferrer"
                           className="p-1.5 bg-green-50 text-green-600 rounded-md hover:bg-green-100 transition-colors border border-green-200 shadow-sm"
                           title="WhatsApp"
                         >
-                          <Phone size={14} />
+                          <FaWhatsapp size={14} />
                         </a>
                         <button 
                           onClick={() => setLogModalLead(lead)}
