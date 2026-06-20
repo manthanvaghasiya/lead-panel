@@ -365,6 +365,7 @@ router.get('/:id/ai-insight', async (req, res) => {
 
   } catch (err) {
     console.error('AI Insight Error:', err);
+    console.log('INSIGHT ERR OBJ STATUS:', err.status, 'MESSAGE:', err.message);
     res.status(err.status || 500).json({ message: err.message });
   }
 });
