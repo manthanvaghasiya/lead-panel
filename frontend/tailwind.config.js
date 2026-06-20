@@ -7,10 +7,10 @@ export default {
   theme: {
     extend: {
       colors: {
-        background: '#f8fafc', // slate-50
+        background: '#f1f5f9', // slate-100 (softer, darker than white)
         surface: '#ffffff', // white
         border: '#e2e8f0', // slate-200
-        primary: '#06b6d4', // cyan-500
+        primary: '#4f46e5', // indigo-600 (very aesthetic, professional blue-purple)
         secondary: '#94a3b8',
         hot: '#ef4444',
         warm: '#eab308',

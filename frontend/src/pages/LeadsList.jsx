@@ -96,9 +96,6 @@ function LeadsList() {
                     {/* 1. Lead Profile */}
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-bold text-sm shrink-0 border border-slate-200">
-                          {lead.name.charAt(0).toUpperCase()}
-                        </div>
                         <div className="flex flex-col min-w-0">
                           <span className="font-semibold text-slate-900 truncate">{lead.name}</span>
                           <span className="text-xs text-slate-500 truncate flex items-center gap-1">
@@ -296,14 +293,14 @@ function AddLeadModal({ onClose, onSuccess }) {
         <div className="p-5 flex flex-col gap-4">
           
           {/* AI Magic Fill Section */}
-          <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-3">
+          <div className="bg-purple-50 border border-purple-100 rounded-lg p-3">
             <div className="flex justify-between items-center mb-2">
-              <label className="text-xs uppercase tracking-wider text-purple-400 font-semibold flex items-center gap-1">
+              <label className="text-xs uppercase tracking-wider text-purple-700 font-bold flex items-center gap-1">
                 <Sparkles size={14}/> AI Magic Fill
               </label>
               
               {/* Image Upload Button */}
-              <label className="cursor-pointer text-purple-400 hover:text-purple-300 transition-colors flex items-center gap-1 text-xs">
+              <label className="cursor-pointer text-purple-600 hover:text-purple-800 transition-colors flex items-center gap-1 text-xs font-semibold">
                 <ImagePlus size={16} /> 
                 <span>Upload Photo</span>
                 <input 
