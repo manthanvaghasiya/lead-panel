@@ -97,7 +97,7 @@ function LeadsList() {
                 filteredLeads.map((lead) => (
                   <tr key={lead._id} className="hover:bg-white/50 transition-colors group">
                     <td className="p-4">
-                      <div className="font-medium text-white">{lead.name}</div>
+                      <div className="font-medium text-slate-900">{lead.name}</div>
                       {lead.followupDate && (
                         <div className="text-xs text-orange-400 mt-1 flex items-center gap-1">
                           <Calendar size={12} />
@@ -392,7 +392,7 @@ function ViewLogsModal({ lead, onClose }) {
       <div className="bg-white border border-border rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col overflow-hidden">
         <div className="flex justify-between items-center p-4 border-b border-border bg-white/50">
           <div>
-            <h3 className="font-medium text-lg text-white">Follow-up Logs</h3>
+            <h3 className="font-medium text-lg text-slate-900">Follow-up Logs</h3>
             <p className="text-xs text-cyan-400 mt-1">{lead.name} • {lead.mobile}</p>
           </div>
           <button onClick={onClose} className="text-slate-500 hover:text-slate-900 transition-colors">

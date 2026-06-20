@@ -110,7 +110,7 @@ function Analytics() {
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
             {statusData.map((stat, i) => (
               <div key={i} className="bg-white/50 border border-border p-4 rounded-lg flex flex-col items-center justify-center">
-                <div className="text-2xl font-bold text-white mb-1">{stat.count}</div>
+                <div className="text-2xl font-bold text-slate-900 mb-1">{stat.count}</div>
                 <div className="text-xs uppercase tracking-wider text-slate-500 text-center">{stat.name}</div>
               </div>
             ))}
