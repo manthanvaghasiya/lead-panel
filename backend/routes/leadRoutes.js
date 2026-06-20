@@ -199,8 +199,11 @@ router.post('/:id/ai-social-extract', async (req, res) => {
 
     const prompt = `
       Search the web for business: "${lead.name}" located in "${lead.city || lead.address || ''}".
-      Find their official social media handles/links (Instagram, Facebook, YouTube, LinkedIn). Do not guess or hallucinate. If you can't find them, return empty string.
+      Find their official social media handles/links (Instagram, Facebook, YouTube, LinkedIn). 
       Also find their business rating (out of 5) and total number of reviews from Google Reviews, Justdial, or IndiaMART.
+      
+      CRITICAL INSTRUCTION: You MUST return a valid JSON object. Do not return an empty string. 
+      If you cannot find a specific piece of information, leave that specific field as an empty string "".
       
       Return ONLY raw JSON matching exactly this structure:
       {
@@ -213,15 +216,27 @@ router.post('/:id/ai-social-extract', async (req, res) => {
       }
     `;
 
-    const result = await model.generateContent(prompt);
+    const result = await model.generateContent({
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      tools: [{ googleSearch: {} }]
+    });
     let responseText = result.response.text().trim();
+    console.log("GEMINI RAW SOCIAL OUTPUT:", responseText);
+
     if (responseText.startsWith('\`\`\`json')) {
       responseText = responseText.replace(/^\`\`\`json/, '').replace(/\`\`\`$/, '').trim();
     } else if (responseText.startsWith('\`\`\`')) {
       responseText = responseText.replace(/^\`\`\`/, '').replace(/\`\`\`$/, '').trim();
     }
+    console.log("CLEANED SOCIAL JSON:", responseText);
 
-    const extractedData = JSON.parse(responseText);
+    let extractedData = {};
+    try {
+      extractedData = JSON.parse(responseText);
+    } catch (parseError) {
+      console.log("JSON Parse Failed, defaulting to empty fields.");
+      extractedData = {};
+    }
 
     lead.socials = {
       instagram: extractedData.instagram || '',
