@@ -82,27 +82,26 @@ function LeadDetail() {
   if (!lead) return null;
 
   return (
-    <div className="max-w-7xl mx-auto flex flex-col gap-8 animate-fade-in-up">
+    <div className="max-w-6xl mx-auto flex flex-col gap-6">
       {/* Header */}
-      <div className="glass-panel p-6 flex flex-col md:flex-row items-start md:items-center gap-6 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
-        <button onClick={() => navigate('/leads')} className="p-2.5 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-colors z-10 text-gray-300">
-          <ArrowLeft size={20} />
+      <div className="flex items-center gap-4">
+        <button onClick={() => navigate('/leads')} className="p-2 bg-surface border border-border rounded-md hover:bg-slate-700 transition-colors">
+          <ArrowLeft size={18} />
         </button>
-        <div className="z-10">
-          <h1 className="text-3xl font-display font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-300">{lead.name}</h1>
-          <div className="text-sm font-medium text-gray-400 mt-2 flex items-center gap-3">
-            <span className="flex items-center gap-1"><Calendar size={14} className="text-primary"/> Added {new Date(lead.createdAt).toLocaleDateString()}</span>
-            <span className="text-white/20">•</span>
-            <span className="flex items-center gap-1"><MapPin size={14} className="text-cyan-400"/> Source: {lead.source}</span>
+        <div>
+          <h1 className="text-2xl font-bold">{lead.name}</h1>
+          <div className="text-sm text-gray-400 mt-1 flex gap-3">
+            <span>Added {new Date(lead.createdAt).toLocaleDateString()}</span>
+            <span>•</span>
+            <span>Source: {lead.source}</span>
           </div>
         </div>
-        <div className="md:ml-auto flex gap-3 z-10 w-full md:w-auto mt-4 md:mt-0">
+        <div className="ml-auto flex gap-3">
           <a 
             href={`https://wa.me/91${lead.mobile}`} 
             target="_blank" 
             rel="noreferrer"
-            className="flex-1 md:flex-none bg-gradient-to-r from-[#25D366] to-[#128C7E] hover:from-[#128C7E] hover:to-[#075E54] text-white font-medium py-2.5 px-6 rounded-xl transition-all shadow-[0_0_15px_rgba(37,211,102,0.3)] flex items-center justify-center gap-2"
+            className="btn-primary !bg-[#25D366] hover:!bg-[#128C7E] flex items-center gap-2"
           >
             <Phone size={18} />
             <span>WhatsApp</span>
@@ -110,39 +109,36 @@ function LeadDetail() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Col: Info & Add Log */}
-        <div className="lg:col-span-1 flex flex-col gap-8">
+        <div className="lg:col-span-1 flex flex-col gap-6">
           {/* Status Card */}
-          <div className="glass-panel p-6 relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none group-hover:bg-primary/30 transition-all"></div>
-            <div className="relative z-10">
-              <div className="flex justify-between items-start mb-6">
-                <div>
-                  <div className="text-[11px] uppercase tracking-widest text-gray-400 mb-1.5 font-bold">Current Status</div>
-                  <div className="font-display font-semibold text-2xl text-white">{lead.status}</div>
-                </div>
-                <span className={`badge ${lead.type === 'Hot' ? 'badge-hot' : lead.type === 'Warm' ? 'badge-warm' : 'badge-cold'} text-sm px-3 py-1.5`}>
-                  {lead.type}
-                </span>
+          <div className="card bg-gradient-to-br from-surface to-slate-800/80 border-t-4 border-t-primary">
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <div className="text-xs uppercase tracking-wider text-gray-400 mb-1">Current Status</div>
+                <div className="font-semibold text-lg">{lead.status}</div>
               </div>
-              <div className="flex items-center gap-4 text-sm mt-6 text-gray-200 bg-white/5 p-3 rounded-xl border border-white/5">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 flex items-center justify-center shadow-inner border border-white/10">
-                  <Phone size={16} className="text-purple-400" />
-                </div>
-                <div className="font-mono text-lg tracking-tight">{lead.mobile}</div>
-              </div>
-              {lead.followupDate && (
-                <div className="flex items-center gap-3 text-sm mt-4 text-amber-400 bg-amber-500/10 p-3 rounded-xl border border-amber-500/20 shadow-[0_0_15px_rgba(245,158,11,0.1)]">
-                  <Calendar size={18} />
-                  <span className="font-medium">Next Call: {new Date(lead.followupDate).toLocaleDateString()}</span>
-                </div>
-              )}
+              <span className={`badge badge-${lead.type?.toLowerCase() || 'cold'} text-sm px-3 py-1`}>
+                {lead.type}
+              </span>
             </div>
+            <div className="flex items-center gap-3 text-sm mt-4 text-gray-300">
+              <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center">
+                <Phone size={14} className="text-primary" />
+              </div>
+              <div className="font-mono">{lead.mobile}</div>
+            </div>
+            {lead.followupDate && (
+              <div className="flex items-center gap-3 text-sm mt-3 text-orange-400 bg-orange-500/10 p-2 rounded border border-orange-500/20">
+                <Calendar size={16} />
+                <span>Next Call: {new Date(lead.followupDate).toLocaleDateString()}</span>
+              </div>
+            )}
           </div>
 
           {/* New Call Log Form */}
-          <div className="glass-panel p-6">
+          <div className="card">
             <h3 className="font-medium text-lg mb-4 flex items-center gap-2">
               <Activity size={18} className="text-primary" />
               Log Activity
@@ -207,44 +203,44 @@ function LeadDetail() {
         <div className="lg:col-span-2">
           
           {/* AI Insight Section */}
-          <div className="mb-8">
+          <div className="mb-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-display font-semibold text-xl flex items-center gap-2 text-white">
-                <BrainCircuit size={22} className="text-purple-400"/> 
+              <h3 className="font-medium text-lg flex items-center gap-2">
+                <BrainCircuit size={20} className="text-purple-400"/> 
                 AI Assistant
               </h3>
               <button 
                 onClick={generateAiInsight}
                 disabled={loadingAi}
-                className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white px-5 py-2.5 rounded-xl text-sm font-semibold shadow-[0_0_20px_rgba(139,92,246,0.3)] transition-all disabled:opacity-50"
+                className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-[0_0_15px_rgba(168,85,247,0.3)] transition-all disabled:opacity-50"
               >
-                <Sparkles size={16} className={loadingAi ? "animate-spin" : ""} />
+                <Sparkles size={16} />
                 {loadingAi ? 'Thinking...' : 'Generate Insight'}
               </button>
             </div>
 
             {aiInsight && (
-              <div className="glass-panel border border-purple-500/30 p-6 relative overflow-hidden group">
+              <div className="bg-gradient-to-br from-slate-800 to-slate-900 border border-purple-500/30 rounded-xl p-5 shadow-xl relative overflow-hidden">
                 {/* Background decoration */}
-                <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500/10 blur-3xl rounded-full group-hover:bg-purple-500/20 transition-all pointer-events-none"></div>
+                <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 blur-3xl rounded-full"></div>
                 
-                <div className="relative z-10 space-y-6">
+                <div className="relative z-10 space-y-5">
                   <div>
-                    <h4 className="text-[11px] uppercase tracking-widest text-purple-400 font-bold mb-2 flex items-center gap-1.5"><BrainCircuit size={14}/> AI Summary</h4>
-                    <p className="text-sm text-gray-200 leading-relaxed bg-black/20 p-4 rounded-xl border border-white/5">{aiInsight.summary}</p>
+                    <h4 className="text-xs uppercase tracking-wider text-purple-400 font-semibold mb-1 flex items-center gap-1"><BrainCircuit size={14}/> AI Summary</h4>
+                    <p className="text-sm text-gray-200 leading-relaxed">{aiInsight.summary}</p>
                   </div>
                   <div>
-                    <h4 className="text-[11px] uppercase tracking-widest text-cyan-400 font-bold mb-2 flex items-center gap-1.5"><Target size={14}/> Suggested Action</h4>
-                    <p className="text-sm text-gray-200 bg-black/20 p-4 rounded-xl border border-white/5">{aiInsight.nextAction}</p>
+                    <h4 className="text-xs uppercase tracking-wider text-cyan-400 font-semibold mb-1 flex items-center gap-1"><Target size={14}/> Suggested Action</h4>
+                    <p className="text-sm text-gray-200">{aiInsight.nextAction}</p>
                   </div>
-                  <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-4 relative shadow-[inset_0_0_20px_rgba(16,185,129,0.05)]">
-                    <h4 className="text-[11px] uppercase tracking-widest text-emerald-400 font-bold mb-3 flex items-center gap-1.5"><MessageSquare size={14}/> WhatsApp Draft</h4>
-                    <p className="text-sm text-gray-300 font-mono whitespace-pre-wrap leading-relaxed">{aiInsight.draftMessage}</p>
+                  <div className="bg-black/40 border border-slate-700/50 rounded-lg p-3 relative">
+                    <h4 className="text-xs uppercase tracking-wider text-green-400 font-semibold mb-2 flex items-center gap-1"><MessageSquare size={14}/> WhatsApp Draft</h4>
+                    <p className="text-sm text-gray-300 font-mono whitespace-pre-wrap">{aiInsight.draftMessage}</p>
                     <button 
                       onClick={() => navigator.clipboard.writeText(aiInsight.draftMessage)}
-                      className="absolute top-4 right-4 text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg text-white font-medium transition-all backdrop-blur-md border border-white/10"
+                      className="absolute top-3 right-3 text-xs bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded text-gray-300 transition-colors"
                     >
-                      Copy Draft
+                      Copy
                     </button>
                   </div>
                 </div>
@@ -252,10 +248,8 @@ function LeadDetail() {
             )}
           </div>
 
-          <div className="glass-panel p-6 h-full flex flex-col">
-            <h3 className="font-display font-semibold text-xl mb-6 border-b border-white/10 pb-4 text-white flex items-center gap-2">
-              <Activity size={20} className="text-primary"/> Activity Timeline
-            </h3>
+          <div className="card h-full flex flex-col">
+            <h3 className="font-medium text-lg mb-6 border-b border-border pb-4">Activity Timeline</h3>
             
             <div className="flex-1 overflow-y-auto pr-2">
               {!lead.callLogs || lead.callLogs.length === 0 ? (
@@ -274,8 +268,8 @@ function LeadDetail() {
                       </div>
                       
                       {/* Content Card */}
-                      <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-white/5 backdrop-blur-md border border-white/5 p-5 rounded-2xl shadow-lg group-hover:bg-white/10 group-hover:border-primary/30 transition-all duration-300 group-hover:-translate-y-1">
-                        <div className="flex justify-between items-start mb-3">
+                      <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-surface border border-border p-4 rounded-lg shadow-sm group-hover:border-primary/50 transition-colors">
+                        <div className="flex justify-between items-start mb-2">
                           <span className="text-xs text-gray-400 font-medium flex items-center gap-1.5">
                             <Clock size={12} />
                             {new Date(log.date).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}
