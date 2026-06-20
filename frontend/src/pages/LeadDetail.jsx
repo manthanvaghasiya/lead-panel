@@ -771,7 +771,15 @@ function UpdateLeadModal({ lead, onClose, onSuccess }) {
     city: lead.city || '',
     source: lead.source || 'Website', 
     type: lead.type || 'Cold', 
-    status: lead.status || 'Pending'
+    status: lead.status || 'Pending',
+    socials: {
+      instagram: lead.socials?.instagram || '',
+      facebook: lead.socials?.facebook || '',
+      youtube: lead.socials?.youtube || '',
+      linkedin: lead.socials?.linkedin || '',
+      rating: lead.socials?.rating || '',
+      reviews: lead.socials?.reviews || ''
+    }
   });
   const [loading, setLoading] = useState(false);
   const [magicText, setMagicText] = useState('');
@@ -957,6 +965,28 @@ function UpdateLeadModal({ lead, onClose, onSuccess }) {
                 <option value="Won">Won</option>
                 <option value="Lost">Lost</option>
               </select>
+            </div>
+
+            <div className="border-t border-slate-200 pt-4 mt-2">
+              <h4 className="text-sm font-bold text-slate-700 mb-3">Social Media Links</h4>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs uppercase tracking-wider text-slate-500 font-semibold mb-1.5">Instagram</label>
+                  <input type="text" className="w-full border border-slate-200 rounded-md p-2 text-sm focus:border-primary focus:outline-none" value={formData.socials.instagram} onChange={e => setFormData({...formData, socials: {...formData.socials, instagram: e.target.value}})} placeholder="https://..." />
+                </div>
+                <div>
+                  <label className="block text-xs uppercase tracking-wider text-slate-500 font-semibold mb-1.5">Facebook</label>
+                  <input type="text" className="w-full border border-slate-200 rounded-md p-2 text-sm focus:border-primary focus:outline-none" value={formData.socials.facebook} onChange={e => setFormData({...formData, socials: {...formData.socials, facebook: e.target.value}})} placeholder="https://..." />
+                </div>
+                <div>
+                  <label className="block text-xs uppercase tracking-wider text-slate-500 font-semibold mb-1.5">YouTube</label>
+                  <input type="text" className="w-full border border-slate-200 rounded-md p-2 text-sm focus:border-primary focus:outline-none" value={formData.socials.youtube} onChange={e => setFormData({...formData, socials: {...formData.socials, youtube: e.target.value}})} placeholder="https://..." />
+                </div>
+                <div>
+                  <label className="block text-xs uppercase tracking-wider text-slate-500 font-semibold mb-1.5">LinkedIn</label>
+                  <input type="text" className="w-full border border-slate-200 rounded-md p-2 text-sm focus:border-primary focus:outline-none" value={formData.socials.linkedin} onChange={e => setFormData({...formData, socials: {...formData.socials, linkedin: e.target.value}})} placeholder="https://..." />
+                </div>
+              </div>
             </div>
           </form>
         </div>
