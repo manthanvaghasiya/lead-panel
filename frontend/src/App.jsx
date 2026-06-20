@@ -25,9 +25,7 @@ function Layout({ children }) {
         
         {/* Logo Section */}
         <div className="h-20 flex items-center justify-center md:justify-start md:px-6 border-b border-slate-800/80">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-blue-600 text-white flex items-center justify-center font-bold text-xl shadow-lg shadow-primary/20 md:mr-3 shrink-0">
-            W
-          </div>
+          <img src="/WEBIOX%20LOGO.png" alt="WEBIOX Logo" className="h-10 md:mr-3 shrink-0 object-contain drop-shadow-md" />
           <span className="hidden md:block font-bold text-xl tracking-wider text-white">WEBIOX</span>
         </div>
 
