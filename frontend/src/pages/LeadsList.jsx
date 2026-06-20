@@ -311,6 +311,73 @@ function AddLeadModal({ onClose, onSuccess }) {
                   ) : '✨ Fill Form'}
                 </button>
               </div>
+            </div>
+          </div>
+
+          <div className="relative py-1 my-4">
+             <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/10"></div></div>
+             <div className="relative flex justify-center text-[10px] uppercase font-bold tracking-widest"><span className="bg-black px-3 py-1 rounded-full text-purple-400 border border-purple-500/30">Review & Edit Data</span></div>
+          </div>
+
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs uppercase tracking-wider text-gray-400 mb-1.5">Name</label>
+              <input required type="text" className="input-field" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
+            </div>
+            <div>
+              <label className="block text-xs uppercase tracking-wider text-gray-400 mb-1.5">Mobile</label>
+              <input required type="text" className="input-field" value={formData.mobile} onChange={e => setFormData({...formData, mobile: e.target.value})} />
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs uppercase tracking-wider text-gray-400 mb-1.5">Address</label>
+            <input type="text" className="input-field" value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} placeholder="e.g. Surat, Gujarat" />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs uppercase tracking-wider text-gray-400 mb-1.5">Type</label>
+              <select className="input-field bg-slate-900" value={formData.type} onChange={e => setFormData({...formData, type: e.target.value})}>
+                <option value="Hot">Hot</option>
+                <option value="Warm">Warm</option>
+                <option value="Cold">Cold</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs uppercase tracking-wider text-gray-400 mb-1.5">Source</label>
+              <select className="input-field bg-slate-900" value={formData.source} onChange={e => setFormData({...formData, source: e.target.value})}>
+                <option value="Website">Website</option>
+                <option value="CRM">CRM</option>
+                <option value="Website+CRM">Website+CRM</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs uppercase tracking-wider text-gray-400 mb-1.5">Initial Status</label>
+            <select className="input-field bg-slate-900" value={formData.status} onChange={e => setFormData({...formData, status: e.target.value})}>
+              <option value="Pending">Pending</option>
+              <option value="In Process">In Process</option>
+              <option value="Send Detail">Send Detail</option>
+              <option value="Follow-up Letter">Follow-up Letter</option>
+              <option value="Contacted">Contacted</option>
+              <option value="Won">Won</option>
+              <option value="Lost">Lost</option>
+            </select>
+          </div>
+          <div className="mt-4 flex gap-3 justify-end pt-4 border-t border-white/10">
+            <button type="button" onClick={onClose} className="btn-secondary">Cancel</button>
+            <button type="submit" disabled={loading} className="btn-primary min-w-[100px]">
+              {loading ? 'Saving...' : 'Save Lead'}
+            </button>
+          </div>
+        </form>
+      </div>
+      </div>
+    </div>
+  );
+}
+
 function Calendar(props) {
   return <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>;
 }
