@@ -198,21 +198,22 @@ router.post('/:id/ai-social-extract', async (req, res) => {
     });
 
     const prompt = `
-      Search the web for business: "${lead.name}" located in "${lead.city || lead.address || ''}".
-      Find their official social media handles/links (Instagram, Facebook, YouTube, LinkedIn). 
-      Also find their business rating (out of 5) and total number of reviews from Google Reviews, Justdial, or IndiaMART.
+      You are an expert web researcher. Please search for the following business:
+      Business Name: "${lead.name}"
+      Location: "${lead.city || lead.address || 'Unknown'}"
       
-      CRITICAL INSTRUCTION: You MUST return a valid JSON object. Do not return an empty string. 
-      If you cannot find a specific piece of information, leave that specific field as an empty string "".
+      Find their official social media handles/links and their Google/Justdial rating and reviews.
+      You MUST return your answer as a raw JSON object and nothing else.
+      If you cannot find a specific piece of information, use an empty string for that field.
       
-      Return ONLY raw JSON matching exactly this structure:
+      Output format:
       {
-        "instagram": "username or link or empty",
-        "facebook": "username or link or empty",
-        "youtube": "username or link or empty",
-        "linkedin": "username or link or empty",
-        "rating": "e.g. 4.5 or empty",
-        "reviews": "e.g. 40 or empty"
+        "instagram": "url or empty",
+        "facebook": "url or empty",
+        "youtube": "url or empty",
+        "linkedin": "url or empty",
+        "rating": "rating out of 5 or empty",
+        "reviews": "total reviews or empty"
       }
     `;
 
@@ -220,14 +221,27 @@ router.post('/:id/ai-social-extract', async (req, res) => {
       contents: [{ role: "user", parts: [{ text: prompt }] }],
       tools: [{ googleSearch: {} }]
     });
-    let responseText = result.response.text().trim();
+    let responseText = '';
+    try {
+      responseText = result.response.text().trim();
+    } catch (e) {
+      console.log("Error extracting text from Gemini response:", e);
+      console.log("FULL RESPONSE:", JSON.stringify(result.response, null, 2));
+    }
+    
     console.log("GEMINI RAW SOCIAL OUTPUT:", responseText);
 
-    if (responseText.startsWith('\`\`\`json')) {
-      responseText = responseText.replace(/^\`\`\`json/, '').replace(/\`\`\`$/, '').trim();
-    } else if (responseText.startsWith('\`\`\`')) {
-      responseText = responseText.replace(/^\`\`\`/, '').replace(/\`\`\`$/, '').trim();
+    if (!responseText) {
+      console.log("WARNING: Gemini returned empty text. Using fallback JSON.");
+      responseText = '{}';
+    } else {
+      if (responseText.startsWith('\`\`\`json')) {
+        responseText = responseText.replace(/^\`\`\`json/, '').replace(/\`\`\`$/, '').trim();
+      } else if (responseText.startsWith('\`\`\`')) {
+        responseText = responseText.replace(/^\`\`\`/, '').replace(/\`\`\`$/, '').trim();
+      }
     }
+    
     console.log("CLEANED SOCIAL JSON:", responseText);
 
     let extractedData = {};
