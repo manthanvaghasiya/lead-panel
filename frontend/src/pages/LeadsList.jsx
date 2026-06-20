@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Plus, Filter, MoreHorizontal, Phone, X, FileText, Sparkles, ImagePlus } from 'lucide-react';
-import { getLeads, createLead, extractLeadFromText } from '../api/apiClient';
+import { getLeads, createLead, extractLeadFromText, addCallLog, extractLogFromText } from '../api/apiClient';
+import { Search, Plus, Filter, MoreHorizontal, Phone, X, FileText, Sparkles, ImagePlus, MessageSquarePlus } from 'lucide-react';
 
 const extractCity = (address) => {
   if (!address) return '-';
@@ -15,6 +15,7 @@ function LeadsList() {
   const [search, setSearch] = useState('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [viewLogsLead, setViewLogsLead] = useState(null);
+  const [logModalLead, setLogModalLead] = useState(null);
 
   useEffect(() => {
     fetchLeads();
@@ -179,6 +180,13 @@ function LeadsList() {
                         >
                           <Phone size={14} />
                         </a>
+                        <button 
+                          onClick={() => setLogModalLead(lead)}
+                          className="p-1.5 bg-indigo-50 text-indigo-600 rounded-md hover:bg-indigo-100 transition-colors border border-indigo-200 shadow-sm"
+                          title="Add Follow-up"
+                        >
+                          <MessageSquarePlus size={14} />
+                        </button>
                         <Link 
                           to={`/leads/${lead._id}`}
                           className="p-1.5 bg-slate-50 text-slate-600 rounded-md hover:bg-slate-100 transition-colors border border-slate-200 shadow-sm"
@@ -212,6 +220,18 @@ function LeadsList() {
         <ViewLogsModal 
           lead={viewLogsLead} 
           onClose={() => setViewLogsLead(null)} 
+        />
+      )}
+
+      {/* Add Call Log Modal */}
+      {logModalLead && (
+        <AddCallLogModal 
+          lead={logModalLead}
+          onClose={() => setLogModalLead(null)}
+          onSuccess={() => {
+            setLogModalLead(null);
+            fetchLeads();
+          }}
         />
       )}
     </div>
@@ -472,3 +492,198 @@ function ViewLogsModal({ lead, onClose }) {
 }
 
 export default LeadsList;
+
+function AddCallLogModal({ lead, onClose, onSuccess }) {
+  const [formData, setFormData] = useState({
+    note: '',
+    typeAtTime: lead.type || 'Cold',
+    statusAtTime: lead.status || 'Pending',
+    nextFollowup: ''
+  });
+  
+  const [loading, setLoading] = useState(false);
+  const [magicText, setMagicText] = useState('');
+  const [extracting, setExtracting] = useState(false);
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => setImagePreview(reader.result);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleMagicFill = async () => {
+    if (!magicText.trim() && !imageFile) return;
+    setExtracting(true);
+    try {
+      let imageBase64 = null;
+      let mimeType = null;
+      if (imageFile && imagePreview) {
+        imageBase64 = imagePreview.split(',')[1];
+        mimeType = imageFile.type;
+      }
+
+      const { data } = await extractLogFromText(magicText, imageBase64, mimeType);
+      
+      setFormData(prev => ({
+        ...prev,
+        note: data.note || prev.note,
+        typeAtTime: ['Hot', 'Warm', 'Cold'].includes(data.typeAtTime) ? data.typeAtTime : prev.typeAtTime,
+        statusAtTime: ['Pending', 'In Process', 'Send Detail', 'Follow-up Letter', 'Contacted', 'Won', 'Lost'].includes(data.statusAtTime) ? data.statusAtTime : prev.statusAtTime,
+        nextFollowup: data.nextFollowup ? data.nextFollowup : prev.nextFollowup
+      }));
+      setMagicText('');
+      setImageFile(null);
+      setImagePreview(null);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to extract data. Make sure AI is configured properly.');
+    } finally {
+      setExtracting(false);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!formData.note.trim()) return;
+    setLoading(true);
+    try {
+      await addCallLog(lead._id, formData);
+      onSuccess();
+    } catch (err) {
+      console.error(err);
+      alert('Error saving log');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <div className="bg-white border border-slate-200 rounded-xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col max-h-[90vh]">
+        <div className="flex justify-between items-center p-4 border-b border-slate-100 bg-slate-50">
+          <div>
+            <h3 className="font-bold text-slate-800">Add Follow-up</h3>
+            <p className="text-[11px] text-slate-500 font-medium">for {lead.name}</p>
+          </div>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-700 transition-colors">
+            <X size={20} />
+          </button>
+        </div>
+        
+        <div className="p-5 flex flex-col gap-4 overflow-y-auto">
+          {/* AI Magic Fill Section */}
+          <div className="bg-indigo-50 border border-indigo-100 rounded-lg p-3">
+            <div className="flex justify-between items-center mb-2">
+              <label className="text-xs uppercase tracking-wider text-indigo-700 font-bold flex items-center gap-1">
+                <Sparkles size={14}/> AI Call Logger
+              </label>
+              
+              <label className="cursor-pointer text-indigo-600 hover:text-indigo-800 transition-colors flex items-center gap-1 text-xs font-semibold">
+                <ImagePlus size={16} /> 
+                <span>Upload Note</span>
+                <input type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
+              </label>
+            </div>
+
+            {imagePreview && (
+              <div className="relative inline-block mb-2">
+                <img src={imagePreview} alt="Preview" className="h-16 rounded border border-indigo-200 object-cover" />
+                <button 
+                  type="button" 
+                  onClick={() => { setImageFile(null); setImagePreview(null); }}
+                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-0.5 hover:bg-red-600 shadow-md"
+                >
+                  <X size={12} />
+                </button>
+              </div>
+            )}
+
+            <div className="flex flex-col sm:flex-row gap-2">
+              <textarea 
+                rows="2"
+                className="w-full border border-indigo-200 rounded-md p-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-400 resize-none flex-1 bg-white placeholder:text-indigo-300"
+                placeholder="Dictate your notes e.g. 'Client is hot, send details...'"
+                value={magicText}
+                onChange={e => setMagicText(e.target.value)}
+              />
+              <button 
+                type="button"
+                onClick={handleMagicFill}
+                disabled={extracting || (!magicText.trim() && !imageFile)}
+                className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-lg px-3 py-2 text-sm font-semibold transition-colors flex items-center justify-center shrink-0"
+              >
+                {extracting ? 'Processing...' : '✨ Auto-Fill'}
+              </button>
+            </div>
+          </div>
+
+          <form id="callLogForm" onSubmit={handleSubmit} className="flex flex-col gap-4">
+            <div>
+              <label className="block text-[11px] uppercase tracking-wider font-semibold text-slate-500 mb-1.5">Notes</label>
+              <textarea 
+                required
+                rows={3} 
+                className="w-full border border-slate-200 rounded-md p-2 text-sm focus:border-primary focus:outline-none resize-none" 
+                placeholder="What did you discuss?"
+                value={formData.note}
+                onChange={e => setFormData({...formData, note: e.target.value})}
+              />
+            </div>
+            
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[11px] uppercase tracking-wider font-semibold text-slate-500 mb-1.5">Update Type</label>
+                <select className="w-full border border-slate-200 rounded-md p-2 text-sm bg-white focus:border-primary focus:outline-none" value={formData.typeAtTime} onChange={e => setFormData({...formData, typeAtTime: e.target.value})}>
+                  <option value="Hot">Hot</option>
+                  <option value="Warm">Warm</option>
+                  <option value="Cold">Cold</option>
+                  <option value="Won">Won</option>
+                  <option value="Lost">Lost</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-[11px] uppercase tracking-wider font-semibold text-slate-500 mb-1.5">Update Status</label>
+                <select 
+                  className="w-full border border-slate-200 rounded-md p-2 text-sm bg-white focus:border-primary focus:outline-none" 
+                  value={formData.statusAtTime}
+                  onChange={e => setFormData({...formData, statusAtTime: e.target.value})}
+                >
+                  <option value="Pending">Pending</option>
+                  <option value="In Process">In Process</option>
+                  <option value="Send Detail">Send Detail</option>
+                  <option value="Follow-up Letter">Follow-up Letter</option>
+                  <option value="Contacted">Contacted</option>
+                  <option value="Won">Won</option>
+                  <option value="Lost">Lost</option>
+                </select>
+              </div>
+            </div>
+            
+            <div>
+              <label className="block text-[11px] uppercase tracking-wider font-semibold text-slate-500 mb-1.5">Set Next Follow-up</label>
+              <input 
+                type="date" 
+                className="w-full border border-slate-200 rounded-md p-2 text-sm bg-white focus:border-primary focus:outline-none" 
+                value={formData.nextFollowup}
+                onChange={e => setFormData({...formData, nextFollowup: e.target.value})}
+              />
+            </div>
+          </form>
+        </div>
+        
+        <div className="p-4 border-t border-slate-100 bg-slate-50 flex gap-3 justify-end mt-auto">
+          <button type="button" onClick={onClose} className="px-4 py-2 text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 font-medium text-sm transition-colors">Cancel</button>
+          <button type="submit" form="callLogForm" disabled={loading} className="px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 font-medium text-sm transition-colors min-w-[100px]">
+            {loading ? 'Saving...' : 'Save Log'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

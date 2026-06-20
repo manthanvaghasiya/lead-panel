@@ -61,6 +61,62 @@ router.post('/ai-extract', async (req, res) => {
   }
 });
 
+// AI Magic Fill - Extract Call Log Data from Text
+router.post('/ai-extract-log', async (req, res) => {
+  try {
+    if (!process.env.GEMINI_API_KEY) {
+      return res.status(500).json({ message: 'Gemini API key is missing' });
+    }
+
+    const { text, imageBase64, mimeType } = req.body;
+    if (!text && !imageBase64) return res.status(400).json({ message: 'Text or image input is required' });
+
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+
+    const prompt = `
+      You are an expert sales assistant. A salesperson has provided messy notes (or an image) from a recent follow-up call with a lead.
+      Extract the structured call log data from this.
+      Return ONLY a JSON object with exactly these keys:
+      {
+        "note": "A clean summary of the conversation/notes. Do not leave this empty.",
+        "typeAtTime": "Must be 'Hot', 'Warm', or 'Cold' if explicitly or implicitly mentioned. Otherwise empty string.",
+        "statusAtTime": "Must be 'Pending', 'In Process', 'Send Detail', 'Follow-up Letter', 'Contacted', 'Won', or 'Lost'. Guess based on text, otherwise empty string.",
+        "nextFollowup": "Extracted future follow up date in YYYY-MM-DD format if mentioned (assume current year is 2026), otherwise empty string."
+      }
+      Do not include any markdown blocks like \`\`\`json. Just the raw JSON.
+
+      Messy Notes: "${text || 'No text provided'}"
+    `;
+
+    const parts = [prompt];
+    if (imageBase64 && mimeType) {
+      parts.push({
+        inlineData: {
+          data: imageBase64,
+          mimeType: mimeType
+        }
+      });
+    }
+
+    const result = await model.generateContent(parts);
+    let responseText = result.response.text().trim();
+    
+    if (responseText.startsWith('\`\`\`json')) {
+      responseText = responseText.replace(/^\`\`\`json/, '').replace(/\`\`\`$/, '').trim();
+    } else if (responseText.startsWith('\`\`\`')) {
+      responseText = responseText.replace(/^\`\`\`/, '').replace(/\`\`\`$/, '').trim();
+    }
+
+    const extractedData = JSON.parse(responseText);
+    res.json(extractedData);
+
+  } catch (err) {
+    console.error('AI Log Extract Error:', err);
+    res.status(500).json({ message: 'Failed to extract log data using AI.' });
+  }
+});
+
 
 // Get all leads
 router.get('/', async (req, res) => {
