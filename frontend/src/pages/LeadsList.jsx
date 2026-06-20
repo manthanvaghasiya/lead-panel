@@ -154,7 +154,6 @@ function LeadsList() {
           </table>
         </div>
       </div>
-      </div>
 
       {/* Add Lead Modal */}
       {isAddModalOpen && (
