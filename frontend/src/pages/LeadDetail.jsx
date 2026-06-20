@@ -378,9 +378,13 @@ function LeadDetail() {
                   <div className="w-8 h-8 rounded bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-500 text-white flex items-center justify-center shrink-0">
                     <FaInstagram size={16} />
                   </div>
-                  <div className="flex flex-col overflow-hidden">
+                  <div className="flex flex-col min-w-0">
                     <span className="text-[10px] font-bold text-slate-400 uppercase">Instagram</span>
-                    <span className="font-medium text-slate-700 truncate">{lead.socials?.instagram || '-'}</span>
+                    {lead.socials?.instagram?.startsWith('http') ? (
+                      <a href={lead.socials.instagram} target="_blank" rel="noreferrer" className="font-medium text-blue-600 hover:text-blue-800 hover:underline truncate" title={lead.socials.instagram}>{lead.socials.instagram.replace(/^https?:\/\/(www\.)?/, '')}</a>
+                    ) : (
+                      <span className="font-medium text-slate-700 truncate">{lead.socials?.instagram || '-'}</span>
+                    )}
                   </div>
                 </div>
 
@@ -388,9 +392,13 @@ function LeadDetail() {
                   <div className="w-8 h-8 rounded bg-[#1877F2] text-white flex items-center justify-center shrink-0">
                     <FaFacebook size={16} />
                   </div>
-                  <div className="flex flex-col overflow-hidden">
+                  <div className="flex flex-col min-w-0">
                     <span className="text-[10px] font-bold text-slate-400 uppercase">Facebook</span>
-                    <span className="font-medium text-slate-700 truncate">{lead.socials?.facebook || '-'}</span>
+                    {lead.socials?.facebook?.startsWith('http') ? (
+                      <a href={lead.socials.facebook} target="_blank" rel="noreferrer" className="font-medium text-blue-600 hover:text-blue-800 hover:underline truncate" title={lead.socials.facebook}>{lead.socials.facebook.replace(/^https?:\/\/(www\.)?/, '')}</a>
+                    ) : (
+                      <span className="font-medium text-slate-700 truncate">{lead.socials?.facebook || '-'}</span>
+                    )}
                   </div>
                 </div>
 
@@ -398,9 +406,13 @@ function LeadDetail() {
                   <div className="w-8 h-8 rounded bg-[#FF0000] text-white flex items-center justify-center shrink-0">
                     <FaYoutube size={16} />
                   </div>
-                  <div className="flex flex-col overflow-hidden">
+                  <div className="flex flex-col min-w-0">
                     <span className="text-[10px] font-bold text-slate-400 uppercase">YouTube</span>
-                    <span className="font-medium text-slate-700 truncate">{lead.socials?.youtube || '-'}</span>
+                    {lead.socials?.youtube?.startsWith('http') ? (
+                      <a href={lead.socials.youtube} target="_blank" rel="noreferrer" className="font-medium text-blue-600 hover:text-blue-800 hover:underline truncate" title={lead.socials.youtube}>{lead.socials.youtube.replace(/^https?:\/\/(www\.)?/, '')}</a>
+                    ) : (
+                      <span className="font-medium text-slate-700 truncate">{lead.socials?.youtube || '-'}</span>
+                    )}
                   </div>
                 </div>
 
@@ -408,9 +420,13 @@ function LeadDetail() {
                   <div className="w-8 h-8 rounded bg-[#0A66C2] text-white flex items-center justify-center shrink-0">
                     <FaLinkedin size={16} />
                   </div>
-                  <div className="flex flex-col overflow-hidden">
+                  <div className="flex flex-col min-w-0">
                     <span className="text-[10px] font-bold text-slate-400 uppercase">LinkedIn</span>
-                    <span className="font-medium text-slate-700 truncate">{lead.socials?.linkedin || '-'}</span>
+                    {lead.socials?.linkedin?.startsWith('http') ? (
+                      <a href={lead.socials.linkedin} target="_blank" rel="noreferrer" className="font-medium text-blue-600 hover:text-blue-800 hover:underline truncate" title={lead.socials.linkedin}>{lead.socials.linkedin.replace(/^https?:\/\/(www\.)?/, '')}</a>
+                    ) : (
+                      <span className="font-medium text-slate-700 truncate">{lead.socials?.linkedin || '-'}</span>
+                    )}
                   </div>
                 </div>
               </div>
