@@ -42,7 +42,7 @@ function LeadsList() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div className="relative w-full sm:w-72 md:w-96">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search size={18} className="text-gray-400" />
+            <Search size={18} className="text-slate-500" />
           </div>
           <input
             type="text"
@@ -72,7 +72,7 @@ function LeadsList() {
         <div className="overflow-x-auto flex-1">
           <table className="w-full text-left border-collapse min-w-[800px]">
             <thead>
-              <tr className="border-b border-border bg-surface/50 text-xs uppercase tracking-wider text-gray-400">
+              <tr className="border-b border-border bg-white/50 text-xs uppercase tracking-wider text-slate-500">
                 <th className="p-4 font-medium">Name</th>
                 <th className="p-4 font-medium">Mobile</th>
                 <th className="p-4 font-medium">City</th>
@@ -87,15 +87,15 @@ function LeadsList() {
             <tbody className="divide-y divide-border">
               {loading ? (
                 <tr>
-                  <td colSpan="7" className="p-8 text-center text-gray-400">Loading leads...</td>
+                  <td colSpan="7" className="p-8 text-center text-slate-500">Loading leads...</td>
                 </tr>
               ) : filteredLeads.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="p-8 text-center text-gray-400">No leads found. Add one!</td>
+                  <td colSpan="7" className="p-8 text-center text-slate-500">No leads found. Add one!</td>
                 </tr>
               ) : (
                 filteredLeads.map((lead) => (
-                  <tr key={lead._id} className="hover:bg-slate-800/50 transition-colors group">
+                  <tr key={lead._id} className="hover:bg-white/50 transition-colors group">
                     <td className="p-4">
                       <div className="font-medium text-white">{lead.name}</div>
                       {lead.followupDate && (
@@ -105,7 +105,7 @@ function LeadsList() {
                         </div>
                       )}
                     </td>
-                    <td className="p-4 text-gray-300">{lead.mobile}</td>
+                    <td className="p-4 text-slate-700">{lead.mobile}</td>
                     <td 
                       className="p-4 text-cyan-400 cursor-pointer hover:underline" 
                       onClick={() => alert(`Full Address:\n${lead.address || 'No address provided'}`)}
@@ -118,13 +118,13 @@ function LeadsList() {
                         {lead.type}
                       </span>
                     </td>
-                    <td className="p-4 text-sm text-gray-400">{lead.source}</td>
+                    <td className="p-4 text-sm text-slate-500">{lead.source}</td>
                     <td className="p-4">
-                      <span className="text-sm px-2 py-1 bg-slate-700 rounded text-gray-200">
+                      <span className="text-sm px-2 py-1 bg-slate-100 rounded text-slate-800">
                         {lead.status}
                       </span>
                     </td>
-                    <td className="p-4 text-sm text-gray-400 max-w-xs truncate">
+                    <td className="p-4 text-sm text-slate-500 max-w-xs truncate">
                       {lead.callLogs && lead.callLogs.length > 0 
                         ? lead.callLogs[lead.callLogs.length - 1].note 
                         : 'No notes yet'}
@@ -132,7 +132,7 @@ function LeadsList() {
                     <td className="p-4">
                       <button 
                         onClick={() => setViewLogsLead(lead)}
-                        className="flex items-center gap-1.5 text-xs bg-slate-800 hover:bg-slate-700 text-cyan-400 px-3 py-1.5 rounded border border-slate-700 transition-colors"
+                        className="flex items-center gap-1.5 text-xs bg-white hover:bg-slate-100 text-cyan-400 px-3 py-1.5 rounded border border-slate-300 transition-colors"
                       >
                         <FileText size={14} />
                         View Logs ({lead.callLogs ? lead.callLogs.length : 0})
@@ -151,7 +151,7 @@ function LeadsList() {
                         </a>
                         <Link 
                           to={`/leads/${lead._id}`}
-                          className="p-2 bg-slate-700 text-gray-300 rounded hover:bg-slate-600 transition-colors"
+                          className="p-2 bg-slate-100 text-slate-700 rounded hover:bg-slate-200 transition-colors"
                         >
                           <MoreHorizontal size={16} />
                         </Link>
@@ -255,10 +255,10 @@ function AddLeadModal({ onClose, onSuccess }) {
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <div className="bg-surface border border-border rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
-        <div className="flex justify-between items-center p-4 border-b border-border bg-slate-800/50">
+      <div className="bg-white border border-border rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
+        <div className="flex justify-between items-center p-4 border-b border-border bg-white/50">
           <h3 className="font-medium text-lg">Add New Lead</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">
+          <button onClick={onClose} className="text-slate-500 hover:text-slate-900 transition-colors">
             <X size={20} />
           </button>
         </div>
@@ -319,27 +319,27 @@ function AddLeadModal({ onClose, onSuccess }) {
 
           <div className="relative py-1">
              <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border"></div></div>
-             <div className="relative flex justify-center text-xs"><span className="bg-surface px-2 text-gray-500 uppercase tracking-wider">Review & Edit</span></div>
+             <div className="relative flex justify-center text-xs"><span className="bg-white px-2 text-slate-400 uppercase tracking-wider">Review & Edit</span></div>
           </div>
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs uppercase tracking-wider text-gray-400 mb-1.5">Name</label>
+              <label className="block text-xs uppercase tracking-wider text-slate-500 mb-1.5">Name</label>
               <input required type="text" className="input-field" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
             </div>
             <div>
-              <label className="block text-xs uppercase tracking-wider text-gray-400 mb-1.5">Mobile</label>
+              <label className="block text-xs uppercase tracking-wider text-slate-500 mb-1.5">Mobile</label>
               <input required type="text" className="input-field" value={formData.mobile} onChange={e => setFormData({...formData, mobile: e.target.value})} />
             </div>
           </div>
           <div>
-            <label className="block text-xs uppercase tracking-wider text-gray-400 mb-1.5">Address</label>
+            <label className="block text-xs uppercase tracking-wider text-slate-500 mb-1.5">Address</label>
             <input type="text" className="input-field" value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} placeholder="e.g. Surat, Gujarat" />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs uppercase tracking-wider text-gray-400 mb-1.5">Type</label>
+              <label className="block text-xs uppercase tracking-wider text-slate-500 mb-1.5">Type</label>
               <select className="input-field" value={formData.type} onChange={e => setFormData({...formData, type: e.target.value})}>
                 <option value="Hot">Hot</option>
                 <option value="Warm">Warm</option>
@@ -347,7 +347,7 @@ function AddLeadModal({ onClose, onSuccess }) {
               </select>
             </div>
             <div>
-              <label className="block text-xs uppercase tracking-wider text-gray-400 mb-1.5">Source</label>
+              <label className="block text-xs uppercase tracking-wider text-slate-500 mb-1.5">Source</label>
               <select className="input-field" value={formData.source} onChange={e => setFormData({...formData, source: e.target.value})}>
                 <option value="Website">Website</option>
                 <option value="CRM">CRM</option>
@@ -357,7 +357,7 @@ function AddLeadModal({ onClose, onSuccess }) {
             </div>
           </div>
           <div>
-            <label className="block text-xs uppercase tracking-wider text-gray-400 mb-1.5">Initial Status</label>
+            <label className="block text-xs uppercase tracking-wider text-slate-500 mb-1.5">Initial Status</label>
             <select className="input-field" value={formData.status} onChange={e => setFormData({...formData, status: e.target.value})}>
               <option value="Pending">Pending</option>
               <option value="In Process">In Process</option>
@@ -389,40 +389,40 @@ function Calendar(props) {
 function ViewLogsModal({ lead, onClose }) {
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <div className="bg-surface border border-border rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col overflow-hidden">
-        <div className="flex justify-between items-center p-4 border-b border-border bg-slate-800/50">
+      <div className="bg-white border border-border rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col overflow-hidden">
+        <div className="flex justify-between items-center p-4 border-b border-border bg-white/50">
           <div>
             <h3 className="font-medium text-lg text-white">Follow-up Logs</h3>
             <p className="text-xs text-cyan-400 mt-1">{lead.name} • {lead.mobile}</p>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">
+          <button onClick={onClose} className="text-slate-500 hover:text-slate-900 transition-colors">
             <X size={20} />
           </button>
         </div>
         
         <div className="p-5 overflow-y-auto flex-1">
           {(!lead.callLogs || lead.callLogs.length === 0) ? (
-            <div className="text-center text-gray-500 py-8">
+            <div className="text-center text-slate-400 py-8">
               No follow-ups recorded yet.
             </div>
           ) : (
-            <div className="relative border-l border-slate-700 ml-3 space-y-6">
+            <div className="relative border-l border-slate-300 ml-3 space-y-6">
               {lead.callLogs.map((log, idx) => (
                 <div key={idx} className="relative pl-6">
                   {/* Timeline dot */}
                   <div className="absolute w-3 h-3 bg-cyan-500 rounded-full -left-[6.5px] top-1.5 shadow-[0_0_10px_rgba(6,182,212,0.5)]"></div>
                   
-                  <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-4">
+                  <div className="bg-white/50 border border-slate-300 rounded-lg p-4">
                     <div className="flex justify-between items-start mb-2">
-                      <div className="text-xs text-gray-400 font-medium bg-slate-900 px-2 py-1 rounded">
+                      <div className="text-xs text-slate-500 font-medium bg-slate-50 px-2 py-1 rounded">
                         {new Date(log.date).toLocaleString()}
                       </div>
                       <div className="flex gap-2">
                         {log.typeAtTime && <span className={`text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded-full ${log.typeAtTime.toLowerCase() === 'hot' ? 'bg-red-500/20 text-red-400' : log.typeAtTime.toLowerCase() === 'warm' ? 'bg-orange-500/20 text-orange-400' : 'bg-blue-500/20 text-blue-400'}`}>{log.typeAtTime}</span>}
-                        {log.statusAtTime && <span className="text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded-full bg-slate-700 text-gray-300">{log.statusAtTime}</span>}
+                        {log.statusAtTime && <span className="text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">{log.statusAtTime}</span>}
                       </div>
                     </div>
-                    <p className="text-sm text-gray-200 mt-2 whitespace-pre-wrap leading-relaxed">
+                    <p className="text-sm text-slate-800 mt-2 whitespace-pre-wrap leading-relaxed">
                       {log.note}
                     </p>
                   </div>
@@ -432,7 +432,7 @@ function ViewLogsModal({ lead, onClose }) {
           )}
         </div>
         
-        <div className="p-4 border-t border-border bg-slate-800/30 flex justify-end">
+        <div className="p-4 border-t border-border bg-white/30 flex justify-end">
           <button onClick={onClose} className="btn-secondary">Close</button>
         </div>
       </div>

@@ -22,7 +22,7 @@ function Dashboard() {
     }
   };
 
-  if (loading) return <div className="p-8 text-center text-gray-400">Loading dashboard...</div>;
+  if (loading) return <div className="p-8 text-center text-slate-500">Loading dashboard...</div>;
 
   // Stats calculation
   const totalLeads = leads.length;
@@ -68,37 +68,37 @@ function Dashboard() {
 
       {/* Top Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="card bg-gradient-to-br from-surface to-slate-800">
+        <div className="card bg-gradient-to-br from-surface to-slate-50">
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-xs uppercase tracking-wider text-gray-400 mb-1">Total Leads</p>
+              <p className="text-xs uppercase tracking-wider text-slate-500 mb-1">Total Leads</p>
               <h3 className="text-3xl font-bold">{totalLeads}</h3>
             </div>
             <div className="p-2 bg-primary/20 text-primary rounded-lg"><Users size={20} /></div>
           </div>
         </div>
-        <div className="card bg-gradient-to-br from-surface to-slate-800 border-l-4 border-l-hot">
+        <div className="card bg-gradient-to-br from-surface to-slate-50 border-l-4 border-l-hot">
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-xs uppercase tracking-wider text-gray-400 mb-1">Hot Leads</p>
+              <p className="text-xs uppercase tracking-wider text-slate-500 mb-1">Hot Leads</p>
               <h3 className="text-3xl font-bold">{hotLeads}</h3>
             </div>
             <div className="p-2 bg-hot/20 text-hot rounded-lg"><TrendingUp size={20} /></div>
           </div>
         </div>
-        <div className="card bg-gradient-to-br from-surface to-slate-800 border-l-4 border-l-warm">
+        <div className="card bg-gradient-to-br from-surface to-slate-50 border-l-4 border-l-warm">
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-xs uppercase tracking-wider text-gray-400 mb-1">Warm Leads</p>
+              <p className="text-xs uppercase tracking-wider text-slate-500 mb-1">Warm Leads</p>
               <h3 className="text-3xl font-bold">{warmLeads}</h3>
             </div>
             <div className="p-2 bg-warm/20 text-warm rounded-lg"><PhoneCall size={20} /></div>
           </div>
         </div>
-        <div className="card bg-gradient-to-br from-surface to-slate-800 border-l-4 border-l-won">
+        <div className="card bg-gradient-to-br from-surface to-slate-50 border-l-4 border-l-won">
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-xs uppercase tracking-wider text-gray-400 mb-1">Total Won</p>
+              <p className="text-xs uppercase tracking-wider text-slate-500 mb-1">Total Won</p>
               <h3 className="text-3xl font-bold">{wonLeads}</h3>
             </div>
             <div className="p-2 bg-won/20 text-won rounded-lg"><CheckCircle size={20} /></div>
@@ -114,20 +114,20 @@ function Dashboard() {
               <Clock size={18} className="text-primary" />
               Today's Follow-ups
             </h3>
-            <span className="badge bg-slate-700 text-gray-200">{todayFollowUps.length}</span>
+            <span className="badge bg-slate-100 text-slate-800">{todayFollowUps.length}</span>
           </div>
           <div className="flex-1 overflow-y-auto pr-2 space-y-3">
             {todayFollowUps.length === 0 ? (
-              <div className="text-center py-10 text-gray-500">No follow-ups scheduled for today.</div>
+              <div className="text-center py-10 text-slate-400">No follow-ups scheduled for today.</div>
             ) : (
               todayFollowUps.map(lead => (
-                <Link key={lead._id} to={`/leads/${lead._id}`} className="block bg-surface border border-border p-3 rounded hover:border-primary/50 transition-colors group">
+                <Link key={lead._id} to={`/leads/${lead._id}`} className="block bg-white border border-border p-3 rounded hover:border-primary/50 transition-colors group">
                   <div className="flex justify-between items-start">
                     <div className="font-medium group-hover:text-primary transition-colors">{lead.name}</div>
                     <span className={`badge badge-${lead.type?.toLowerCase()}`}>{lead.type}</span>
                   </div>
-                  <div className="text-sm text-gray-400 mt-1">{lead.mobile}</div>
-                  <div className="text-xs text-gray-500 mt-2 truncate">
+                  <div className="text-sm text-slate-500 mt-1">{lead.mobile}</div>
+                  <div className="text-xs text-slate-400 mt-2 truncate">
                     {lead.callLogs?.length > 0 ? lead.callLogs[lead.callLogs.length - 1].note : 'No previous notes'}
                   </div>
                 </Link>
@@ -144,13 +144,13 @@ function Dashboard() {
           </div>
           <div className="flex-1 overflow-y-auto pr-2 space-y-3">
             {leads.slice(0, 5).map(lead => (
-              <div key={lead._id} className="flex items-center gap-3 p-2 hover:bg-slate-800/50 rounded transition-colors">
-                <div className="w-8 h-8 rounded bg-slate-700 flex items-center justify-center shrink-0">
-                  <span className="text-xs font-bold text-gray-300">{lead.name.charAt(0)}</span>
+              <div key={lead._id} className="flex items-center gap-3 p-2 hover:bg-white/50 rounded transition-colors">
+                <div className="w-8 h-8 rounded bg-slate-100 flex items-center justify-center shrink-0">
+                  <span className="text-xs font-bold text-slate-700">{lead.name.charAt(0)}</span>
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-medium truncate">{lead.name}</div>
-                  <div className="text-xs text-gray-400 truncate">{lead.source} • {new Date(lead.createdAt).toLocaleDateString()}</div>
+                  <div className="text-xs text-slate-500 truncate">{lead.source} • {new Date(lead.createdAt).toLocaleDateString()}</div>
                 </div>
                 <div className={`text-xs px-2 py-1 rounded bg-${lead.type?.toLowerCase()}/20 text-${lead.type?.toLowerCase()}`}>
                   {lead.status}

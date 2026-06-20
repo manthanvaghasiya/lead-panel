@@ -78,19 +78,19 @@ function LeadDetail() {
     }
   };
 
-  if (loading) return <div className="p-8 text-center text-gray-400">Loading lead profile...</div>;
+  if (loading) return <div className="p-8 text-center text-slate-500">Loading lead profile...</div>;
   if (!lead) return null;
 
   return (
     <div className="max-w-6xl mx-auto flex flex-col gap-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <button onClick={() => navigate('/leads')} className="p-2 bg-surface border border-border rounded-md hover:bg-slate-700 transition-colors">
+        <button onClick={() => navigate('/leads')} className="p-2 bg-white border border-border rounded-md hover:bg-slate-100 transition-colors">
           <ArrowLeft size={18} />
         </button>
         <div>
           <h1 className="text-2xl font-bold">{lead.name}</h1>
-          <div className="text-sm text-gray-400 mt-1 flex gap-3">
+          <div className="text-sm text-slate-500 mt-1 flex gap-3">
             <span>Added {new Date(lead.createdAt).toLocaleDateString()}</span>
             <span>•</span>
             <span>Source: {lead.source}</span>
@@ -116,15 +116,15 @@ function LeadDetail() {
           <div className="card bg-gradient-to-br from-surface to-slate-800/80 border-t-4 border-t-primary">
             <div className="flex justify-between items-start mb-4">
               <div>
-                <div className="text-xs uppercase tracking-wider text-gray-400 mb-1">Current Status</div>
+                <div className="text-xs uppercase tracking-wider text-slate-500 mb-1">Current Status</div>
                 <div className="font-semibold text-lg">{lead.status}</div>
               </div>
               <span className={`badge badge-${lead.type?.toLowerCase() || 'cold'} text-sm px-3 py-1`}>
                 {lead.type}
               </span>
             </div>
-            <div className="flex items-center gap-3 text-sm mt-4 text-gray-300">
-              <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center">
+            <div className="flex items-center gap-3 text-sm mt-4 text-slate-700">
+              <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center">
                 <Phone size={14} className="text-primary" />
               </div>
               <div className="font-mono">{lead.mobile}</div>
@@ -145,7 +145,7 @@ function LeadDetail() {
             </h3>
             <form onSubmit={handleAddLog} className="flex flex-col gap-4">
               <div>
-                <label className="block text-xs text-gray-400 mb-1">Notes / Conversation</label>
+                <label className="block text-xs text-slate-500 mb-1">Notes / Conversation</label>
                 <textarea 
                   required
                   rows={3} 
@@ -157,7 +157,7 @@ function LeadDetail() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs text-gray-400 mb-1">Change Type</label>
+                  <label className="block text-xs text-slate-500 mb-1">Change Type</label>
                   <select className="input-field text-sm py-1.5" value={typeAtTime} onChange={e => setTypeAtTime(e.target.value)}>
                     <option value="Hot">Hot</option>
                     <option value="Warm">Warm</option>
@@ -167,7 +167,7 @@ function LeadDetail() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-400 mb-1">Change Status</label>
+                  <label className="block text-xs text-slate-500 mb-1">Change Status</label>
                   <select 
                     className="input-field text-sm py-1.5" 
                     value={statusAtTime}
@@ -184,7 +184,7 @@ function LeadDetail() {
                 </div>
               </div>
               <div>
-                <label className="block text-xs text-gray-400 mb-1">Set Next Follow-up</label>
+                <label className="block text-xs text-slate-500 mb-1">Set Next Follow-up</label>
                 <input 
                   type="date" 
                   className="input-field text-sm py-1.5" 
@@ -227,18 +227,18 @@ function LeadDetail() {
                 <div className="relative z-10 space-y-5">
                   <div>
                     <h4 className="text-xs uppercase tracking-wider text-purple-400 font-semibold mb-1 flex items-center gap-1"><BrainCircuit size={14}/> AI Summary</h4>
-                    <p className="text-sm text-gray-200 leading-relaxed">{aiInsight.summary}</p>
+                    <p className="text-sm text-slate-800 leading-relaxed">{aiInsight.summary}</p>
                   </div>
                   <div>
                     <h4 className="text-xs uppercase tracking-wider text-cyan-400 font-semibold mb-1 flex items-center gap-1"><Target size={14}/> Suggested Action</h4>
-                    <p className="text-sm text-gray-200">{aiInsight.nextAction}</p>
+                    <p className="text-sm text-slate-800">{aiInsight.nextAction}</p>
                   </div>
-                  <div className="bg-black/40 border border-slate-700/50 rounded-lg p-3 relative">
+                  <div className="bg-black/40 border border-slate-300/50 rounded-lg p-3 relative">
                     <h4 className="text-xs uppercase tracking-wider text-green-400 font-semibold mb-2 flex items-center gap-1"><MessageSquare size={14}/> WhatsApp Draft</h4>
-                    <p className="text-sm text-gray-300 font-mono whitespace-pre-wrap">{aiInsight.draftMessage}</p>
+                    <p className="text-sm text-slate-700 font-mono whitespace-pre-wrap">{aiInsight.draftMessage}</p>
                     <button 
                       onClick={() => navigator.clipboard.writeText(aiInsight.draftMessage)}
-                      className="absolute top-3 right-3 text-xs bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded text-gray-300 transition-colors"
+                      className="absolute top-3 right-3 text-xs bg-slate-100 hover:bg-slate-200 px-2 py-1 rounded text-slate-700 transition-colors"
                     >
                       Copy
                     </button>
@@ -253,7 +253,7 @@ function LeadDetail() {
             
             <div className="flex-1 overflow-y-auto pr-2">
               {!lead.callLogs || lead.callLogs.length === 0 ? (
-                <div className="text-center py-10 text-gray-500">
+                <div className="text-center py-10 text-slate-400">
                   <Clock size={40} className="mx-auto mb-3 opacity-20" />
                   <p>No activity recorded yet.</p>
                   <p className="text-sm mt-1">Add a log on the left to start the timeline.</p>
@@ -263,14 +263,14 @@ function LeadDetail() {
                   {[...lead.callLogs].reverse().map((log, i) => (
                     <div key={log._id || i} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
                       {/* Icon */}
-                      <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-background bg-slate-700 text-slate-300 shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
+                      <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-background bg-slate-100 text-slate-300 shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
                         <Phone size={14} />
                       </div>
                       
                       {/* Content Card */}
-                      <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-surface border border-border p-4 rounded-lg shadow-sm group-hover:border-primary/50 transition-colors">
+                      <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-white border border-border p-4 rounded-lg shadow-sm group-hover:border-primary/50 transition-colors">
                         <div className="flex justify-between items-start mb-2">
-                          <span className="text-xs text-gray-400 font-medium flex items-center gap-1.5">
+                          <span className="text-xs text-slate-500 font-medium flex items-center gap-1.5">
                             <Clock size={12} />
                             {new Date(log.date).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}
                           </span>
@@ -278,13 +278,13 @@ function LeadDetail() {
                             {log.typeAtTime}
                           </span>
                         </div>
-                        <p className="text-gray-200 text-sm leading-relaxed mb-3">
+                        <p className="text-slate-800 text-sm leading-relaxed mb-3">
                           {log.note}
                         </p>
                         {(log.statusAtTime || log.nextFollowup) && (
                           <div className="pt-3 border-t border-border/50 text-xs flex flex-wrap gap-x-4 gap-y-2">
                             {log.statusAtTime && (
-                              <div className="text-gray-400">Status: <span className="text-gray-200">{log.statusAtTime}</span></div>
+                              <div className="text-slate-500">Status: <span className="text-slate-800">{log.statusAtTime}</span></div>
                             )}
                             {log.nextFollowup && (
                               <div className="text-orange-400/80 flex items-center gap-1">

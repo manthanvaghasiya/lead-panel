@@ -21,7 +21,7 @@ function Analytics() {
     }
   };
 
-  if (loading) return <div className="p-8 text-center text-gray-400">Loading analytics...</div>;
+  if (loading) return <div className="p-8 text-center text-slate-500">Loading analytics...</div>;
 
   // Type Distribution
   const typeData = [
@@ -109,9 +109,9 @@ function Analytics() {
           <h3 className="font-medium mb-4">Pipeline Status</h3>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
             {statusData.map((stat, i) => (
-              <div key={i} className="bg-slate-800/50 border border-border p-4 rounded-lg flex flex-col items-center justify-center">
+              <div key={i} className="bg-white/50 border border-border p-4 rounded-lg flex flex-col items-center justify-center">
                 <div className="text-2xl font-bold text-white mb-1">{stat.count}</div>
-                <div className="text-xs uppercase tracking-wider text-gray-400 text-center">{stat.name}</div>
+                <div className="text-xs uppercase tracking-wider text-slate-500 text-center">{stat.name}</div>
               </div>
             ))}
           </div>

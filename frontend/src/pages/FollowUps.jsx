@@ -22,7 +22,7 @@ function FollowUps() {
     }
   };
 
-  if (loading) return <div className="p-8 text-center text-gray-400">Loading follow-ups...</div>;
+  if (loading) return <div className="p-8 text-center text-slate-500">Loading follow-ups...</div>;
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -46,18 +46,18 @@ function FollowUps() {
     <Link 
       key={lead._id} 
       to={`/leads/${lead._id}`}
-      className={`card flex items-center justify-between hover:bg-slate-800/50 transition-colors group ${type === 'overdue' ? 'border-red-500/30 bg-red-500/5' : ''}`}
+      className={`card flex items-center justify-between hover:bg-white/50 transition-colors group ${type === 'overdue' ? 'border-red-500/30 bg-red-500/5' : ''}`}
     >
       <div className="flex items-center gap-4">
-        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${type === 'overdue' ? 'bg-red-500/20 text-red-400' : type === 'today' ? 'bg-primary/20 text-primary' : 'bg-slate-700 text-gray-400'}`}>
+        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${type === 'overdue' ? 'bg-red-500/20 text-red-400' : type === 'today' ? 'bg-primary/20 text-primary' : 'bg-slate-100 text-slate-500'}`}>
           {type === 'overdue' ? <AlertCircle size={20} /> : <Calendar size={20} />}
         </div>
         <div>
-          <h4 className="font-medium text-gray-200 group-hover:text-primary transition-colors flex items-center gap-2">
+          <h4 className="font-medium text-slate-800 group-hover:text-primary transition-colors flex items-center gap-2">
             {lead.name}
             <span className={`badge badge-${lead.type?.toLowerCase()}`}>{lead.type}</span>
           </h4>
-          <div className="text-sm text-gray-400 mt-1 flex items-center gap-3">
+          <div className="text-sm text-slate-500 mt-1 flex items-center gap-3">
             <span>{lead.mobile}</span>
             <span>•</span>
             <span className="flex items-center gap-1">
@@ -67,7 +67,7 @@ function FollowUps() {
           </div>
         </div>
       </div>
-      <div className="text-gray-500 group-hover:text-primary transition-colors">
+      <div className="text-slate-400 group-hover:text-primary transition-colors">
         <ChevronRight size={20} />
       </div>
     </Link>
@@ -93,7 +93,7 @@ function FollowUps() {
           <Clock size={18} /> Due Today ({dueToday.length})
         </h2>
         {dueToday.length === 0 ? (
-          <div className="p-6 text-center text-gray-500 bg-surface border border-border rounded-lg">
+          <div className="p-6 text-center text-slate-400 bg-white border border-border rounded-lg">
             No follow-ups scheduled for today.
           </div>
         ) : (
@@ -104,11 +104,11 @@ function FollowUps() {
       </section>
 
       <section>
-        <h2 className="text-lg font-medium text-gray-300 mb-3 flex items-center gap-2">
+        <h2 className="text-lg font-medium text-slate-700 mb-3 flex items-center gap-2">
           <Calendar size={18} /> Upcoming ({upcoming.length})
         </h2>
         {upcoming.length === 0 ? (
-          <div className="p-6 text-center text-gray-500 bg-surface border border-border rounded-lg">
+          <div className="p-6 text-center text-slate-400 bg-white border border-border rounded-lg">
             No upcoming follow-ups.
           </div>
         ) : (

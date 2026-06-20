@@ -182,7 +182,7 @@ function ImportExport() {
             <h2 className="text-lg font-medium">Import Leads</h2>
           </div>
           
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-slate-500">
             Upload your existing Excel or CSV file. You can map your columns to the database fields in the next step.
           </p>
 
@@ -198,7 +198,7 @@ function ImportExport() {
             onClick={() => fileInputRef.current.click()}
             className="btn-secondary w-full py-8 border-dashed border-2 flex flex-col items-center justify-center gap-3 hover:border-primary/50"
           >
-            <FileSpreadsheet size={32} className="text-gray-400" />
+            <FileSpreadsheet size={32} className="text-slate-500" />
             <span>Select Excel or CSV File</span>
           </button>
 
@@ -207,7 +207,7 @@ function ImportExport() {
               {results.error > 0 ? <AlertTriangle className="text-orange-500" /> : <Check className="text-green-500" />}
               <div>
                 <h4 className={`font-medium ${results.error > 0 ? 'text-orange-500' : 'text-green-500'}`}>Import Complete</h4>
-                <p className="text-sm text-gray-300 mt-1">Successfully imported {results.success} leads.</p>
+                <p className="text-sm text-slate-700 mt-1">Successfully imported {results.success} leads.</p>
                 {results.error > 0 && <p className="text-sm text-orange-400 mt-1">Failed to import {results.error} rows (missing required fields or errors).</p>}
               </div>
             </div>
@@ -221,7 +221,7 @@ function ImportExport() {
             <h2 className="text-lg font-medium">Export Leads</h2>
           </div>
           
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-slate-500">
             Download your entire lead database as an Excel (.xlsx) file for backup or external reporting.
           </p>
 
@@ -244,14 +244,14 @@ function ImportExport() {
           <h3 className="font-medium text-lg mb-4 flex items-center gap-2">
             <Check className="text-primary" /> Map Columns
           </h3>
-          <p className="text-sm text-gray-400 mb-6">
+          <p className="text-sm text-slate-500 mb-6">
             Match your file columns to the system fields. Name and Mobile are required.
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
             {dbFields.map(field => (
-              <div key={field.key} className="bg-slate-800/50 p-3 rounded border border-border">
-                <label className="block text-xs uppercase tracking-wider text-gray-400 mb-2">
+              <div key={field.key} className="bg-white/50 p-3 rounded border border-border">
+                <label className="block text-xs uppercase tracking-wider text-slate-500 mb-2">
                   {field.label}
                 </label>
                 <select 

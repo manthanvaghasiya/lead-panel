@@ -11,15 +11,15 @@ function Layout({ children }) {
   return (
     <div className="flex h-screen bg-background">
       {/* Sidebar */}
-      <div className="w-16 md:w-64 bg-surface border-r border-border flex flex-col">
-        <div className="h-16 flex items-center justify-center md:justify-start md:px-6 border-b border-border">
+      <div className="w-16 md:w-64 bg-slate-900 border-r border-slate-800 flex flex-col">
+        <div className="h-16 flex items-center justify-center md:justify-start md:px-6 border-b border-slate-800 text-white">
           <div className="w-8 h-8 rounded bg-primary text-white flex items-center justify-center font-bold text-xl md:mr-3">
             W
           </div>
           <span className="hidden md:block font-bold text-xl tracking-wider">WEBIOX</span>
         </div>
         <nav className="flex-1 py-4 flex flex-col gap-2 px-2">
-          <Link to="/" className="flex items-center gap-3 px-3 py-3 rounded hover:bg-slate-700 transition-colors text-gray-300 hover:text-white">
+          <Link to="/" className="flex items-center gap-3 px-3 py-3 rounded hover:bg-slate-800 transition-colors text-slate-400 hover:text-white">
             <LayoutDashboard size={20} />
             <span className="hidden md:block text-sm font-medium">Dashboard</span>
           </Link>
@@ -27,15 +27,15 @@ function Layout({ children }) {
             <List size={20} />
             <span className="hidden md:block text-sm font-medium">Leads</span>
           </Link>
-          <Link to="/follow-ups" className="flex items-center gap-3 px-3 py-3 rounded hover:bg-slate-700 transition-colors text-gray-300 hover:text-white">
+          <Link to="/follow-ups" className="flex items-center gap-3 px-3 py-3 rounded hover:bg-slate-800 transition-colors text-slate-400 hover:text-white">
             <Calendar size={20} />
             <span className="hidden md:block text-sm font-medium">Follow-ups</span>
           </Link>
-          <Link to="/analytics" className="flex items-center gap-3 px-3 py-3 rounded hover:bg-slate-700 transition-colors text-gray-300 hover:text-white">
+          <Link to="/analytics" className="flex items-center gap-3 px-3 py-3 rounded hover:bg-slate-800 transition-colors text-slate-400 hover:text-white">
             <LayoutDashboard size={20} />
             <span className="hidden md:block text-sm font-medium">Analytics</span>
           </Link>
-          <Link to="/import-export" className="flex items-center gap-3 px-3 py-3 rounded hover:bg-slate-700 transition-colors text-gray-300 hover:text-white">
+          <Link to="/import-export" className="flex items-center gap-3 px-3 py-3 rounded hover:bg-slate-800 transition-colors text-slate-400 hover:text-white">
             <FileDown size={20} />
             <span className="hidden md:block text-sm font-medium">Import / Export</span>
           </Link>
@@ -45,7 +45,7 @@ function Layout({ children }) {
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
 
-        <main className="flex-1 overflow-y-auto p-4 md:p-6 text-gray-200">
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 text-slate-800">
           {children}
         </main>
       </div>
