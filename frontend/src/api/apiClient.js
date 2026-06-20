@@ -7,6 +7,15 @@ const apiClient = axios.create({
   }
 });
 
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    console.error('API Client Error Response Data:', error.response?.data || error.message);
+    return Promise.reject(error);
+  }
+);
+
+
 export const getLeads = () => apiClient.get('/leads');
 export const getLead = (id) => apiClient.get(`/leads/${id}`);
 export const createLead = (data) => apiClient.post('/leads', data);
