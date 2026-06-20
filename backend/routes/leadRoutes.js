@@ -193,7 +193,8 @@ router.post('/:id/ai-social-extract', async (req, res) => {
 
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
     const model = genAI.getGenerativeModel({ 
-      model: "gemini-2.5-flash"
+      model: "gemini-2.5-flash",
+      tools: [{ googleSearch: {} }] 
     });
 
     const prompt = `
@@ -364,7 +365,7 @@ router.get('/:id/ai-insight', async (req, res) => {
 
   } catch (err) {
     console.error('AI Insight Error:', err);
-    res.status(500).json({ message: 'Failed to generate AI insight. Ensure API key is valid.' });
+    res.status(err.status || 500).json({ message: err.message });
   }
 });
 
