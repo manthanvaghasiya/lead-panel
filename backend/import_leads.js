@@ -19,12 +19,58 @@ const run = async () => {
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
+    // Pre-process and merge data
+    const mergedData = [];
+    const mobileToRow = new Map();
+
+    for (let row of data) {
+      let mobiles = (row['Mobile No.'] || '').toString().split(/[,/]/).map(m => m.replace(/\D/g, '')).filter(m => m.length > 0);
+      if (mobiles.length === 0) mobiles = ['0000000000'];
+
+      // Find if this row matches any existing merged row
+      let existingRow = null;
+      for (let m of mobiles) {
+        if (m.startsWith('0')) m = m.substring(1);
+        if (m !== '0000000000' && mobileToRow.has(m)) {
+          existingRow = mobileToRow.get(m);
+          break;
+        }
+      }
+
+      if (existingRow) {
+        // Merge! 
+        // We append call logs (reason, followups, dates)
+        // Keep the original name as the parent name
+        Object.keys(row).forEach(k => {
+          if (!existingRow[k] && k !== 'Original Name' && k !== 'Mobile No.') {
+            existingRow[k] = row[k];
+          } else if (k === 'Original Reason' || k.startsWith('followup') || k.match(/^\d{1,2}\/\d{1,2}\/\d{4}/)) {
+            // If the parent already has this key, we can create a new key so it's not lost
+            let newKey = k;
+            while(existingRow[newKey]) newKey += '_merged';
+            existingRow[newKey] = row[k];
+          }
+        });
+      } else {
+        // New row
+        mergedData.push(row);
+        for (let m of mobiles) {
+          if (m.startsWith('0')) m = m.substring(1);
+          if (m !== '0000000000') {
+            mobileToRow.set(m, row);
+          }
+        }
+      }
+    }
+
+    console.log(`Merged down to ${mergedData.length} unique leads`);
+
     // Process in batches of 20
     const BATCH_SIZE = 20;
     
-    for (let i = 0; i < data.length; i += BATCH_SIZE) {
-      console.log(`Processing batch ${i/BATCH_SIZE + 1} of ${Math.ceil(data.length/BATCH_SIZE)}...`);
-      const batch = data.slice(i, i + BATCH_SIZE);
+    for (let i = 0; i < mergedData.length; i += BATCH_SIZE) {
+      console.log(`Processing batch ${i/BATCH_SIZE + 1} of ${Math.ceil(mergedData.length/BATCH_SIZE)}...`);
+      const batch = mergedData.slice(i, i + BATCH_SIZE);
       
       const promptData = batch.map((row, idx) => {
         let name = row['Clean Name'] || row['Original Name'] || '';
@@ -100,10 +146,42 @@ const run = async () => {
         else if (rawStatus.includes('won')) status = 'Won';
         else if (rawStatus.includes('lost')) status = 'Lost';
 
+        // Extract and sequence call logs perfectly
         let callLogs = [];
-        if (row['Original Reason']) callLogs.push({ note: "Original Reason: " + row['Original Reason'], timestamp: new Date() });
-        if (row['followup 1']) callLogs.push({ note: "Followup 1: " + row['followup 1'], timestamp: new Date() });
-        if (row['followup 2']) callLogs.push({ note: "Followup 2: " + row['followup 2'], timestamp: new Date() });
+        
+        // Base time: Right now
+        const baseTime = new Date().getTime();
+        
+        // Sequence list
+        let sequence = [];
+
+        // 1. Original Reason
+        const reasonKeys = Object.keys(row).filter(k => k.includes('Original Reason'));
+        reasonKeys.forEach(k => sequence.push("Original Reason: " + row[k]));
+
+        // 2. Followup 1
+        const f1Keys = Object.keys(row).filter(k => k.includes('followup 1'));
+        f1Keys.forEach(k => sequence.push("Followup 1: " + row[k]));
+
+        // 3. Followup 2
+        const f2Keys = Object.keys(row).filter(k => k.includes('followup 2'));
+        f2Keys.forEach(k => sequence.push("Followup 2: " + row[k]));
+
+        // 4. Any Date keys (like 16/06/2026)
+        const dateKeys = Object.keys(row).filter(k => k.match(/^\d{1,2}\/\d{1,2}\/\d{4}/));
+        // sort date keys if possible, but they are probably just strings.
+        dateKeys.forEach(k => sequence.push(`Date [${k.split('_')[0]}]: ` + row[k]));
+
+        // Reverse the order for timestamp assignment so the first in sequence gets the OLDEST time
+        // E.g. sequence[0] gets baseTime - N minutes, sequence[last] gets baseTime.
+        sequence.forEach((note, index) => {
+           // Older notes get older timestamps (subtracting days/hours so they sort nicely)
+           // If we have 4 notes: 
+           // index 0 gets -4 hours
+           // index 1 gets -3 hours
+           const timeDiff = (sequence.length - index) * 60 * 60 * 1000; 
+           callLogs.push({ note, date: new Date(baseTime - timeDiff) });
+        });
 
         const lead = new Lead({
           name,

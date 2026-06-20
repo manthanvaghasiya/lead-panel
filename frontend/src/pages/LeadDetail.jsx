@@ -197,8 +197,21 @@ function LeadDetail() {
             </div>
             <div className="p-5 flex flex-col gap-5">
               
-              {/* Core Contact */}
-              <div className="flex flex-col gap-3">
+              {/* Owner / Core Contact */}
+              <div className="flex flex-col gap-4">
+                
+                {lead.ownerName && (
+                  <div className="flex items-start gap-3 text-sm bg-indigo-50/50 p-3 rounded-lg border border-indigo-100/50">
+                    <div className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center shrink-0">
+                      <Target size={14} className="text-indigo-600" />
+                    </div>
+                    <div className="flex flex-col pt-1">
+                      <span className="text-xs font-semibold text-indigo-600 uppercase tracking-wider mb-0.5">Owner / Contact</span>
+                      <span className="font-bold text-slate-900">{lead.ownerName}</span>
+                    </div>
+                  </div>
+                )}
+
                 <div className="flex items-start gap-3 text-sm">
                   <div className="w-8 h-8 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0">
                     <Phone size={14} className="text-slate-500" />
