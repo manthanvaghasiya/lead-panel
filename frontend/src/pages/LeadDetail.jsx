@@ -140,14 +140,18 @@ function LeadDetail() {
           <div className="flex flex-col">
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight">{lead.name}</h1>
             <div className="flex items-center gap-3 mt-1.5 text-sm font-medium text-slate-500 flex-wrap">
-              <span className="flex items-center gap-1.5 text-slate-700">
-                <Briefcase size={14} className="text-slate-400" />
-                {lead.businessType || 'No Business Type'}
-              </span>
-              <span className="text-slate-300">•</span>
+              {lead.businessType && (
+                <>
+                  <span className="flex items-center gap-1.5 text-slate-700">
+                    <Briefcase size={14} className="text-slate-400" />
+                    {lead.businessType}
+                  </span>
+                  <span className="text-slate-300">•</span>
+                </>
+              )}
               <span className="flex items-center gap-1.5 text-slate-700">
                 <MapPin size={14} className="text-slate-400" />
-                {lead.city || 'No Location'}
+                {lead.city || (lead.address ? lead.address.split(/[,|]/)[0].trim() : 'Location Unknown')}
               </span>
             </div>
           </div>
