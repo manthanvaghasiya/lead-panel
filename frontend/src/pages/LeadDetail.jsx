@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Phone, Calendar, Clock, MapPin, Briefcase, Activity, Sparkles, BrainCircuit, MessageSquare, Target, Globe, Tags, X, Edit, ImagePlus } from 'lucide-react';
-import { getLead, addCallLog, updateLead, getLeadAiInsight, extractLeadFromText, extractLogFromText, autoCleanLead } from '../api/apiClient';
+import { ArrowLeft, Phone, Calendar, Clock, MapPin, Briefcase, Activity, Sparkles, BrainCircuit, MessageSquare, Target, Globe, Tags, X, Edit, ImagePlus, Star } from 'lucide-react';
+import { FaInstagram, FaFacebook, FaYoutube, FaLinkedin } from 'react-icons/fa';
+import { getLead, addCallLog, updateLead, getLeadAiInsight, extractLeadFromText, extractLogFromText, autoCleanLead, extractSocialProfiles } from '../api/apiClient';
 
 function LeadDetail() {
   const { id } = useParams();
@@ -22,6 +23,7 @@ function LeadDetail() {
   const [logImageFile, setLogImageFile] = useState(null);
   const [logImagePreview, setLogImagePreview] = useState(null);
   const [savingLog, setSavingLog] = useState(false);
+  const [extractingSocials, setExtractingSocials] = useState(false);
 
   // Tags State
   const [tagInput, setTagInput] = useState('');
@@ -71,6 +73,19 @@ function LeadDetail() {
       alert('Failed to generate AI Insight. Make sure your API key is valid.');
     } finally {
       setLoadingAi(false);
+    }
+  };
+
+  const handleExtractSocials = async () => {
+    try {
+      setExtractingSocials(true);
+      const res = await extractSocialProfiles(id);
+      setLead(res.data);
+    } catch (e) {
+      console.error(e);
+      alert('Failed to extract social profiles. Make sure API key is valid.');
+    } finally {
+      setExtractingSocials(false);
     }
   };
 
@@ -291,6 +306,92 @@ function LeadDetail() {
             </div>
           </div>
 
+          {/* Web Presence Panel */}
+          <div className="bg-white border border-border rounded-xl shadow-sm overflow-hidden mt-6">
+            <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+              <h3 className="font-semibold text-slate-800 flex items-center gap-2">
+                <Globe size={16} className="text-blue-500" />
+                Web Presence
+              </h3>
+              <button 
+                onClick={handleExtractSocials}
+                disabled={extractingSocials}
+                className="flex items-center gap-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 px-2.5 py-1 rounded border border-blue-200 text-[10px] font-bold uppercase tracking-wider transition-colors disabled:opacity-50"
+              >
+                {extractingSocials ? <Activity size={12} className="animate-spin" /> : <Sparkles size={12} />}
+                {extractingSocials ? 'Scanning...' : 'AI Search Web'}
+              </button>
+            </div>
+            <div className="p-5 flex flex-col gap-5">
+              {/* Google Reviews */}
+              <div className="bg-amber-50/50 border border-amber-100 rounded-lg p-3 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-white border border-amber-200 flex items-center justify-center shrink-0 shadow-sm text-amber-500">
+                    <Star size={20} className="fill-amber-400" />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Rating</span>
+                    {lead.socials?.rating ? (
+                      <div className="flex items-baseline gap-1">
+                        <span className="font-black text-xl text-slate-800">{lead.socials.rating}</span>
+                        <span className="text-sm font-semibold text-amber-600">/ 5</span>
+                      </div>
+                    ) : (
+                      <span className="text-sm font-medium text-slate-400 italic">No rating found</span>
+                    )}
+                  </div>
+                </div>
+                <div className="flex flex-col items-end">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Reviews</span>
+                  <span className="font-bold text-slate-700">{lead.socials?.reviews || '0'}</span>
+                </div>
+              </div>
+
+              {/* Social Links */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex items-center gap-2 text-sm bg-slate-50 border border-slate-100 p-2 rounded-lg">
+                  <div className="w-8 h-8 rounded bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-500 text-white flex items-center justify-center shrink-0">
+                    <FaInstagram size={16} />
+                  </div>
+                  <div className="flex flex-col overflow-hidden">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase">Instagram</span>
+                    <span className="font-medium text-slate-700 truncate">{lead.socials?.instagram || '-'}</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 text-sm bg-slate-50 border border-slate-100 p-2 rounded-lg">
+                  <div className="w-8 h-8 rounded bg-[#1877F2] text-white flex items-center justify-center shrink-0">
+                    <FaFacebook size={16} />
+                  </div>
+                  <div className="flex flex-col overflow-hidden">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase">Facebook</span>
+                    <span className="font-medium text-slate-700 truncate">{lead.socials?.facebook || '-'}</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 text-sm bg-slate-50 border border-slate-100 p-2 rounded-lg">
+                  <div className="w-8 h-8 rounded bg-[#FF0000] text-white flex items-center justify-center shrink-0">
+                    <FaYoutube size={16} />
+                  </div>
+                  <div className="flex flex-col overflow-hidden">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase">YouTube</span>
+                    <span className="font-medium text-slate-700 truncate">{lead.socials?.youtube || '-'}</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 text-sm bg-slate-50 border border-slate-100 p-2 rounded-lg">
+                  <div className="w-8 h-8 rounded bg-[#0A66C2] text-white flex items-center justify-center shrink-0">
+                    <FaLinkedin size={16} />
+                  </div>
+                  <div className="flex flex-col overflow-hidden">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase">LinkedIn</span>
+                    <span className="font-medium text-slate-700 truncate">{lead.socials?.linkedin || '-'}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
         </div>
 
         {/* RIGHT COLUMN: AI & Timeline */}
@@ -430,6 +531,8 @@ function LeadDetail() {
                 </div>
               )}
             </div>
+          </div>
+          
           {/* Activity Logger */}
           <div className="bg-white border border-border rounded-xl shadow-sm overflow-hidden">
             <div className="p-4 border-b border-slate-100 bg-slate-50/50">
@@ -540,9 +643,6 @@ function LeadDetail() {
               </form>
             </div>
           </div>
-
-          </div>
-
         </div>
       </div>
 

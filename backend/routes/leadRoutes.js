@@ -181,6 +181,65 @@ router.post('/:id/auto-clean', async (req, res) => {
   }
 });
 
+// AI extract social presence using Search Grounding
+router.post('/:id/ai-social-extract', async (req, res) => {
+  try {
+    const lead = await Lead.findById(req.params.id);
+    if (!lead) return res.status(404).json({ message: 'Lead not found' });
+
+    if (!process.env.GEMINI_API_KEY) {
+      return res.status(500).json({ message: 'Gemini API key is missing' });
+    }
+
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    const model = genAI.getGenerativeModel({ 
+      model: "gemini-2.5-flash",
+      tools: [{ googleSearch: {} }] 
+    });
+
+    const prompt = `
+      Search the web for business: "${lead.name}" located in "${lead.city || lead.address || ''}".
+      Find their official social media handles/links (Instagram, Facebook, YouTube, LinkedIn). Do not guess or hallucinate. If you can't find them, return empty string.
+      Also find their business rating (out of 5) and total number of reviews from Google Reviews, Justdial, or IndiaMART.
+      
+      Return ONLY raw JSON matching exactly this structure:
+      {
+        "instagram": "username or link or empty",
+        "facebook": "username or link or empty",
+        "youtube": "username or link or empty",
+        "linkedin": "username or link or empty",
+        "rating": "e.g. 4.5 or empty",
+        "reviews": "e.g. 40 or empty"
+      }
+    `;
+
+    const result = await model.generateContent(prompt);
+    let responseText = result.response.text().trim();
+    if (responseText.startsWith('\`\`\`json')) {
+      responseText = responseText.replace(/^\`\`\`json/, '').replace(/\`\`\`$/, '').trim();
+    } else if (responseText.startsWith('\`\`\`')) {
+      responseText = responseText.replace(/^\`\`\`/, '').replace(/\`\`\`$/, '').trim();
+    }
+
+    const extractedData = JSON.parse(responseText);
+
+    lead.socials = {
+      instagram: extractedData.instagram || '',
+      facebook: extractedData.facebook || '',
+      youtube: extractedData.youtube || '',
+      linkedin: extractedData.linkedin || '',
+      rating: extractedData.rating || '',
+      reviews: extractedData.reviews || ''
+    };
+
+    await lead.save();
+    res.json(lead);
+  } catch (err) {
+    console.error('AI Social Extract Error:', err);
+    res.status(500).json({ message: err.message });
+  }
+});
+
 // Get all leads
 router.get('/', async (req, res) => {
   try {
