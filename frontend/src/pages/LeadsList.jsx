@@ -71,15 +71,15 @@ function LeadsList() {
       {/* Leads Table */}
       <div className="card flex-1 overflow-hidden flex flex-col p-0">
         <div className="overflow-x-auto flex-1">
-          <table className="w-full text-left border-collapse min-w-[800px]">
+          <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-border bg-slate-50 text-xs uppercase tracking-wider text-slate-500">
-                <th className="px-4 py-3 font-semibold w-[280px]">Lead Profile</th>
-                <th className="px-4 py-3 font-semibold w-[180px]">Contact Info</th>
-                <th className="px-4 py-3 font-semibold w-[100px]">Type</th>
-                <th className="px-4 py-3 font-semibold w-[140px]">Status</th>
-                <th className="px-4 py-3 font-semibold min-w-[200px]">Latest Activity</th>
-                <th className="px-4 py-3 font-semibold w-[100px] text-right">Actions</th>
+                <th className="px-3 py-3 font-semibold w-[25%]">Lead Profile</th>
+                <th className="px-3 py-3 font-semibold w-[18%]">Contact Info</th>
+                <th className="px-3 py-3 font-semibold w-[8%]">Type</th>
+                <th className="px-3 py-3 font-semibold w-[12%]">Status</th>
+                <th className="px-3 py-3 font-semibold min-w-[200px]">Latest Activity</th>
+                <th className="px-3 py-3 font-semibold w-[10%] text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 bg-white">
@@ -116,9 +116,11 @@ function LeadsList() {
                     </td>
                     
                     {/* 2. Contact Info */}
-                    <td className="px-4 py-3">
+                    <td className="px-3 py-3">
                       <div className="flex flex-col">
-                        <span className="font-medium text-slate-700">{lead.mobile}</span>
+                        <span className="font-medium text-slate-700">
+                          {lead.mobile?.length > 10 ? lead.mobile.match(/.{1,10}/g).join(', ') : lead.mobile}
+                        </span>
                         <span 
                           className="text-xs text-cyan-600 cursor-pointer hover:underline truncate max-w-[150px] flex items-center gap-1"
                           onClick={() => alert(`Full Address:\n${lead.address || 'No address provided'}`)}
@@ -169,7 +171,7 @@ function LeadsList() {
                     </td>
 
                     {/* 6. Actions */}
-                    <td className="px-4 py-3 text-right">
+                    <td className="px-3 py-3 text-right">
                       <div className="flex items-center justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
                         <a 
                           href={`https://wa.me/91${lead.mobile}`} 

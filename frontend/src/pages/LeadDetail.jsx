@@ -233,7 +233,9 @@ function LeadDetail() {
                   </div>
                   <div className="flex flex-col pt-1">
                     <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-0.5">Mobile Number</span>
-                    <span className="font-medium text-slate-900">{lead.mobile}</span>
+                    <span className="font-bold text-slate-900">
+                      {lead.mobile?.length > 10 ? lead.mobile.match(/.{1,10}/g).join(', ') : lead.mobile}
+                    </span>
                   </div>
                 </div>
 
