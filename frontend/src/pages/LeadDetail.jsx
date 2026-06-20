@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Phone, Calendar, Clock, MapPin, Briefcase, Activity, Sparkles, BrainCircuit, MessageSquare, Target, Globe, Tags } from 'lucide-react';
+import { ArrowLeft, Phone, Calendar, Clock, MapPin, Briefcase, Activity, Sparkles, BrainCircuit, MessageSquare, Target, Globe, Tags, X } from 'lucide-react';
 import { getLead, addCallLog, updateLead, getLeadAiInsight } from '../api/apiClient';
 
 function LeadDetail() {
@@ -15,6 +15,40 @@ function LeadDetail() {
   const [statusAtTime, setStatusAtTime] = useState('');
   const [nextFollowup, setNextFollowup] = useState('');
   const [savingLog, setSavingLog] = useState(false);
+
+  // Tags State
+  const [tagInput, setTagInput] = useState('');
+
+  const handleAddTag = async (e) => {
+    if (e.key === 'Enter' && tagInput.trim()) {
+      e.preventDefault();
+      const newTag = tagInput.trim();
+      if (!lead.tags?.includes(newTag)) {
+        const updatedTags = [...(lead.tags || []), newTag];
+        try {
+          const { data } = await updateLead(id, { tags: updatedTags });
+          setLead(data);
+          setTagInput('');
+        } catch (err) {
+          console.error(err);
+          alert('Failed to add tag');
+        }
+      } else {
+        setTagInput('');
+      }
+    }
+  };
+
+  const handleRemoveTag = async (tagToRemove) => {
+    const updatedTags = lead.tags.filter(t => t !== tagToRemove);
+    try {
+      const { data } = await updateLead(id, { tags: updatedTags });
+      setLead(data);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to remove tag');
+    }
+  };
 
   // AI Insight State
   const [aiInsight, setAiInsight] = useState(null);
@@ -205,16 +239,23 @@ function LeadDetail() {
               {/* Tags */}
               <div className="flex flex-col gap-2 pt-2">
                 <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1"><Tags size={12}/> Tags</span>
-                <div className="flex flex-wrap gap-2">
-                  {lead.tags && lead.tags.length > 0 ? (
-                    lead.tags.map((tag, i) => (
-                      <span key={i} className="px-2 py-1 bg-slate-100 border border-slate-200 rounded text-xs font-medium text-slate-600">
-                        {tag}
-                      </span>
-                    ))
-                  ) : (
-                    <span className="text-xs text-slate-400 italic">No tags</span>
-                  )}
+                <div className="flex flex-wrap gap-2 items-center">
+                  {lead.tags && lead.tags.map((tag, i) => (
+                    <span key={i} className="flex items-center gap-1 px-2 py-1 bg-indigo-50 border border-indigo-100 rounded-md text-xs font-bold text-indigo-700 group transition-colors hover:bg-indigo-100">
+                      {tag}
+                      <button onClick={() => handleRemoveTag(tag)} className="text-indigo-400 hover:text-indigo-700 opacity-50 group-hover:opacity-100 transition-opacity" title="Remove tag">
+                        <X size={12} strokeWidth={3} />
+                      </button>
+                    </span>
+                  ))}
+                  <input 
+                    type="text" 
+                    placeholder="Type & press Enter..." 
+                    className="text-xs font-medium border border-dashed border-slate-300 rounded-md px-2.5 py-1 w-32 focus:w-40 focus:outline-none focus:border-primary focus:bg-white bg-slate-50 transition-all text-slate-700 placeholder:text-slate-400 placeholder:font-normal"
+                    value={tagInput}
+                    onChange={(e) => setTagInput(e.target.value)}
+                    onKeyDown={handleAddTag}
+                  />
                 </div>
               </div>
 
