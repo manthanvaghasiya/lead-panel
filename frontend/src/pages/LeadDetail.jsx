@@ -501,7 +501,7 @@ function LeadDetail() {
               )}
               
               {/* Extra Info */}
-              {(lead.socials?.hours || lead.socials?.emails) && (
+              {(lead.socials?.hours || lead.socials?.emails || lead.socials?.phones || lead.socials?.addressMatch) && (
                 <div className="flex flex-col gap-2 bg-slate-50 border border-slate-100 p-3 rounded-lg text-sm">
                   {lead.socials?.hours && (
                     <div className="flex items-start gap-2">
@@ -513,6 +513,18 @@ function LeadDetail() {
                     <div className="flex items-start gap-2">
                       <span className="font-bold text-slate-400 text-[10px] uppercase tracking-wider w-12 shrink-0 mt-0.5">Email</span>
                       <span className="text-blue-600 font-medium break-all">{lead.socials.emails}</span>
+                    </div>
+                  )}
+                  {lead.socials?.phones && (
+                    <div className="flex items-start gap-2">
+                      <span className="font-bold text-slate-400 text-[10px] uppercase tracking-wider w-12 shrink-0 mt-0.5">Phones</span>
+                      <span className="text-slate-700 font-medium break-all">{lead.socials.phones}</span>
+                    </div>
+                  )}
+                  {lead.socials?.addressMatch && (
+                    <div className="flex items-start gap-2 pt-1 border-t border-slate-200 mt-1">
+                      <span className="font-bold text-slate-400 text-[10px] uppercase tracking-wider w-12 shrink-0 mt-0.5">Address</span>
+                      <span className="text-slate-600 font-medium leading-tight">{lead.socials.addressMatch}</span>
                     </div>
                   )}
                 </div>
@@ -531,6 +543,11 @@ function LeadDetail() {
                     ) : (
                       <span className="font-medium text-slate-700 truncate">{lead.socials?.instagram || '-'}</span>
                     )}
+                    {lead.socials?.instagramFollowers && (
+                      <span className="text-[10px] font-bold text-purple-600 bg-purple-50 px-1.5 py-0.5 rounded mt-0.5 w-max">
+                        {lead.socials.instagramFollowers} Followers
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -545,6 +562,11 @@ function LeadDetail() {
                     ) : (
                       <span className="font-medium text-slate-700 truncate">{lead.socials?.facebook || '-'}</span>
                     )}
+                    {lead.socials?.facebookFollowers && (
+                      <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded mt-0.5 w-max">
+                        {lead.socials.facebookFollowers} Followers
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -558,6 +580,11 @@ function LeadDetail() {
                       <a href={lead.socials.youtube} target="_blank" rel="noreferrer" className="font-medium text-blue-600 hover:text-blue-800 hover:underline truncate" title={lead.socials.youtube}>{lead.socials.youtube.replace(/^https?:\/\/(www\.)?/, '')}</a>
                     ) : (
                       <span className="font-medium text-slate-700 truncate">{lead.socials?.youtube || '-'}</span>
+                    )}
+                    {lead.socials?.youtubeSubscribers && (
+                      <span className="text-[10px] font-bold text-red-600 bg-red-50 px-1.5 py-0.5 rounded mt-0.5 w-max">
+                        {lead.socials.youtubeSubscribers} Subs
+                      </span>
                     )}
                   </div>
                 </div>
@@ -948,6 +975,11 @@ function UpdateLeadModal({ lead, onClose, onSuccess }) {
       summary: lead.socials?.summary || '',
       hours: lead.socials?.hours || '',
       emails: lead.socials?.emails || '',
+      phones: lead.socials?.phones || '',
+      addressMatch: lead.socials?.addressMatch || '',
+      instagramFollowers: lead.socials?.instagramFollowers || '',
+      facebookFollowers: lead.socials?.facebookFollowers || '',
+      youtubeSubscribers: lead.socials?.youtubeSubscribers || '',
       platforms: lead.socials?.platforms || []
     }
   });

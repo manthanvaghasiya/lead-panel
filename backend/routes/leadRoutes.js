@@ -188,7 +188,8 @@ router.post('/:id/ai-social-extract', async (req, res) => {
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
     const model = genAI.getGenerativeModel({
       model: "gemini-2.5-flash",
-      tools: [{ googleSearch: {} }]
+      tools: [{ googleSearch: {} }],
+      generationConfig: { responseMimeType: "application/json" }
     });
 
     const prompt = `
@@ -204,9 +205,14 @@ router.post('/:id/ai-social-extract', async (req, res) => {
       - "facebook": Official Facebook URL
       - "youtube": Official YouTube channel URL
       - "linkedin": Official LinkedIn URL
-      - "summary": A highly detailed, comprehensive summary of the business. You MUST include: 1. EXACTLY what services/products they offer. 2. Their precise, confirmed physical address found online. 3. Any public phone numbers or WhatsApp numbers found. 4. Notable social media follower counts if found (e.g., "1.2k Facebook followers"). Make it a rich, readable paragraph.
-      - "hours": Their operating hours if found online (e.g. "Mon-Fri 9AM-6PM").
+      - "instagramFollowers": Number of Instagram followers if found (e.g. "12.5k" or "450")
+      - "facebookFollowers": Number of Facebook followers/likes if found
+      - "youtubeSubscribers": Number of YouTube subscribers if found
+      - "summary": A descriptive summary of what the business actually does, including their exact confirmed address. Be extremely precise.
+      - "hours": Their exact operating hours if found online (e.g. "Mon-Fri 9AM-6PM").
       - "emails": Any public email addresses found (comma separated if multiple).
+      - "phones": Any public phone or mobile numbers found online (comma separated).
+      - "addressMatch": The exact full physical address found on Google/Justdial/Web.
       - "platforms": An array of objects. For every platform where you find a rating (e.g., Google Maps, Justdial, Yelp, Facebook, Zomato, etc.), return an object: { "name": "Platform Name", "rating": "e.g. 4.8", "reviews": "e.g. 120", "url": "URL to the profile" }.
     `;
 
@@ -254,6 +260,11 @@ router.post('/:id/ai-social-extract', async (req, res) => {
       summary: extractedData.summary || '',
       hours: extractedData.hours || '',
       emails: extractedData.emails || '',
+      phones: extractedData.phones || '',
+      addressMatch: extractedData.addressMatch || '',
+      instagramFollowers: extractedData.instagramFollowers || '',
+      facebookFollowers: extractedData.facebookFollowers || '',
+      youtubeSubscribers: extractedData.youtubeSubscribers || '',
       platforms: Array.isArray(extractedData.platforms) ? extractedData.platforms : []
     };
 

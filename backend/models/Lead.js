@@ -34,6 +34,11 @@ const leadSchema = new mongoose.Schema({
     summary: { type: String },
     hours: { type: String },
     emails: { type: String },
+    phones: { type: String },
+    addressMatch: { type: String },
+    instagramFollowers: { type: String },
+    facebookFollowers: { type: String },
+    youtubeSubscribers: { type: String },
     platforms: [{
       name: { type: String },
       rating: { type: String },
