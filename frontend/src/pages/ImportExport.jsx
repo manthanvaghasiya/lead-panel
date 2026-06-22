@@ -23,7 +23,7 @@ function ImportExport() {
   const dbFields = [
     { key: 'name', label: 'Name (Required)', icon: '👤' },
     { key: 'mobile', label: 'Mobile (Required)', icon: '📱' },
-    { key: 'source', label: 'Source', icon: '🌐' },
+    { key: 'source', label: 'Ask For', icon: '🌐' },
     { key: 'type', label: 'Type (Hot/Warm/Cold)', icon: '🔥' },
     { key: 'status', label: 'Status', icon: '📊' },
     { key: 'businessType', label: 'Business Type', icon: '🏢' },
@@ -207,7 +207,7 @@ function ImportExport() {
         Mobile: lead.mobile,
         Type: lead.type,
         Status: lead.status,
-        Source: lead.source,
+        'Ask For': lead.source,
         'Business Type': lead.businessType || '',
         City: lead.city || '',
         'Created At': new Date(lead.createdAt).toLocaleDateString(),

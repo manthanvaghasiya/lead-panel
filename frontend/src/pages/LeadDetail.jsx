@@ -374,7 +374,7 @@ function LeadDetail() {
                   </span>
                 </div>
                 <div className="flex flex-col gap-1">
-                  <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Source</span>
+                  <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Ask For</span>
                   <span className="text-sm font-medium text-slate-800 flex items-center gap-1.5">
                     <Globe size={12} className="text-slate-400" />
                     {lead.source}
@@ -951,7 +951,15 @@ function UpdateLeadModal({ lead, onClose, onSuccess }) {
         businessType: data.businessType || prev.businessType,
         type: ['Hot', 'Warm', 'Cold'].includes(data.type) ? data.type : prev.type,
         source: ['Website', 'CRM', 'Website+CRM', 'Other'].includes(data.source) ? data.source : prev.source,
-        status: ['Pending', 'In Process', 'Send Detail', 'Follow-up Letter', 'Contacted'].includes(data.status) ? data.status : prev.status
+        status: ['Pending', 'In Process', 'Send Detail', 'Follow-up Letter', 'Contacted'].includes(data.status) ? data.status : prev.status,
+        socials: {
+          instagram: data.socials?.instagram || prev.socials?.instagram || '',
+          facebook: data.socials?.facebook || prev.socials?.facebook || '',
+          youtube: data.socials?.youtube || prev.socials?.youtube || '',
+          linkedin: data.socials?.linkedin || prev.socials?.linkedin || '',
+          rating: prev.socials?.rating || '',
+          reviews: prev.socials?.reviews || ''
+        }
       }));
       setMagicText('');
       setImageFile(null);
@@ -1076,6 +1084,31 @@ function UpdateLeadModal({ lead, onClose, onSuccess }) {
               <input type="text" className="input-field" value={formData.website} onChange={e => setFormData({...formData, website: e.target.value})} placeholder="e.g. https://example.com" />
             </div>
 
+            <details className="group border border-slate-200 rounded-lg bg-slate-50 open:bg-white transition-colors">
+              <summary className="flex items-center justify-between cursor-pointer p-3 font-medium text-slate-700 select-none">
+                <span className="flex items-center gap-2 text-sm"><Sparkles size={16} className="text-purple-500" /> Social Media Links</span>
+                <ChevronDown size={18} className="text-slate-400 group-open:-rotate-180 transition-transform duration-200" />
+              </summary>
+              <div className="p-4 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs uppercase tracking-wider text-slate-500 mb-1.5">Instagram</label>
+                  <input type="text" className="input-field" value={formData.socials.instagram} onChange={e => setFormData({...formData, socials: {...formData.socials, instagram: e.target.value}})} placeholder="URL or handle" />
+                </div>
+                <div>
+                  <label className="block text-xs uppercase tracking-wider text-slate-500 mb-1.5">Facebook</label>
+                  <input type="text" className="input-field" value={formData.socials.facebook} onChange={e => setFormData({...formData, socials: {...formData.socials, facebook: e.target.value}})} placeholder="URL or handle" />
+                </div>
+                <div>
+                  <label className="block text-xs uppercase tracking-wider text-slate-500 mb-1.5">LinkedIn</label>
+                  <input type="text" className="input-field" value={formData.socials.linkedin} onChange={e => setFormData({...formData, socials: {...formData.socials, linkedin: e.target.value}})} placeholder="URL or handle" />
+                </div>
+                <div>
+                  <label className="block text-xs uppercase tracking-wider text-slate-500 mb-1.5">YouTube</label>
+                  <input type="text" className="input-field" value={formData.socials.youtube} onChange={e => setFormData({...formData, socials: {...formData.socials, youtube: e.target.value}})} placeholder="URL or channel" />
+                </div>
+              </div>
+            </details>
+
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs uppercase tracking-wider text-slate-500 font-semibold mb-1.5">Type</label>
@@ -1086,7 +1119,7 @@ function UpdateLeadModal({ lead, onClose, onSuccess }) {
                 </select>
               </div>
               <div>
-                <label className="block text-xs uppercase tracking-wider text-slate-500 font-semibold mb-1.5">Source</label>
+                <label className="block text-xs uppercase tracking-wider text-slate-500 font-semibold mb-1.5">Ask For</label>
                 <select className="w-full border border-slate-200 rounded-md p-2 text-sm bg-white focus:border-primary focus:outline-none" value={formData.source} onChange={e => setFormData({...formData, source: e.target.value})}>
                   <option value="Website">Website</option>
                   <option value="CRM">CRM</option>

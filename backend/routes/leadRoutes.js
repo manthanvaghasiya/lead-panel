@@ -14,27 +14,30 @@ router.post('/ai-extract', async (req, res) => {
     if (!text && !imageBase64) return res.status(400).json({ message: 'Text or image input is required' });
 
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const model = genAI.getGenerativeModel({ 
+      model: "gemini-2.5-flash",
+      generationConfig: { responseMimeType: "application/json" }
+    });
 
     const prompt = `
-      You are an expert sales assistant. A salesperson has provided an image (like a business card) and/or dictated some messy notes about a new lead.
-      Extract the structured lead data from this.
-      Return ONLY a JSON object with exactly these keys:
-      {
-        "name": "Extracted business name or main entity name, or empty string if not found",
-        "ownerName": "Extracted owner/contact person name, or empty string",
-        "mobile": "Extracted mobile number (digits only) or empty string",
-        "address": "Extracted full address/location or empty string",
-        "city": "Extract JUST the City name from the address (e.g. Surat, Delhi, Karnal) or empty string",
-        "businessType": "Extract the business type or profession if mentioned, else empty string",
-        "website": "Extracted website URL if mentioned, else empty string",
-        "type": "Must be 'Hot', 'Warm', or 'Cold' based on their interest level. Default to 'Cold'.",
-        "source": "Must be 'Website', 'CRM', 'Website+CRM', or 'Other'. Guess based on text/image, default to 'Other'.",
-        "status": "Must be 'Pending', 'In Process', 'Send Detail', 'Follow-up Letter', 'Contacted'. Guess based on text/image, default to 'Pending'."
-      }
-      Do not include any markdown blocks like \`\`\`json. Just the raw JSON.
+      You are an expert, highly accurate data entry assistant for a sales CRM. Your job is to extract structured lead data from a given image (e.g., a business card, flyer, screenshot) and/or a messy text note.
 
-      Messy Notes: "${text || 'No text provided'}"
+      EXTRACT THE FOLLOWING FIELDS EXACTLY AS REQUESTED. DO NOT GUESS DATA THAT IS NOT PRESENT. IF SOMETHING IS MISSING, RETURN AN EMPTY STRING "".
+
+      Fields to extract:
+      - "name": The Business Name, Company Name, or Shop Name. If it's just a person, leave empty or use their name if they act as a business.
+      - "ownerName": The Name of the person/owner/contact. Do NOT confuse this with the business name.
+      - "mobile": Extract ALL phone numbers found. Return ONLY digits (e.g., "9876543210"). If there are multiple, separate them by a comma. Remove +91 or other country codes if it's an Indian 10-digit number.
+      - "address": The full address or location mentioned.
+      - "city": Extract JUST the City name from the address (e.g., Surat, Delhi, Karnal, Mumbai). Must be a single word if possible.
+      - "businessType": The industry, profession, or type of business (e.g., Plumber, Real Estate, Doctor, Clothing Shop).
+      - "website": The exact website URL (e.g., example.com).
+      - "type": Estimate interest level: 'Hot', 'Warm', or 'Cold'. Default: 'Cold'.
+      - "source": Guess what product/service the lead is ASKING FOR (e.g., 'Website', 'CRM', 'Website+CRM', 'Other'). Default: 'Other'.
+      - "status": Estimate current stage: 'Pending', 'In Process', 'Send Detail', 'Follow-up Letter', 'Contacted'. Default: 'Pending'.
+      - "socials": A nested object containing strings for: "instagram", "facebook", "youtube", "linkedin". If you find an @handle or a link, put it in the matching platform.
+
+      Input Text Notes: "${text || 'No text provided'}"
     `;
 
     const parts = [prompt];
@@ -48,14 +51,8 @@ router.post('/ai-extract', async (req, res) => {
     }
 
     const result = await model.generateContent(parts);
-    let responseText = result.response.text().trim();
+    const responseText = result.response.text().trim();
     
-    if (responseText.startsWith('\`\`\`json')) {
-      responseText = responseText.replace(/^\`\`\`json/, '').replace(/\`\`\`$/, '').trim();
-    } else if (responseText.startsWith('\`\`\`')) {
-      responseText = responseText.replace(/^\`\`\`/, '').replace(/\`\`\`$/, '').trim();
-    }
-
     const extractedData = JSON.parse(responseText);
     res.json(extractedData);
 
@@ -76,21 +73,23 @@ router.post('/ai-extract-log', async (req, res) => {
     if (!text && !imageBase64) return res.status(400).json({ message: 'Text or image input is required' });
 
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const model = genAI.getGenerativeModel({ 
+      model: "gemini-2.5-flash",
+      generationConfig: { responseMimeType: "application/json" }
+    });
 
     const prompt = `
-      You are an expert sales assistant. A salesperson has provided messy notes (or an image) from a recent follow-up call with a lead.
+      You are an expert sales assistant and highly accurate data entry bot. A salesperson has provided messy notes (or an image) from a recent follow-up call with a lead.
       Extract the structured call log data from this.
-      Return ONLY a JSON object with exactly these keys:
-      {
-        "note": "A clean summary of the conversation/notes. Do not leave this empty.",
-        "typeAtTime": "Must be 'Hot', 'Warm', or 'Cold' if explicitly or implicitly mentioned. Otherwise empty string.",
-        "statusAtTime": "Must be 'Pending', 'In Process', 'Send Detail', 'Follow-up Letter', 'Contacted', 'Won', or 'Lost'. Guess based on text, otherwise empty string.",
-        "nextFollowup": "Extracted future follow up date in YYYY-MM-DD format if mentioned (assume current year is 2026), otherwise empty string."
-      }
-      Do not include any markdown blocks like \`\`\`json. Just the raw JSON.
 
-      Messy Notes: "${text || 'No text provided'}"
+      EXTRACT THE FOLLOWING FIELDS EXACTLY AS REQUESTED. DO NOT GUESS DATA THAT IS NOT PRESENT.
+      Fields to extract:
+      - "note": A clean summary of the conversation/notes. Do not leave this empty.
+      - "typeAtTime": Must be 'Hot', 'Warm', or 'Cold' if explicitly or implicitly mentioned. Otherwise empty string.
+      - "statusAtTime": Must be 'Pending', 'In Process', 'Send Detail', 'Follow-up Letter', 'Contacted', 'Won', or 'Lost'. Guess based on text, otherwise empty string.
+      - "nextFollowup": Extracted future follow up date in YYYY-MM-DD format if mentioned (assume current year is 2026), otherwise empty string.
+
+      Input Text Notes: "${text || 'No text provided'}"
     `;
 
     const parts = [prompt];
@@ -104,14 +103,8 @@ router.post('/ai-extract-log', async (req, res) => {
     }
 
     const result = await model.generateContent(parts);
-    let responseText = result.response.text().trim();
+    const responseText = result.response.text().trim();
     
-    if (responseText.startsWith('\`\`\`json')) {
-      responseText = responseText.replace(/^\`\`\`json/, '').replace(/\`\`\`$/, '').trim();
-    } else if (responseText.startsWith('\`\`\`')) {
-      responseText = responseText.replace(/^\`\`\`/, '').replace(/\`\`\`$/, '').trim();
-    }
-
     const extractedData = JSON.parse(responseText);
     res.json(extractedData);
 

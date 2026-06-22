@@ -89,7 +89,7 @@ function Analytics() {
 
         {/* Sources Chart */}
         <div className="card">
-          <h3 className="font-medium mb-4 text-center">Lead Sources</h3>
+          <h3 className="font-medium mb-4 text-center">What Leads Ask For</h3>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={sourceData} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
