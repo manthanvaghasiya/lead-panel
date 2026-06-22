@@ -17,6 +17,7 @@ const leadSchema = new mongoose.Schema({
   city: { type: String },
   address: { type: String },
   mapsUrl: { type: String },
+  website: { type: String },
   source: { type: String, default: 'Website' },
   type: { type: String, enum: ['Hot', 'Warm', 'Cold', 'Won', 'Lost'], default: 'Cold' },
   status: { type: String, default: 'Pending' },

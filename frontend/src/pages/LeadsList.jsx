@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getLeads, createLead, extractLeadFromText, addCallLog, extractLogFromText } from '../api/apiClient';
+import { useScrollRestore } from '../hooks/useScrollRestore';
+import { extractMobileNumbers } from '../utils/contactUtils';
+import SelectContactModal from '../components/Modals/SelectContactModal';
 import { Search, Plus, Filter, MoreHorizontal, FileText, MessageSquarePlus, X, Sparkles, ImagePlus, ChevronDown, RotateCcw } from 'lucide-react';
 import { FaWhatsapp, FaPhoneAlt } from 'react-icons/fa';
 
@@ -18,6 +21,8 @@ function LeadsList() {
   const [viewLogsLead, setViewLogsLead] = useState(null);
   const [logModalLead, setLogModalLead] = useState(null);
   const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
+  const [contactActionLead, setContactActionLead] = useState(null);
+  const [contactActionType, setContactActionType] = useState(null);
   const [filters, setFilters] = useState({
     status: '',
     type: '',
@@ -25,6 +30,9 @@ function LeadsList() {
     city: '',
     source: ''
   });
+
+  useScrollRestore('leads-desktop-scroll', loading);
+  useScrollRestore('leads-mobile-scroll', loading);
 
   useEffect(() => {
     fetchLeads();
@@ -38,6 +46,20 @@ function LeadsList() {
       console.error('Error fetching leads:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleContactClick = (e, lead, type) => {
+    e.preventDefault();
+    const numbers = extractMobileNumbers(lead.mobile);
+    if (numbers.length > 1) {
+      setContactActionLead(lead);
+      setContactActionType(type);
+    } else if (numbers.length === 1) {
+      if (type === 'call') window.location.href = `tel:${numbers[0]}`;
+      if (type === 'whatsapp') window.open(`https://wa.me/91${numbers[0]}`, '_blank');
+    } else {
+      alert('No valid mobile number found.');
     }
   };
 
@@ -248,7 +270,7 @@ function LeadsList() {
 
       {/* Leads Table (Desktop) */}
       <div className="hidden md:flex flex-1 flex-col -mx-4 sm:mx-0 overflow-hidden">
-        <div className="overflow-y-auto overflow-x-hidden flex-1 bg-white sm:rounded-xl sm:border sm:border-slate-200 shadow-sm">
+        <div id="leads-desktop-scroll" className="overflow-y-auto overflow-x-hidden flex-1 bg-white sm:rounded-xl sm:border sm:border-slate-200 shadow-sm">
           <table className="w-full text-left border-collapse table-fixed">
             <thead className="sticky top-0 z-10">
               <tr className="border-b border-border bg-slate-50 text-xs uppercase tracking-wider text-slate-500 shadow-sm">
@@ -347,22 +369,20 @@ function LeadsList() {
                     {/* 6. Actions */}
                     <td className="px-3 py-3 text-right">
                       <div className="flex items-center justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <a 
-                          href={`tel:${lead.mobile}`} 
+                        <button 
+                          onClick={(e) => handleContactClick(e, lead, 'call')}
                           className="p-1.5 bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 transition-colors border border-blue-200 shadow-sm"
                           title="Call"
                         >
                           <FaPhoneAlt size={12} />
-                        </a>
-                        <a 
-                          href={`https://wa.me/91${lead.mobile}`} 
-                          target="_blank" 
-                          rel="noreferrer"
+                        </button>
+                        <button 
+                          onClick={(e) => handleContactClick(e, lead, 'whatsapp')}
                           className="p-1.5 bg-green-50 text-green-600 rounded-md hover:bg-green-100 transition-colors border border-green-200 shadow-sm"
                           title="WhatsApp"
                         >
                           <FaWhatsapp size={14} />
-                        </a>
+                        </button>
                         <button 
                           onClick={() => setLogModalLead(lead)}
                           className="p-1.5 bg-indigo-50 text-indigo-600 rounded-md hover:bg-indigo-100 transition-colors border border-indigo-200 shadow-sm"
@@ -388,7 +408,7 @@ function LeadsList() {
       </div>
 
       {/* Leads List (Mobile Card View) */}
-      <div className="md:hidden flex-1 overflow-y-auto pb-20 space-y-3 -mx-2">
+      <div id="leads-mobile-scroll" className="md:hidden flex-1 overflow-y-auto pb-20 space-y-3 -mx-2">
         {loading ? (
           <div className="p-12 text-center text-slate-500 font-medium">Loading leads...</div>
         ) : filteredLeads.length === 0 ? (
@@ -437,8 +457,8 @@ function LeadsList() {
                   Logs ({lead.callLogs ? lead.callLogs.length : 0})
                 </button>
                 <div className="flex gap-2">
-                  <a href={`tel:${lead.mobile}`} className="p-2 bg-blue-50 text-blue-600 rounded-lg border border-blue-200 shadow-sm"><FaPhoneAlt size={14} /></a>
-                  <a href={`https://wa.me/91${lead.mobile}`} target="_blank" rel="noreferrer" className="p-2 bg-green-50 text-green-600 rounded-lg border border-green-200 shadow-sm"><FaWhatsapp size={16} /></a>
+                  <button onClick={(e) => handleContactClick(e, lead, 'call')} className="p-2 bg-blue-50 text-blue-600 rounded-lg border border-blue-200 shadow-sm"><FaPhoneAlt size={14} /></button>
+                  <button onClick={(e) => handleContactClick(e, lead, 'whatsapp')} className="p-2 bg-green-50 text-green-600 rounded-lg border border-green-200 shadow-sm"><FaWhatsapp size={16} /></button>
                   <button onClick={() => setLogModalLead(lead)} className="p-2 bg-indigo-50 text-indigo-600 rounded-lg border border-indigo-200 shadow-sm"><MessageSquarePlus size={16} /></button>
                   <Link to={`/leads/${lead._id}`} className="p-2 bg-slate-800 text-white rounded-lg shadow-sm"><MoreHorizontal size={16} /></Link>
                 </div>
@@ -478,13 +498,25 @@ function LeadsList() {
           }}
         />
       )}
+
+      {/* Select Contact Modal */}
+      {contactActionLead && (
+        <SelectContactModal 
+          lead={contactActionLead}
+          actionType={contactActionType}
+          onClose={() => {
+            setContactActionLead(null);
+            setContactActionType(null);
+          }}
+        />
+      )}
     </div>
   );
 }
 
 function AddLeadModal({ onClose, onSuccess }) {
   const [formData, setFormData] = useState({
-    name: '', ownerName: '', mobile: '', address: '', mapsUrl: '', city: '', businessType: '', source: 'Website', type: 'Cold', status: 'Pending'
+    name: '', ownerName: '', mobile: '', address: '', mapsUrl: '', website: '', city: '', businessType: '', source: 'Website', type: 'Cold', status: 'Pending'
   });
   const [loading, setLoading] = useState(false);
   const [magicText, setMagicText] = useState('');
@@ -501,6 +533,27 @@ function AddLeadModal({ onClose, onSuccess }) {
       reader.readAsDataURL(file);
     }
   };
+
+  useEffect(() => {
+    const handlePaste = (e) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].type.indexOf('image') !== -1) {
+          const file = items[i].getAsFile();
+          if (file) {
+            setImageFile(file);
+            const reader = new FileReader();
+            reader.onloadend = () => setImagePreview(reader.result);
+            reader.readAsDataURL(file);
+          }
+          break;
+        }
+      }
+    };
+    document.addEventListener('paste', handlePaste);
+    return () => document.removeEventListener('paste', handlePaste);
+  }, []);
 
   const handleMagicFill = async () => {
     if (!magicText.trim() && !imageFile) return;
@@ -520,6 +573,8 @@ function AddLeadModal({ onClose, onSuccess }) {
         ownerName: data.ownerName || prev.ownerName,
         mobile: data.mobile || prev.mobile,
         address: data.address || prev.address,
+        mapsUrl: data.mapsUrl || prev.mapsUrl,
+        website: data.website || prev.website,
         city: data.city || prev.city,
         businessType: data.businessType || prev.businessType,
         type: ['Hot', 'Warm', 'Cold'].includes(data.type) ? data.type : prev.type,
@@ -553,14 +608,14 @@ function AddLeadModal({ onClose, onSuccess }) {
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <div className="bg-white border border-border rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
-        <div className="flex justify-between items-center p-4 border-b border-border bg-white/50">
+      <div className="bg-white border border-border rounded-xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col max-h-[90vh]">
+        <div className="flex justify-between items-center p-4 border-b border-border bg-white/50 shrink-0">
           <h3 className="font-medium text-lg">Add New Lead</h3>
           <button onClick={onClose} className="text-slate-500 hover:text-slate-900 transition-colors">
             <X size={20} />
           </button>
         </div>
-        <div className="p-5 flex flex-col gap-4">
+        <div className="p-5 flex flex-col gap-4 overflow-y-auto custom-scrollbar">
           
           {/* AI Magic Fill Section */}
           <div className="bg-purple-50 border border-purple-100 rounded-lg p-3">
@@ -600,7 +655,7 @@ function AddLeadModal({ onClose, onSuccess }) {
               <textarea 
                 rows="2"
                 className="input-field text-sm resize-none flex-1"
-                placeholder="e.g. 'Rahul from Surat, 9988776655' or just upload a photo!"
+                placeholder="Paste an image (Ctrl+V) or type info..."
                 value={magicText}
                 onChange={e => setMagicText(e.target.value)}
               />
@@ -652,6 +707,10 @@ function AddLeadModal({ onClose, onSuccess }) {
             <div>
               <label className="block text-xs uppercase tracking-wider text-slate-500 mb-1.5">Google Maps URL</label>
               <input type="text" className="input-field" value={formData.mapsUrl} onChange={e => setFormData({...formData, mapsUrl: e.target.value})} placeholder="e.g. https://google.com/maps/..." />
+            </div>
+            <div>
+              <label className="block text-xs uppercase tracking-wider text-slate-500 mb-1.5">Website Link</label>
+              <input type="text" className="input-field" value={formData.website} onChange={e => setFormData({...formData, website: e.target.value})} placeholder="e.g. https://example.com" />
             </div>
             <div className="grid grid-cols-2 gap-4">
             <div>

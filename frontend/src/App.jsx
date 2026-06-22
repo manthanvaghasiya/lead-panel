@@ -7,6 +7,9 @@ import Dashboard from './pages/Dashboard';
 import FollowUps from './pages/FollowUps';
 import Analytics from './pages/Analytics';
 import ImportExport from './pages/ImportExport';
+import UpdatePrompt from './components/PWA/UpdatePrompt';
+import InstallButton from './components/PWA/InstallButton';
+import OfflineBadge from './components/PWA/OfflineBadge';
 
 function Layout({ children }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -15,6 +18,12 @@ function Layout({ children }) {
   // Close mobile menu when route changes
   useEffect(() => {
     setIsMobileMenuOpen(false);
+    
+    // Scroll to top of main content when route changes
+    const mainContent = document.getElementById('main-scroll-container');
+    if (mainContent) {
+      mainContent.scrollTop = 0;
+    }
   }, [location.pathname]);
 
   const navItems = [
@@ -26,8 +35,9 @@ function Layout({ children }) {
   ];
 
   return (
-    <div className="flex h-screen bg-background font-sans text-slate-800 overflow-hidden">
-      
+    <div className="flex h-screen bg-background font-sans text-slate-800 overflow-hidden flex-col">
+      <OfflineBadge />
+      <div className="flex flex-1 overflow-hidden">
       {/* Mobile Overlay */}
       {isMobileMenuOpen && (
         <div 
@@ -94,7 +104,8 @@ function Layout({ children }) {
         </nav>
 
         {/* User Profile Section */}
-        <div className="p-4 border-t border-slate-800/80 bg-slate-900/50">
+        <div className="p-4 border-t border-slate-800/80 bg-slate-900/50 flex flex-col gap-2">
+          <InstallButton />
           <div className="flex items-center gap-3 p-2 rounded-xl hover:bg-slate-800 transition-all duration-200 cursor-pointer group">
             <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center shrink-0 border-2 border-slate-700 group-hover:border-slate-500 transition-colors overflow-hidden">
               <img src="/IMG_20251110_151125[1].jpg" alt="Admin" className="w-full h-full object-cover" />
@@ -125,10 +136,12 @@ function Layout({ children }) {
           </div>
         </div>
 
-        <main className="flex-1 overflow-y-auto p-4 md:p-8">
+        <main id="main-scroll-container" className="flex-1 overflow-y-auto p-4 md:p-8">
           {children}
         </main>
       </div>
+      </div>
+      <UpdatePrompt />
     </div>
   );
 }

@@ -2,10 +2,13 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Calendar, AlertCircle, Clock, ChevronRight } from 'lucide-react';
 import { getLeads } from '../api/apiClient';
+import { useScrollRestore } from '../hooks/useScrollRestore';
 
 function FollowUps() {
   const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  useScrollRestore('main-scroll-container', loading);
 
   useEffect(() => {
     fetchLeads();

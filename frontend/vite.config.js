@@ -7,8 +7,13 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
+      registerType: 'prompt',
+      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg', 'WEBIOX LOGO.png'],
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,json}'],
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+      },
       manifest: {
         name: 'Webiox Lead Panel',
         short_name: 'LeadPanel',

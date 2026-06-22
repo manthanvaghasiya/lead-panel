@@ -27,6 +27,7 @@ router.post('/ai-extract', async (req, res) => {
         "address": "Extracted full address/location or empty string",
         "city": "Extract JUST the City name from the address (e.g. Surat, Delhi, Karnal) or empty string",
         "businessType": "Extract the business type or profession if mentioned, else empty string",
+        "website": "Extracted website URL if mentioned, else empty string",
         "type": "Must be 'Hot', 'Warm', or 'Cold' based on their interest level. Default to 'Cold'.",
         "source": "Must be 'Website', 'CRM', 'Website+CRM', or 'Other'. Guess based on text/image, default to 'Other'.",
         "status": "Must be 'Pending', 'In Process', 'Send Detail', 'Follow-up Letter', 'Contacted'. Guess based on text/image, default to 'Pending'."

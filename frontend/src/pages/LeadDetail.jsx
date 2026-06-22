@@ -3,6 +3,9 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Phone, Calendar, Clock, MapPin, Briefcase, Activity, Sparkles, BrainCircuit, MessageSquare, Target, Globe, Tags, X, Edit, ImagePlus, Star, Search } from 'lucide-react';
 import { FaInstagram, FaFacebook, FaYoutube, FaLinkedin } from 'react-icons/fa';
 import { getLead, addCallLog, updateLead, getLeadAiInsight, extractLeadFromText, extractLogFromText, autoCleanLead, extractSocialProfiles, deleteLead } from '../api/apiClient';
+import { useScrollRestore } from '../hooks/useScrollRestore';
+import { extractMobileNumbers } from '../utils/contactUtils';
+import SelectContactModal from '../components/Modals/SelectContactModal';
 
 function LeadDetail() {
   const { id } = useParams();
@@ -33,6 +36,10 @@ function LeadDetail() {
 
   // Tags State
   const [tagInput, setTagInput] = useState('');
+
+  const [contactActionType, setContactActionType] = useState(null);
+
+  useScrollRestore('main-scroll-container', loading);
 
   const handleAddTag = async (e) => {
     if (e.key === 'Enter' && tagInput.trim()) {
@@ -166,6 +173,19 @@ function LeadDetail() {
     }
   };
 
+  const handleContactClick = (e, type) => {
+    e.preventDefault();
+    const numbers = extractMobileNumbers(lead.mobile);
+    if (numbers.length > 1) {
+      setContactActionType(type);
+    } else if (numbers.length === 1) {
+      if (type === 'call') window.location.href = `tel:${numbers[0]}`;
+      if (type === 'whatsapp') window.open(`https://wa.me/91${numbers[0]}`, '_blank');
+    } else {
+      alert('No valid mobile number found.');
+    }
+  };
+
   const filteredLogs = (lead?.callLogs || []).filter(log => {
     if (logSearch && !log.note.toLowerCase().includes(logSearch.toLowerCase())) {
       return false;
@@ -237,22 +257,23 @@ function LeadDetail() {
             <Edit size={16} />
             <span>Edit Profile</span>
           </button>
-          <a 
-            href={`https://wa.me/91${lead.mobile}`} 
-            target="_blank" 
-            rel="noreferrer"
-            className="flex items-center justify-center gap-2 px-3 sm:px-5 py-2.5 bg-[#25D366] text-white rounded-lg font-medium shadow-sm hover:bg-[#128C7E] transition-colors"
-          >
-            <MessageSquare size={16} />
-            <span>WhatsApp</span>
-          </a>
-          <a 
-            href={`tel:${lead.mobile}`} 
-            className="flex items-center justify-center gap-2 px-3 sm:px-5 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-lg font-medium shadow-sm hover:bg-slate-50 transition-colors"
-          >
-            <Phone size={16} />
-            <span>Call</span>
-          </a>
+          {/* Action Buttons */}
+          <div className="flex gap-2 w-full sm:w-auto">
+            <button 
+              onClick={(e) => handleContactClick(e, 'whatsapp')}
+              className="flex items-center justify-center gap-2 px-3 sm:px-5 py-2.5 bg-[#25D366] text-white rounded-lg font-medium shadow-sm hover:bg-[#128C7E] transition-colors"
+            >
+              <MessageSquare size={16} />
+              <span>WhatsApp</span>
+            </button>
+            <button 
+              onClick={(e) => handleContactClick(e, 'call')}
+              className="flex items-center justify-center gap-2 px-3 sm:px-5 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-lg font-medium shadow-sm hover:bg-slate-50 transition-colors"
+            >
+              <Phone size={16} />
+              <span>Call</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -317,12 +338,26 @@ function LeadDetail() {
                           rel="noopener noreferrer"
                           className="ml-2 text-indigo-600 hover:text-indigo-800 text-xs font-bold underline inline-flex items-center gap-0.5"
                         >
-                          View on Google Maps 🗺️
+                          Open Map
                         </a>
                       )}
                     </span>
                   </div>
                 </div>
+
+                {lead.website && (
+                  <div className="flex items-start gap-3 text-sm mt-3">
+                    <div className="w-8 h-8 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0">
+                      <Globe size={14} className="text-slate-500" />
+                    </div>
+                    <div className="flex flex-col pt-1">
+                      <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-0.5">Website</span>
+                      <a href={lead.website.startsWith('http') ? lead.website : `https://${lead.website}`} target="_blank" rel="noopener noreferrer" className="font-bold text-indigo-600 hover:underline">
+                        {lead.website}
+                      </a>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <hr className="border-slate-100" />
@@ -762,6 +797,14 @@ function LeadDetail() {
           }}
         />
       )}
+
+      {contactActionType && (
+        <SelectContactModal 
+          lead={lead}
+          actionType={contactActionType}
+          onClose={() => setContactActionType(null)}
+        />
+      )}
     </div>
   );
 
@@ -832,6 +875,7 @@ function UpdateLeadModal({ lead, onClose, onSuccess }) {
     mobile: lead.mobile || '', 
     address: lead.address || '', 
     mapsUrl: lead.mapsUrl || '', 
+    website: lead.website || '',
     businessType: lead.businessType || '',
     city: lead.city || '',
     source: lead.source || 'Website', 
@@ -862,6 +906,27 @@ function UpdateLeadModal({ lead, onClose, onSuccess }) {
     }
   };
 
+  useEffect(() => {
+    const handlePaste = (e) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].type.indexOf('image') !== -1) {
+          const file = items[i].getAsFile();
+          if (file) {
+            setImageFile(file);
+            const reader = new FileReader();
+            reader.onloadend = () => setImagePreview(reader.result);
+            reader.readAsDataURL(file);
+          }
+          break;
+        }
+      }
+    };
+    document.addEventListener('paste', handlePaste);
+    return () => document.removeEventListener('paste', handlePaste);
+  }, []);
+
   const handleMagicFill = async () => {
     if (!magicText.trim() && !imageFile) return;
     setExtracting(true);
@@ -880,6 +945,8 @@ function UpdateLeadModal({ lead, onClose, onSuccess }) {
         ownerName: data.ownerName || prev.ownerName,
         mobile: data.mobile || prev.mobile,
         address: data.address || prev.address,
+        mapsUrl: data.mapsUrl || prev.mapsUrl,
+        website: data.website || prev.website,
         city: data.city || prev.city,
         businessType: data.businessType || prev.businessType,
         type: ['Hot', 'Warm', 'Cold'].includes(data.type) ? data.type : prev.type,
@@ -951,8 +1018,8 @@ function UpdateLeadModal({ lead, onClose, onSuccess }) {
             <div className="flex flex-col sm:flex-row gap-2">
               <textarea 
                 rows="2"
-                className="w-full border border-purple-200 rounded-md p-2 text-sm focus:outline-none focus:ring-1 focus:ring-purple-400 resize-none flex-1 bg-white"
-                placeholder="Paste updated text or upload a photo!"
+                className="input-field text-sm resize-none flex-1"
+                placeholder="Paste an image (Ctrl+V) or type info..."
                 value={magicText}
                 onChange={e => setMagicText(e.target.value)}
               />
@@ -1001,8 +1068,12 @@ function UpdateLeadModal({ lead, onClose, onSuccess }) {
             </div>
 
             <div>
-              <label className="block text-xs uppercase tracking-wider text-slate-500 font-semibold mb-1.5">Google Maps URL</label>
-              <input type="text" className="w-full border border-slate-200 rounded-md p-2 text-sm focus:border-primary focus:outline-none" value={formData.mapsUrl} onChange={e => setFormData({...formData, mapsUrl: e.target.value})} />
+              <label className="block text-xs uppercase tracking-wider text-slate-500 mb-1.5">Google Maps URL</label>
+              <input type="text" className="input-field" value={formData.mapsUrl} onChange={e => setFormData({...formData, mapsUrl: e.target.value})} placeholder="e.g. https://google.com/maps/..." />
+            </div>
+            <div>
+              <label className="block text-xs uppercase tracking-wider text-slate-500 mb-1.5">Website Link</label>
+              <input type="text" className="input-field" value={formData.website} onChange={e => setFormData({...formData, website: e.target.value})} placeholder="e.g. https://example.com" />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
