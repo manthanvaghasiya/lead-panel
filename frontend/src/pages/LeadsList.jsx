@@ -538,7 +538,7 @@ function AddLeadModal({ onClose, onSuccess }) {
       setImagePreview(null);
     } catch (err) {
       console.error(err);
-      alert('Failed to extract data. Make sure AI is configured properly.');
+      alert(err.response?.data?.message || 'Failed to extract data. Make sure AI is configured properly.');
     } finally {
       setExtracting(false);
     }
@@ -845,7 +845,7 @@ function AddCallLogModal({ lead, onClose, onSuccess }) {
       setImagePreview(null);
     } catch (err) {
       console.error(err);
-      alert('Failed to extract data. Make sure AI is configured properly.');
+      alert(err.response?.data?.message || 'Failed to extract data. Make sure AI is configured properly.');
     } finally {
       setExtracting(false);
     }
