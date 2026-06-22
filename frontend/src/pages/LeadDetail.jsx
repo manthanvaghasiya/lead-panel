@@ -235,6 +235,15 @@ function LeadDetail() {
                   <MapPin size={14} className="text-slate-400 shrink-0" />
                   <span className="truncate max-w-[120px] sm:max-w-none">{lead.city || (lead.address ? lead.address.split(/[,|]/)[0].trim() : 'Location Unknown')}</span>
                 </span>
+                {lead.createdAt && (
+                  <>
+                    <span className="text-slate-300 hidden sm:inline">•</span>
+                    <span className="flex items-center gap-1 text-slate-700 truncate" title="Lead Added Date">
+                      <Calendar size={14} className="text-slate-400 shrink-0" />
+                      <span>Added {new Date(lead.createdAt).toLocaleDateString()}</span>
+                    </span>
+                  </>
+                )}
               </div>
             </div>
           </div>

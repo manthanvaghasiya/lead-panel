@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, List, Calendar, FileDown, PieChart, LogOut, Settings as SettingsIcon } from 'lucide-react';
+import { LayoutDashboard, List, Calendar, FileDown, PieChart, LogOut, Settings as SettingsIcon, Images } from 'lucide-react';
 import LeadsList from './pages/LeadsList';
 import LeadDetail from './pages/LeadDetail';
 import Dashboard from './pages/Dashboard';
@@ -8,6 +8,7 @@ import FollowUps from './pages/FollowUps';
 import Analytics from './pages/Analytics';
 import ImportExport from './pages/ImportExport';
 import Settings from './pages/Settings';
+import BulkImageImport from './pages/BulkImageImport';
 import UpdatePrompt from './components/PWA/UpdatePrompt';
 import InstallButton from './components/PWA/InstallButton';
 import OfflineBadge from './components/PWA/OfflineBadge';
@@ -33,6 +34,7 @@ function Layout({ children }) {
     { path: '/follow-ups', label: 'Follow-ups', icon: Calendar },
     { path: '/analytics', label: 'Analytics', icon: PieChart },
     { path: '/import-export', label: 'Import / Export', icon: FileDown },
+    { path: '/bulk-image-import', label: 'Bulk Image Import', icon: Images },
     { path: '/settings', label: 'Settings', icon: SettingsIcon },
   ];
 
@@ -159,6 +161,7 @@ function App() {
           <Route path="/follow-ups" element={<FollowUps />} />
           <Route path="/analytics" element={<Analytics />} />
           <Route path="/import-export" element={<ImportExport />} />
+          <Route path="/bulk-image-import" element={<BulkImageImport />} />
           <Route path="/settings" element={<Settings />} />
         </Routes>
       </Layout>
