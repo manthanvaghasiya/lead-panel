@@ -144,104 +144,71 @@ function LeadsList() {
         </div>
       </div>
 
-      {/* Expandable Filter Drawer UI */}
+      {/* Expandable Filter Panel */}
       <div 
-        className={`overflow-hidden transition-all duration-300 ease-in-out bg-white border border-slate-200 rounded-xl shadow-sm mb-4
-          ${isFilterPanelOpen ? 'max-h-[500px] p-4 opacity-100 visible' : 'max-h-0 p-0 opacity-0 invisible border-none'}`}
+        className={`transition-all duration-300 ease-in-out bg-white rounded-xl shadow-sm border border-slate-200 mb-4 overflow-hidden
+          ${isFilterPanelOpen ? 'max-h-[500px] p-3 opacity-100 visible' : 'max-h-0 p-0 opacity-0 invisible border-none'}`}
       >
-        <div className="flex justify-between items-center pb-3 border-b border-slate-100 mb-4">
-          <h4 className="text-sm font-bold text-slate-800 flex items-center gap-1.5">
+        <div className="flex items-center justify-between mb-3">
+          <h4 className="text-xs font-bold text-slate-800 flex items-center gap-1.5 uppercase tracking-wider">
             <Filter size={14} className="text-cyan-600" />
-            Filter Leads
+            Filters
           </h4>
           {activeFilterCount > 0 && (
             <button 
               onClick={() => setFilters({ status: '', type: '', businessType: '', city: '', source: '' })}
-              className="text-xs font-semibold text-rose-500 hover:text-rose-600 flex items-center gap-1 hover:underline transition-colors"
+              className="text-xs font-bold text-rose-500 bg-rose-50 px-2.5 py-1 rounded-md hover:bg-rose-100 transition-colors"
             >
-              <RotateCcw size={12} />
               Reset All
             </button>
           )}
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
-          {/* Status Filter */}
-          <div className="flex flex-col">
-            <label className="text-[10px] uppercase tracking-wider font-semibold text-slate-400 mb-1.5">Lead Status</label>
-            <select 
-              className="input-field py-1.5 text-xs bg-white border border-slate-200 rounded-lg focus:border-cyan-500 focus:outline-none"
-              value={filters.status}
-              onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-            >
-              <option value="">All Statuses</option>
-              {uniqueStatuses.map(status => (
-                <option key={status} value={status}>{status}</option>
-              ))}
-            </select>
-          </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5">
+          <select 
+            className="w-full text-xs font-semibold bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-2 outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 text-slate-700"
+            value={filters.status}
+            onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+          >
+            <option value="">Status: All</option>
+            {uniqueStatuses.map(status => <option key={status} value={status}>{status}</option>)}
+          </select>
+          
+          <select 
+            className="w-full text-xs font-semibold bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-2 outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 text-slate-700"
+            value={filters.type}
+            onChange={(e) => setFilters({ ...filters, type: e.target.value })}
+          >
+            <option value="">Type: All</option>
+            {uniqueTypes.map(type => <option key={type} value={type}>{type}</option>)}
+          </select>
 
-          {/* Type Filter */}
-          <div className="flex flex-col">
-            <label className="text-[10px] uppercase tracking-wider font-semibold text-slate-400 mb-1.5">Interest Type</label>
-            <select 
-              className="input-field py-1.5 text-xs bg-white border border-slate-200 rounded-lg focus:border-cyan-500 focus:outline-none"
-              value={filters.type}
-              onChange={(e) => setFilters({ ...filters, type: e.target.value })}
-            >
-              <option value="">All Types</option>
-              {uniqueTypes.map(type => (
-                <option key={type} value={type}>{type}</option>
-              ))}
-            </select>
-          </div>
+          <select 
+            className="w-full text-xs font-semibold bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-2 outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 text-slate-700"
+            value={filters.businessType}
+            onChange={(e) => setFilters({ ...filters, businessType: e.target.value })}
+          >
+            <option value="">Business: All</option>
+            {uniqueBusinessTypes.map(bType => <option key={bType} value={bType}>{bType}</option>)}
+          </select>
 
-          {/* Business Type Filter */}
-          <div className="flex flex-col">
-            <label className="text-[10px] uppercase tracking-wider font-semibold text-slate-400 mb-1.5">Business Type</label>
-            <select 
-              className="input-field py-1.5 text-xs bg-white border border-slate-200 rounded-lg focus:border-cyan-500 focus:outline-none"
-              value={filters.businessType}
-              onChange={(e) => setFilters({ ...filters, businessType: e.target.value })}
-            >
-              <option value="">All Businesses</option>
-              {uniqueBusinessTypes.map(bType => (
-                <option key={bType} value={bType}>{bType}</option>
-              ))}
-            </select>
-          </div>
+          <select 
+            className="w-full text-xs font-semibold bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-2 outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 text-slate-700"
+            value={filters.city}
+            onChange={(e) => setFilters({ ...filters, city: e.target.value })}
+          >
+            <option value="">City: All</option>
+            {uniqueCities.map(city => <option key={city} value={city}>{city}</option>)}
+          </select>
 
-          {/* City Filter */}
-          <div className="flex flex-col">
-            <label className="text-[10px] uppercase tracking-wider font-semibold text-slate-400 mb-1.5">City</label>
-            <select 
-              className="input-field py-1.5 text-xs bg-white border border-slate-200 rounded-lg focus:border-cyan-500 focus:outline-none"
-              value={filters.city}
-              onChange={(e) => setFilters({ ...filters, city: e.target.value })}
-            >
-              <option value="">All Cities</option>
-              {uniqueCities.map(city => (
-                <option key={city} value={city}>{city}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Ask For Filter */}
-          <div>
-            <label className="text-[10px] uppercase tracking-wider font-semibold text-slate-400 mb-1.5">Ask For</label>
-            <div className="relative">
-              <select 
-                className="w-full text-xs font-semibold border-none bg-slate-100 rounded-md py-2 pl-3 pr-8 focus:ring-2 focus:ring-primary/20 appearance-none text-slate-700"
-                value={filters.source}
-                onChange={(e) => setFilters({ ...filters, source: e.target.value })}
-              >
-                <option value="">All</option>
-                {uniqueSources.map(src => (
-                  <option key={src} value={src}>{src}</option>
-                ))}
-              </select>
-            </div>
-          </div>
+          <select 
+            className="w-full text-xs font-semibold bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-2 outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 text-slate-700"
+            value={filters.source}
+            onChange={(e) => setFilters({ ...filters, source: e.target.value })}
+          >
+            <option value="">Ask For: All</option>
+            {uniqueSources.map(src => <option key={src} value={src}>{src}</option>)}
+          </select>
         </div>
       </div>
 
