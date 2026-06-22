@@ -33,7 +33,13 @@ const leadSchema = new mongoose.Schema({
     reviews: { type: String },
     summary: { type: String },
     hours: { type: String },
-    emails: { type: String }
+    emails: { type: String },
+    platforms: [{
+      name: { type: String },
+      rating: { type: String },
+      reviews: { type: String },
+      url: { type: String }
+    }]
   }
 }, {
   timestamps: true

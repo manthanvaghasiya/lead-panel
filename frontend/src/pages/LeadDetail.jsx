@@ -435,31 +435,62 @@ function LeadDetail() {
               </button>
             </div>
             <div className="p-5 flex flex-col gap-5">
-              {/* Google Reviews */}
-              <div className="bg-amber-50/50 border border-amber-100 rounded-lg p-3 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-white border border-amber-200 flex items-center justify-center shrink-0 shadow-sm text-amber-500">
-                    <Star size={20} className="fill-amber-400" />
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Rating</span>
-                    {lead.socials?.rating ? (
-                      <div className="flex items-baseline gap-1">
-                        <span className="font-black text-xl text-slate-800">
-                          {lead.socials.rating.replace(/(\/.*|out of.*)/gi, '').trim()}
-                        </span>
-                        <span className="text-sm font-semibold text-amber-600">/ 5</span>
+              {/* Platform Ratings */}
+              {lead.socials?.platforms && lead.socials.platforms.length > 0 ? (
+                <div className="flex flex-col gap-3">
+                  {lead.socials.platforms.map((platform, idx) => (
+                    <div key={idx} className="bg-amber-50/50 border border-amber-100 rounded-lg p-3 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-white border border-amber-200 flex items-center justify-center shrink-0 shadow-sm text-amber-500">
+                          <Star size={20} className="fill-amber-400" />
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{platform.name} Rating</span>
+                          {platform.rating ? (
+                            <div className="flex items-baseline gap-1">
+                              <span className="font-black text-xl text-slate-800">
+                                {platform.rating.replace(/(\/.*|out of.*)/gi, '').trim()}
+                              </span>
+                              <span className="text-sm font-semibold text-amber-600">/ 5</span>
+                            </div>
+                          ) : (
+                            <span className="text-sm font-medium text-slate-400 italic">No rating found</span>
+                          )}
+                        </div>
                       </div>
-                    ) : (
-                      <span className="text-sm font-medium text-slate-400 italic">No rating found</span>
-                    )}
+                      <div className="flex flex-col items-end">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Reviews</span>
+                        <span className="font-bold text-slate-700">{platform.reviews || '0'}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="bg-amber-50/50 border border-amber-100 rounded-lg p-3 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-white border border-amber-200 flex items-center justify-center shrink-0 shadow-sm text-amber-500">
+                      <Star size={20} className="fill-amber-400" />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Rating</span>
+                      {lead.socials?.rating ? (
+                        <div className="flex items-baseline gap-1">
+                          <span className="font-black text-xl text-slate-800">
+                            {lead.socials.rating.replace(/(\/.*|out of.*)/gi, '').trim()}
+                          </span>
+                          <span className="text-sm font-semibold text-amber-600">/ 5</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm font-medium text-slate-400 italic">No rating found</span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Reviews</span>
+                    <span className="font-bold text-slate-700">{lead.socials?.reviews || '0'}</span>
                   </div>
                 </div>
-                <div className="flex flex-col items-end">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Reviews</span>
-                  <span className="font-bold text-slate-700">{lead.socials?.reviews || '0'}</span>
-                </div>
-              </div>
+              )}
 
               {/* Web Summary */}
               {lead.socials?.summary && (
@@ -916,7 +947,8 @@ function UpdateLeadModal({ lead, onClose, onSuccess }) {
       reviews: lead.socials?.reviews || '',
       summary: lead.socials?.summary || '',
       hours: lead.socials?.hours || '',
-      emails: lead.socials?.emails || ''
+      emails: lead.socials?.emails || '',
+      platforms: lead.socials?.platforms || []
     }
   });
   const [loading, setLoading] = useState(false);

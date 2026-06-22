@@ -205,11 +205,10 @@ router.post('/:id/ai-social-extract', async (req, res) => {
       - "facebook": Official Facebook URL
       - "youtube": Official YouTube channel URL
       - "linkedin": Official LinkedIn URL
-      - "rating": Their Google or Justdial rating (e.g. "4.8" or "4.8/5")
-      - "reviews": Total number of reviews (e.g. "124")
       - "summary": A short 1-2 sentence description of what the business actually does, based on search snippets.
       - "hours": Their operating hours if found online (e.g. "Mon-Fri 9AM-6PM").
       - "emails": Any public email addresses found (comma separated if multiple).
+      - "platforms": An array of objects. For every platform where you find a rating (e.g., Google Maps, Justdial, Yelp, Facebook, Zomato, etc.), return an object: { "name": "Platform Name", "rating": "e.g. 4.8", "reviews": "e.g. 120", "url": "URL to the profile" }.
     `;
 
     const result = await model.generateContent({
@@ -255,7 +254,8 @@ router.post('/:id/ai-social-extract', async (req, res) => {
       reviews: extractedData.reviews || '',
       summary: extractedData.summary || '',
       hours: extractedData.hours || '',
-      emails: extractedData.emails || ''
+      emails: extractedData.emails || '',
+      platforms: Array.isArray(extractedData.platforms) ? extractedData.platforms : []
     };
 
     await lead.save();
