@@ -103,45 +103,44 @@ function LeadsList() {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Header Actions */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
-        <div className="relative w-full sm:w-72 md:w-96">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search size={18} className="text-slate-400" />
+      {/* Ultra-compact Header Actions */}
+      <div className="flex flex-wrap items-center gap-2 mb-3">
+        <div className="relative flex-1 min-w-[150px]">
+          <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
+            <Search size={16} className="text-slate-400" />
           </div>
           <input
             type="text"
-            className="input-field pl-10 bg-white border border-slate-200 focus:border-cyan-500 transition-colors"
-            placeholder="Search name, mobile, city, type..."
+            className="w-full pl-8 pr-3 py-1.5 text-sm bg-white border border-slate-200 rounded-lg focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 outline-none transition-all shadow-sm"
+            placeholder="Search leads..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <div className="flex gap-2 w-full sm:w-auto">
-          <button 
-            onClick={() => setIsFilterPanelOpen(!isFilterPanelOpen)}
-            className={`flex items-center gap-2 flex-1 sm:flex-none justify-center px-4 py-2 text-sm font-semibold rounded-lg border transition-all duration-200 shadow-sm
-              ${isFilterPanelOpen || activeFilterCount > 0 
-                ? 'bg-cyan-50 border-cyan-300 text-cyan-700 hover:bg-cyan-100/70' 
-                : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'}`}
-          >
-            <Filter size={16} />
-            <span>Filter</span>
-            {activeFilterCount > 0 && (
-              <span className="flex items-center justify-center bg-cyan-600 text-white rounded-full text-[10px] w-5 h-5 font-bold animate-pulse">
-                {activeFilterCount}
-              </span>
-            )}
-            <ChevronDown size={14} className={`transition-transform duration-200 ${isFilterPanelOpen ? 'rotate-180' : ''}`} />
-          </button>
-          <button 
-            onClick={() => setIsAddModalOpen(true)}
-            className="btn-primary flex items-center gap-2 flex-1 sm:flex-none justify-center"
-          >
-            <Plus size={18} />
-            <span>Add Lead</span>
-          </button>
-        </div>
+        
+        <button 
+          onClick={() => setIsFilterPanelOpen(!isFilterPanelOpen)}
+          className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold rounded-lg border transition-all duration-200 shadow-sm whitespace-nowrap
+            ${isFilterPanelOpen || activeFilterCount > 0 
+              ? 'bg-cyan-50 border-cyan-300 text-cyan-700 hover:bg-cyan-100' 
+              : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'}`}
+        >
+          <Filter size={14} />
+          <span className="hidden sm:inline">Filter</span>
+          {activeFilterCount > 0 && (
+            <span className="bg-cyan-600 text-white rounded-full text-[10px] px-1.5 py-0.5 leading-none font-bold">
+              {activeFilterCount}
+            </span>
+          )}
+        </button>
+
+        <button 
+          onClick={() => setIsAddModalOpen(true)}
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 text-white text-sm font-semibold rounded-lg shadow-sm hover:bg-slate-800 transition-colors whitespace-nowrap"
+        >
+          <Plus size={16} />
+          <span className="hidden sm:inline">Add</span>
+        </button>
       </div>
 
       {/* Expandable Filter Panel */}
@@ -212,30 +211,7 @@ function LeadsList() {
         </div>
       </div>
 
-      {/* Active Filter Tags */}
-      {activeFilterCount > 0 && (
-        <div className="flex flex-wrap items-center gap-2 mb-4">
-          <span className="text-xs text-slate-400 font-semibold mr-1">Active filters:</span>
-          {Object.entries(filters).map(([key, val]) => {
-            if (!val) return null;
-            return (
-              <span 
-                key={key} 
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 border border-slate-200 text-slate-600 shadow-sm transition-all hover:bg-slate-200/60"
-              >
-                <span className="text-slate-400 uppercase text-[9px] tracking-wider">{key}:</span>
-                <span>{val}</span>
-                <button 
-                  onClick={() => setFilters({ ...filters, [key]: '' })}
-                  className="text-slate-400 hover:text-slate-700 transition-colors bg-white hover:bg-slate-300/40 rounded-full p-0.5"
-                >
-                  <X size={10} />
-                </button>
-              </span>
-            );
-          })}
-        </div>
-      )}
+
 
       {/* Leads Table (Desktop) */}
       <div className="hidden md:flex flex-1 flex-col -mx-4 sm:mx-0 overflow-hidden">
