@@ -14,7 +14,7 @@ router.post('/ai-extract', async (req, res) => {
     if (!text && !imageBase64) return res.status(400).json({ message: 'Text or image input is required' });
 
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ 
+    const model = genAI.getGenerativeModel({
       model: "gemini-2.5-flash",
       generationConfig: { responseMimeType: "application/json" }
     });
@@ -52,7 +52,7 @@ router.post('/ai-extract', async (req, res) => {
 
     const result = await model.generateContent(parts);
     const responseText = result.response.text().trim();
-    
+
     const extractedData = JSON.parse(responseText);
     res.json(extractedData);
 
@@ -73,7 +73,7 @@ router.post('/ai-extract-log', async (req, res) => {
     if (!text && !imageBase64) return res.status(400).json({ message: 'Text or image input is required' });
 
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ 
+    const model = genAI.getGenerativeModel({
       model: "gemini-2.5-flash",
       generationConfig: { responseMimeType: "application/json" }
     });
@@ -104,7 +104,7 @@ router.post('/ai-extract-log', async (req, res) => {
 
     const result = await model.generateContent(parts);
     const responseText = result.response.text().trim();
-    
+
     const extractedData = JSON.parse(responseText);
     res.json(extractedData);
 
@@ -186,7 +186,7 @@ router.post('/:id/ai-social-extract', async (req, res) => {
     }
 
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ 
+    const model = genAI.getGenerativeModel({
       model: "gemini-2.5-flash",
       tools: [{ googleSearch: {} }]
     });
@@ -204,7 +204,7 @@ router.post('/:id/ai-social-extract', async (req, res) => {
       - "facebook": Official Facebook URL
       - "youtube": Official YouTube channel URL
       - "linkedin": Official LinkedIn URL
-      - "summary": A short 1-2 sentence description of what the business actually does, based on search snippets.
+      - "summary": A highly detailed, comprehensive summary of the business. You MUST include: 1. EXACTLY what services/products they offer. 2. Their precise, confirmed physical address found online. 3. Any public phone numbers or WhatsApp numbers found. 4. Notable social media follower counts if found (e.g., "1.2k Facebook followers"). Make it a rich, readable paragraph.
       - "hours": Their operating hours if found online (e.g. "Mon-Fri 9AM-6PM").
       - "emails": Any public email addresses found (comma separated if multiple).
       - "platforms": An array of objects. For every platform where you find a rating (e.g., Google Maps, Justdial, Yelp, Facebook, Zomato, etc.), return an object: { "name": "Platform Name", "rating": "e.g. 4.8", "reviews": "e.g. 120", "url": "URL to the profile" }.
@@ -220,7 +220,7 @@ router.post('/:id/ai-social-extract', async (req, res) => {
       console.log("Error extracting text from Gemini response:", e);
       console.log("FULL RESPONSE:", JSON.stringify(result.response, null, 2));
     }
-    
+
     console.log("GEMINI RAW SOCIAL OUTPUT:", responseText);
 
     if (!responseText) {
@@ -233,7 +233,7 @@ router.post('/:id/ai-social-extract', async (req, res) => {
         responseText = responseText.replace(/^\`\`\`/, '').replace(/\`\`\`$/, '').trim();
       }
     }
-    
+
     console.log("CLEANED SOCIAL JSON:", responseText);
 
     let extractedData = {};
@@ -324,7 +324,7 @@ router.post('/bulk-import', async (req, res) => {
       const mobileClean = lead.mobile.toString().trim();
       if (!existingMobiles.has(mobileClean) && !seenIncomingMobiles.has(mobileClean)) {
         seenIncomingMobiles.add(mobileClean);
-        
+
         // Standardize status
         let standardizedStatus = 'Pending';
         const rawStatus = (lead.status || '').toLowerCase().trim();
@@ -470,7 +470,7 @@ router.patch('/:id', async (req, res) => {
 router.post('/:id/call-logs', async (req, res) => {
   try {
     const { note, typeAtTime, statusAtTime, nextFollowup, outcome } = req.body;
-    
+
     const lead = await Lead.findById(req.params.id);
     if (!lead) return res.status(404).json({ message: 'Lead not found' });
 
@@ -508,7 +508,7 @@ router.get('/:id/ai-insight', async (req, res) => {
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
-    const formattedLogs = lead.callLogs.map(log => 
+    const formattedLogs = lead.callLogs.map(log =>
       `Date: ${new Date(log.date).toLocaleDateString()}, Status: ${log.statusAtTime}, Note: ${log.note}`
     ).join('\n');
 
@@ -531,7 +531,7 @@ router.get('/:id/ai-insight', async (req, res) => {
 
     const result = await model.generateContent(prompt);
     let responseText = result.response.text().trim();
-    
+
     // Clean up potential markdown formatting from Gemini
     if (responseText.startsWith('\`\`\`json')) {
       responseText = responseText.replace(/^\`\`\`json/, '').replace(/\`\`\`$/, '').trim();
