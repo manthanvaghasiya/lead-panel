@@ -29,4 +29,7 @@ export const extractLeadFromText = (text, imageBase64, mimeType) => apiClient.po
 export const extractLogFromText = (text, imageBase64, mimeType) => apiClient.post('/leads/ai-extract-log', { text, imageBase64, mimeType });
 export const deleteLead = (id) => apiClient.delete(`/leads/${id}`);
 
+export const getSettings = () => apiClient.get('/settings');
+export const updateSettings = (data) => apiClient.put('/settings', data);
+
 export default apiClient;

@@ -1,58 +1,55 @@
 const express = require('express');
 const router = express.Router();
 const Lead = require('../models/Lead');
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { callGeminiWithRetry } = require('../utils/geminiHelper');
 
 // AI Magic Fill - Extract Lead Data from Text
 router.post('/ai-extract', async (req, res) => {
   try {
-    if (!process.env.GEMINI_API_KEY) {
-      return res.status(500).json({ message: 'Gemini API key is missing' });
-    }
-
     const { text, imageBase64, mimeType } = req.body;
     if (!text && !imageBase64) return res.status(400).json({ message: 'Text or image input is required' });
 
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({
-      model: "gemini-2.5-flash",
-      generationConfig: { responseMimeType: "application/json" }
+    const result = await callGeminiWithRetry(async (genAI) => {
+      const model = genAI.getGenerativeModel({
+        model: "gemini-2.5-flash",
+        generationConfig: { responseMimeType: "application/json" }
+      });
+
+      const prompt = `
+        You are an expert, highly accurate data entry assistant for a sales CRM. Your job is to extract structured lead data from a given image (e.g., a business card, flyer, screenshot) and/or a messy text note.
+
+        EXTRACT THE FOLLOWING FIELDS EXACTLY AS REQUESTED. DO NOT GUESS DATA THAT IS NOT PRESENT. IF SOMETHING IS MISSING, RETURN AN EMPTY STRING "".
+
+        Fields to extract:
+        - "name": The Business Name, Company Name, or Shop Name. If it's just a person, leave empty or use their name if they act as a business.
+        - "ownerName": The Name of the person/owner/contact. Do NOT confuse this with the business name.
+        - "mobile": Extract ALL phone numbers found. Return ONLY digits (e.g., "9876543210"). If there are multiple, separate them by a comma. Remove +91 or other country codes if it's an Indian 10-digit number.
+        - "address": The full address or location mentioned.
+        - "city": Extract JUST the City name from the address (e.g., Surat, Delhi, Karnal, Mumbai). Must be a single word if possible.
+        - "businessType": The industry, profession, or type of business (e.g., Plumber, Real Estate, Doctor, Clothing Shop).
+        - "website": The exact website URL (e.g., example.com).
+        - "type": Estimate interest level: 'Hot', 'Warm', or 'Cold'. Default: 'Cold'.
+        - "source": Guess what product/service the lead is ASKING FOR (e.g., 'Website', 'CRM', 'Website+CRM', 'Other'). Default: 'Other'.
+        - "status": Estimate current stage: 'Pending', 'In Process', 'Send Detail', 'Follow-up Letter', 'Contacted'. Default: 'Pending'.
+        - "socials": A nested object containing strings for: "instagram", "facebook", "youtube", "linkedin". If you find an @handle or a link, put it in the matching platform.
+
+        Input Text Notes: "${text || 'No text provided'}"
+      `;
+
+      const parts = [prompt];
+      if (imageBase64 && mimeType) {
+        parts.push({
+          inlineData: {
+            data: imageBase64,
+            mimeType: mimeType
+          }
+        });
+      }
+
+      return await model.generateContent(parts);
     });
 
-    const prompt = `
-      You are an expert, highly accurate data entry assistant for a sales CRM. Your job is to extract structured lead data from a given image (e.g., a business card, flyer, screenshot) and/or a messy text note.
-
-      EXTRACT THE FOLLOWING FIELDS EXACTLY AS REQUESTED. DO NOT GUESS DATA THAT IS NOT PRESENT. IF SOMETHING IS MISSING, RETURN AN EMPTY STRING "".
-
-      Fields to extract:
-      - "name": The Business Name, Company Name, or Shop Name. If it's just a person, leave empty or use their name if they act as a business.
-      - "ownerName": The Name of the person/owner/contact. Do NOT confuse this with the business name.
-      - "mobile": Extract ALL phone numbers found. Return ONLY digits (e.g., "9876543210"). If there are multiple, separate them by a comma. Remove +91 or other country codes if it's an Indian 10-digit number.
-      - "address": The full address or location mentioned.
-      - "city": Extract JUST the City name from the address (e.g., Surat, Delhi, Karnal, Mumbai). Must be a single word if possible.
-      - "businessType": The industry, profession, or type of business (e.g., Plumber, Real Estate, Doctor, Clothing Shop).
-      - "website": The exact website URL (e.g., example.com).
-      - "type": Estimate interest level: 'Hot', 'Warm', or 'Cold'. Default: 'Cold'.
-      - "source": Guess what product/service the lead is ASKING FOR (e.g., 'Website', 'CRM', 'Website+CRM', 'Other'). Default: 'Other'.
-      - "status": Estimate current stage: 'Pending', 'In Process', 'Send Detail', 'Follow-up Letter', 'Contacted'. Default: 'Pending'.
-      - "socials": A nested object containing strings for: "instagram", "facebook", "youtube", "linkedin". If you find an @handle or a link, put it in the matching platform.
-
-      Input Text Notes: "${text || 'No text provided'}"
-    `;
-
-    const parts = [prompt];
-    if (imageBase64 && mimeType) {
-      parts.push({
-        inlineData: {
-          data: imageBase64,
-          mimeType: mimeType
-        }
-      });
-    }
-
-    const result = await model.generateContent(parts);
     const responseText = result.response.text().trim();
-
     const extractedData = JSON.parse(responseText);
     res.json(extractedData);
 
@@ -65,46 +62,43 @@ router.post('/ai-extract', async (req, res) => {
 // AI Magic Fill - Extract Call Log Data from Text
 router.post('/ai-extract-log', async (req, res) => {
   try {
-    if (!process.env.GEMINI_API_KEY) {
-      return res.status(500).json({ message: 'Gemini API key is missing' });
-    }
-
     const { text, imageBase64, mimeType } = req.body;
     if (!text && !imageBase64) return res.status(400).json({ message: 'Text or image input is required' });
 
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({
-      model: "gemini-2.5-flash",
-      generationConfig: { responseMimeType: "application/json" }
+    const result = await callGeminiWithRetry(async (genAI) => {
+      const model = genAI.getGenerativeModel({
+        model: "gemini-2.5-flash",
+        generationConfig: { responseMimeType: "application/json" }
+      });
+
+      const prompt = `
+        You are an expert sales assistant and highly accurate data entry bot. A salesperson has provided messy notes (or an image) from a recent follow-up call with a lead.
+        Extract the structured call log data from this.
+
+        EXTRACT THE FOLLOWING FIELDS EXACTLY AS REQUESTED. DO NOT GUESS DATA THAT IS NOT PRESENT.
+        Fields to extract:
+        - "note": A clean summary of the conversation/notes. Do not leave this empty.
+        - "typeAtTime": Must be 'Hot', 'Warm', or 'Cold' if explicitly or implicitly mentioned. Otherwise empty string.
+        - "statusAtTime": Must be 'Pending', 'In Process', 'Send Detail', 'Follow-up Letter', 'Contacted', 'Won', or 'Lost'. Guess based on text, otherwise empty string.
+        - "nextFollowup": Extracted future follow up date in YYYY-MM-DD format if mentioned (assume current year is 2026), otherwise empty string.
+
+        Input Text Notes: "${text || 'No text provided'}"
+      `;
+
+      const parts = [prompt];
+      if (imageBase64 && mimeType) {
+        parts.push({
+          inlineData: {
+            data: imageBase64,
+            mimeType: mimeType
+          }
+        });
+      }
+
+      return await model.generateContent(parts);
     });
 
-    const prompt = `
-      You are an expert sales assistant and highly accurate data entry bot. A salesperson has provided messy notes (or an image) from a recent follow-up call with a lead.
-      Extract the structured call log data from this.
-
-      EXTRACT THE FOLLOWING FIELDS EXACTLY AS REQUESTED. DO NOT GUESS DATA THAT IS NOT PRESENT.
-      Fields to extract:
-      - "note": A clean summary of the conversation/notes. Do not leave this empty.
-      - "typeAtTime": Must be 'Hot', 'Warm', or 'Cold' if explicitly or implicitly mentioned. Otherwise empty string.
-      - "statusAtTime": Must be 'Pending', 'In Process', 'Send Detail', 'Follow-up Letter', 'Contacted', 'Won', or 'Lost'. Guess based on text, otherwise empty string.
-      - "nextFollowup": Extracted future follow up date in YYYY-MM-DD format if mentioned (assume current year is 2026), otherwise empty string.
-
-      Input Text Notes: "${text || 'No text provided'}"
-    `;
-
-    const parts = [prompt];
-    if (imageBase64 && mimeType) {
-      parts.push({
-        inlineData: {
-          data: imageBase64,
-          mimeType: mimeType
-        }
-      });
-    }
-
-    const result = await model.generateContent(parts);
     const responseText = result.response.text().trim();
-
     const extractedData = JSON.parse(responseText);
     res.json(extractedData);
 
@@ -121,30 +115,28 @@ router.post('/:id/auto-clean', async (req, res) => {
     const lead = await Lead.findById(req.params.id);
     if (!lead) return res.status(404).json({ message: 'Lead not found' });
 
-    if (!process.env.GEMINI_API_KEY) {
-      return res.status(500).json({ message: 'Gemini API key is missing' });
-    }
+    const result = await callGeminiWithRetry(async (genAI) => {
+      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+      const prompt = `
+        Analyze this lead data:
+        Name: ${lead.name || ''}
+        Address: ${lead.address || ''}
 
-    const prompt = `
-      Analyze this lead data:
-      Name: ${lead.name || ''}
-      Address: ${lead.address || ''}
+        Please extract:
+        1. A clean "businessType" based on the name (e.g. if name is "Hariram Motors", type is "Automotive"). If you can't guess, return "Business".
+        2. A clean "city" name extracted from the address. If address is "MAIN G.T ROAD KARNAL..", city is "Karnal".
 
-      Please extract:
-      1. A clean "businessType" based on the name (e.g. if name is "Hariram Motors", type is "Automotive"). If you can't guess, return "Business".
-      2. A clean "city" name extracted from the address. If address is "MAIN G.T ROAD KARNAL..", city is "Karnal".
+        Return ONLY raw JSON:
+        {
+          "businessType": "...",
+          "city": "..."
+        }
+      `;
 
-      Return ONLY raw JSON:
-      {
-        "businessType": "...",
-        "city": "..."
-      }
-    `;
+      return await model.generateContent(prompt);
+    });
 
-    const result = await model.generateContent(prompt);
     let responseText = result.response.text().trim();
     if (responseText.startsWith('\`\`\`json')) {
       responseText = responseText.replace(/^\`\`\`json/, '').replace(/\`\`\`$/, '').trim();
@@ -181,44 +173,42 @@ router.post('/:id/ai-social-extract', async (req, res) => {
     const lead = await Lead.findById(req.params.id);
     if (!lead) return res.status(404).json({ message: 'Lead not found' });
 
-    if (!process.env.GEMINI_API_KEY) {
-      return res.status(500).json({ message: 'Gemini API key is missing' });
-    }
+    const result = await callGeminiWithRetry(async (genAI) => {
+      const model = genAI.getGenerativeModel({
+        model: "gemini-2.5-flash",
+        tools: [{ googleSearch: {} }],
+        generationConfig: { responseMimeType: "application/json" }
+      });
 
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({
-      model: "gemini-2.5-flash",
-      tools: [{ googleSearch: {} }],
-      generationConfig: { responseMimeType: "application/json" }
+      const prompt = `
+        You are an expert web researcher. Please perform a deep search for the following business:
+        Business Name: "${lead.name}"
+        Location: "${lead.city || lead.address || 'Unknown'}"
+        
+        Find their official web presence and extract everything you can.
+        You MUST return your answer as a raw JSON object. Do not guess information. If you cannot find a specific piece of information, use an empty string for that field.
+        
+        Fields to extract:
+        - "instagram": Official Instagram URL
+        - "facebook": Official Facebook URL
+        - "youtube": Official YouTube channel URL
+        - "linkedin": Official LinkedIn URL
+        - "instagramFollowers": Number of Instagram followers if found (e.g. "12.5k" or "450")
+        - "facebookFollowers": Number of Facebook followers/likes if found
+        - "youtubeSubscribers": Number of YouTube subscribers if found
+        - "summary": A descriptive summary of what the business actually does, including their exact confirmed address. Be extremely precise.
+        - "hours": Their exact operating hours if found online (e.g. "Mon-Fri 9AM-6PM").
+        - "emails": Any public email addresses found (comma separated if multiple).
+        - "phones": Any public phone or mobile numbers found online (comma separated).
+        - "addressMatch": The exact full physical address found on Google/Justdial/Web.
+        - "platforms": An array of objects. For every platform where you find a rating (e.g., Google Maps, Justdial, Yelp, Facebook, Zomato, etc.), return an object: { "name": "Platform Name", "rating": "e.g. 4.8", "reviews": "e.g. 120", "url": "URL to the profile" }.
+      `;
+
+      return await model.generateContent({
+        contents: [{ role: "user", parts: [{ text: prompt }] }]
+      });
     });
 
-    const prompt = `
-      You are an expert web researcher. Please perform a deep search for the following business:
-      Business Name: "${lead.name}"
-      Location: "${lead.city || lead.address || 'Unknown'}"
-      
-      Find their official web presence and extract everything you can.
-      You MUST return your answer as a raw JSON object. Do not guess information. If you cannot find a specific piece of information, use an empty string for that field.
-      
-      Fields to extract:
-      - "instagram": Official Instagram URL
-      - "facebook": Official Facebook URL
-      - "youtube": Official YouTube channel URL
-      - "linkedin": Official LinkedIn URL
-      - "instagramFollowers": Number of Instagram followers if found (e.g. "12.5k" or "450")
-      - "facebookFollowers": Number of Facebook followers/likes if found
-      - "youtubeSubscribers": Number of YouTube subscribers if found
-      - "summary": A descriptive summary of what the business actually does, including their exact confirmed address. Be extremely precise.
-      - "hours": Their exact operating hours if found online (e.g. "Mon-Fri 9AM-6PM").
-      - "emails": Any public email addresses found (comma separated if multiple).
-      - "phones": Any public phone or mobile numbers found online (comma separated).
-      - "addressMatch": The exact full physical address found on Google/Justdial/Web.
-      - "platforms": An array of objects. For every platform where you find a rating (e.g., Google Maps, Justdial, Yelp, Facebook, Zomato, etc.), return an object: { "name": "Platform Name", "rating": "e.g. 4.8", "reviews": "e.g. 120", "url": "URL to the profile" }.
-    `;
-
-    const result = await model.generateContent({
-      contents: [{ role: "user", parts: [{ text: prompt }] }]
-    });
     let responseText = '';
     try {
       responseText = result.response.text().trim();
@@ -512,35 +502,33 @@ router.get('/:id/ai-insight', async (req, res) => {
     const lead = await Lead.findById(req.params.id);
     if (!lead) return res.status(404).json({ message: 'Lead not found' });
 
-    if (!process.env.GEMINI_API_KEY) {
-      return res.status(500).json({ message: 'Gemini API key is missing' });
-    }
-
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-
     const formattedLogs = lead.callLogs.map(log =>
       `Date: ${new Date(log.date).toLocaleDateString()}, Status: ${log.statusAtTime}, Note: ${log.note}`
     ).join('\n');
 
-    const prompt = `
-      You are an expert sales assistant. Analyze the following lead and their follow-up history.
-      Provide your response as a JSON object with exactly these 3 keys:
-      {
-        "summary": "A quick 1-2 sentence summary of what the lead wants and where the deal stands.",
-        "nextAction": "A short recommendation on what the salesperson should do next.",
-        "draftMessage": "A polite, professional, and convincing WhatsApp message to send to the lead next, based on their history."
-      }
-      Do not include markdown blocks like \`\`\`json, just return the raw JSON object.
+    const result = await callGeminiWithRetry(async (genAI) => {
+      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
-      Lead Name: ${lead.name}
-      Business Type: ${lead.businessType}
-      Current Status: ${lead.status}
-      Follow-up History:
-      ${formattedLogs}
-    `;
+      const prompt = `
+        You are an expert sales assistant. Analyze the following lead and their follow-up history.
+        Provide your response as a JSON object with exactly these 3 keys:
+        {
+          "summary": "A quick 1-2 sentence summary of what the lead wants and where the deal stands.",
+          "nextAction": "A short recommendation on what the salesperson should do next.",
+          "draftMessage": "A polite, professional, and convincing WhatsApp message to send to the lead next, based on their history."
+        }
+        Do not include markdown blocks like \`\`\`json, just return the raw JSON object.
 
-    const result = await model.generateContent(prompt);
+        Lead Name: ${lead.name}
+        Business Type: ${lead.businessType}
+        Current Status: ${lead.status}
+        Follow-up History:
+        ${formattedLogs}
+      `;
+
+      return await model.generateContent(prompt);
+    });
+
     let responseText = result.response.text().trim();
 
     // Clean up potential markdown formatting from Gemini

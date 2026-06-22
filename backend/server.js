@@ -47,7 +47,10 @@ app.use(async (req, res, next) => {
 
 // Routes
 const leadRoutes = require('./routes/leadRoutes');
+const settingsRoutes = require('./routes/settingsRoutes');
+
 app.use(['/_/backend/api/leads', '/api/leads'], leadRoutes);
+app.use(['/_/backend/api/settings', '/api/settings'], settingsRoutes);
 
 
 if (process.env.NODE_ENV !== 'production') {
