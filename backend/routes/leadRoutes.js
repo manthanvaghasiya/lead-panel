@@ -188,32 +188,32 @@ router.post('/:id/ai-social-extract', async (req, res) => {
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
     const model = genAI.getGenerativeModel({ 
       model: "gemini-2.5-flash",
-      tools: [{ googleSearch: {} }] 
+      tools: [{ googleSearch: {} }],
+      generationConfig: { responseMimeType: "application/json" }
     });
 
     const prompt = `
-      You are an expert web researcher. Please search for the following business:
+      You are an expert web researcher. Please perform a deep search for the following business:
       Business Name: "${lead.name}"
       Location: "${lead.city || lead.address || 'Unknown'}"
       
-      Find their official social media handles/links and their Google/Justdial rating and reviews.
-      You MUST return your answer as a raw JSON object and nothing else.
-      If you cannot find a specific piece of information, use an empty string for that field.
+      Find their official web presence and extract everything you can.
+      You MUST return your answer as a raw JSON object. Do not guess information. If you cannot find a specific piece of information, use an empty string for that field.
       
-      Output format:
-      {
-        "instagram": "url or empty",
-        "facebook": "url or empty",
-        "youtube": "url or empty",
-        "linkedin": "url or empty",
-        "rating": "rating out of 5 or empty",
-        "reviews": "total reviews or empty"
-      }
+      Fields to extract:
+      - "instagram": Official Instagram URL
+      - "facebook": Official Facebook URL
+      - "youtube": Official YouTube channel URL
+      - "linkedin": Official LinkedIn URL
+      - "rating": Their Google or Justdial rating (e.g. "4.8" or "4.8/5")
+      - "reviews": Total number of reviews (e.g. "124")
+      - "summary": A short 1-2 sentence description of what the business actually does, based on search snippets.
+      - "hours": Their operating hours if found online (e.g. "Mon-Fri 9AM-6PM").
+      - "emails": Any public email addresses found (comma separated if multiple).
     `;
 
     const result = await model.generateContent({
-      contents: [{ role: "user", parts: [{ text: prompt }] }],
-      tools: [{ googleSearch: {} }]
+      contents: [{ role: "user", parts: [{ text: prompt }] }]
     });
     let responseText = '';
     try {
@@ -252,7 +252,10 @@ router.post('/:id/ai-social-extract', async (req, res) => {
       youtube: extractedData.youtube || '',
       linkedin: extractedData.linkedin || '',
       rating: extractedData.rating || '',
-      reviews: extractedData.reviews || ''
+      reviews: extractedData.reviews || '',
+      summary: extractedData.summary || '',
+      hours: extractedData.hours || '',
+      emails: extractedData.emails || ''
     };
 
     await lead.save();

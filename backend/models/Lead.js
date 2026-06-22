@@ -30,7 +30,10 @@ const leadSchema = new mongoose.Schema({
     youtube: { type: String },
     linkedin: { type: String },
     rating: { type: String },
-    reviews: { type: String }
+    reviews: { type: String },
+    summary: { type: String },
+    hours: { type: String },
+    emails: { type: String }
   }
 }, {
   timestamps: true

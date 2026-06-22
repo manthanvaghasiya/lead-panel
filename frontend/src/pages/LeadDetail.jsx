@@ -461,6 +461,32 @@ function LeadDetail() {
                 </div>
               </div>
 
+              {/* Web Summary */}
+              {lead.socials?.summary && (
+                <div className="text-sm text-slate-600 bg-blue-50/50 border border-blue-100 p-3 rounded-lg leading-relaxed shadow-sm">
+                  <span className="font-bold text-blue-800 block mb-1 text-[10px] uppercase tracking-wider flex items-center gap-1"><Sparkles size={10} className="text-blue-600" /> AI Web Summary</span>
+                  {lead.socials.summary}
+                </div>
+              )}
+              
+              {/* Extra Info */}
+              {(lead.socials?.hours || lead.socials?.emails) && (
+                <div className="flex flex-col gap-2 bg-slate-50 border border-slate-100 p-3 rounded-lg text-sm">
+                  {lead.socials?.hours && (
+                    <div className="flex items-start gap-2">
+                      <span className="font-bold text-slate-400 text-[10px] uppercase tracking-wider w-12 shrink-0 mt-0.5">Hours</span>
+                      <span className="text-slate-700 font-medium">{lead.socials.hours}</span>
+                    </div>
+                  )}
+                  {lead.socials?.emails && (
+                    <div className="flex items-start gap-2">
+                      <span className="font-bold text-slate-400 text-[10px] uppercase tracking-wider w-12 shrink-0 mt-0.5">Email</span>
+                      <span className="text-blue-600 font-medium break-all">{lead.socials.emails}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Social Links */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="flex items-center gap-2 text-sm bg-slate-50 border border-slate-100 p-2 rounded-lg">
@@ -887,7 +913,10 @@ function UpdateLeadModal({ lead, onClose, onSuccess }) {
       youtube: lead.socials?.youtube || '',
       linkedin: lead.socials?.linkedin || '',
       rating: lead.socials?.rating || '',
-      reviews: lead.socials?.reviews || ''
+      reviews: lead.socials?.reviews || '',
+      summary: lead.socials?.summary || '',
+      hours: lead.socials?.hours || '',
+      emails: lead.socials?.emails || ''
     }
   });
   const [loading, setLoading] = useState(false);
