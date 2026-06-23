@@ -3,7 +3,7 @@ import { extractLeadFromText, bulkImportLeads } from '../api/apiClient';
 import { Images, UploadCloud, Play, CheckCircle2, AlertCircle, Loader2, X, Save, Trash2, Edit3 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-function BulkImageImport() {
+function BulkImageImport({ isComponent = false }) {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
   const [items, setItems] = useState([]);
@@ -163,7 +163,7 @@ function BulkImageImport() {
   const doneCount = items.filter(i => i.status === 'done').length;
 
   return (
-    <div className="max-w-7xl mx-auto flex flex-col gap-6 pb-12">
+    <div className={`flex flex-col gap-6 ${isComponent ? '' : 'max-w-7xl mx-auto pb-12'}`}>
       <div className="flex items-center gap-3 mb-2">
         <div className="p-3 bg-purple-100 text-purple-700 rounded-xl">
           <Images size={24} />

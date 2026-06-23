@@ -3,6 +3,7 @@ import { Upload, Download, FileSpreadsheet, Check, AlertTriangle, ArrowRight, X,
 import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
 import { bulkImportLeads, getLeads } from '../api/apiClient';
+import BulkImageImport from './BulkImageImport';
 
 function ImportExport() {
   const [file, setFile] = useState(null);
@@ -392,6 +393,11 @@ function ImportExport() {
           </div>
         </div>
 
+      </div>
+
+      {/* Bulk Image Import Section */}
+      <div className="mt-4 pt-8 border-t border-slate-200">
+        <BulkImageImport isComponent={true} />
       </div>
     </div>
   );
