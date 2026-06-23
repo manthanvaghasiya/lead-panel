@@ -6,11 +6,21 @@ import { extractMobileNumbers } from '../../utils/contactUtils';
 export default function SelectContactModal({ lead, actionType, onClose }) {
   const numbers = extractMobileNumbers(lead?.mobile);
 
+  const defaultMessage = `જય શ્રી કૃષ્ણ, Webiox Digital Solution માંથી મંથન. આપણી વાત થઈ હતી એ મુજબ, અમારા પ્રીમિયમ કાર ડીલર પ્રોજેક્ટ્સની ડિટેલ્સ નીચે મુજબ છે.
+
+અમે ટોપ કાર શોરૂમ્સ માટે ડિજિટલ પ્લેટફોર્મ બનાવીએ છીએ, જેથી કસ્ટમર સીધા મોબાઈલમાં જ લાઈવ સ્ટોક જોઈ શકે. તમે અમારા લાઈવ પ્રોજેક્ટ્સ અહીં ચેક કરી શકો છો:
+
+🚘 HARIRAM car: > https://haririamcars.vercel.app/
+🚘 Sadguru Car Surat: > https://sadgurucarsurat.com/
+🚘 carnest: > https://carnest.in/  etc.
+
+સાહેબ, એકવાર શાંતિથી આ શોરૂમની સાઇટ્સ જોજો—એની સ્પીડ અને પ્રીમિયમ લુક ચેક કરજો. તમારા શોરૂમને આવો જ ડિજિટલ લુક આપવો છે. આપના રિપ્લાયની રાહ રહેશે. આભાર!`;
+
   const handleSelect = (number) => {
     if (actionType === 'call') {
       window.location.href = `tel:${number}`;
     } else if (actionType === 'whatsapp') {
-      window.open(`https://wa.me/91${number}`, '_blank');
+      window.location.href = `whatsapp://send?phone=91${number}&text=${encodeURIComponent(defaultMessage)}`;
     }
     onClose();
   };

@@ -56,12 +56,9 @@ function LeadsList() {
   const handleContactClick = (e, lead, type) => {
     e.preventDefault();
     const numbers = extractMobileNumbers(lead.mobile);
-    if (numbers.length > 1) {
+    if (numbers.length > 0) {
       setContactActionLead(lead);
       setContactActionType(type);
-    } else if (numbers.length === 1) {
-      if (type === 'call') window.location.href = `tel:${numbers[0]}`;
-      if (type === 'whatsapp') window.open(`https://wa.me/91${numbers[0]}`, '_blank');
     } else {
       alert('No valid mobile number found.');
     }
