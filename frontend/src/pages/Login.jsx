@@ -98,12 +98,6 @@ function Login() {
             )}
           </button>
         </form>
-
-        <div className="mt-8 text-center">
-          <p className="text-slate-400 text-xs">
-            Default Admin: admin@webiox.tech / admin123
-          </p>
-        </div>
       </div>
     </div>
   );

@@ -5,18 +5,23 @@ const jwt = require('jsonwebtoken');
 // Ensure JWT_SECRET is available or provide a default for local dev
 const JWT_SECRET = process.env.JWT_SECRET || 'webiox_super_secret_key_123!';
 
-// Setup default admin user if none exists
+// Setup default admin user or update password
 const setupDefaultUser = async () => {
   try {
-    const userCount = await User.countDocuments();
-    if (userCount === 0) {
-      const hashedPassword = await bcrypt.hash('admin123', 10);
+    const hashedPassword = await bcrypt.hash('webiox@07', 10);
+    const existingAdmin = await User.findOne({ email: 'admin@webiox.tech' });
+    
+    if (!existingAdmin) {
       await User.create({
         email: 'admin@webiox.tech',
         password: hashedPassword,
         name: 'Admin User'
       });
-      console.log('Default admin user created: admin@webiox.tech / admin123');
+      console.log('Default admin user created: admin@webiox.tech');
+    } else {
+      // Force update password to new default just in case it was created with old one
+      existingAdmin.password = hashedPassword;
+      await existingAdmin.save();
     }
   } catch (err) {
     console.error('Failed to setup default user:', err);
