@@ -71,7 +71,7 @@ function Dashboard() {
 
       {/* Top Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="card bg-gradient-to-br from-surface to-slate-50">
+        <Link to="/leads" className="card bg-gradient-to-br from-surface to-slate-50 hover:shadow-md transition-shadow">
           <div className="flex justify-between items-start">
             <div>
               <p className="text-xs uppercase tracking-wider text-slate-500 mb-1">Total Leads</p>
@@ -79,8 +79,8 @@ function Dashboard() {
             </div>
             <div className="p-2 bg-primary/20 text-primary rounded-lg"><Users size={20} /></div>
           </div>
-        </div>
-        <div className="card bg-gradient-to-br from-surface to-slate-50 border-l-4 border-l-hot">
+        </Link>
+        <Link to="/leads?type=Hot" className="card bg-gradient-to-br from-surface to-slate-50 border-l-4 border-l-hot hover:shadow-md transition-shadow">
           <div className="flex justify-between items-start">
             <div>
               <p className="text-xs uppercase tracking-wider text-slate-500 mb-1">Hot Leads</p>
@@ -88,8 +88,8 @@ function Dashboard() {
             </div>
             <div className="p-2 bg-hot/20 text-hot rounded-lg"><TrendingUp size={20} /></div>
           </div>
-        </div>
-        <div className="card bg-gradient-to-br from-surface to-slate-50 border-l-4 border-l-warm">
+        </Link>
+        <Link to="/leads?type=Warm" className="card bg-gradient-to-br from-surface to-slate-50 border-l-4 border-l-warm hover:shadow-md transition-shadow">
           <div className="flex justify-between items-start">
             <div>
               <p className="text-xs uppercase tracking-wider text-slate-500 mb-1">Warm Leads</p>
@@ -97,8 +97,8 @@ function Dashboard() {
             </div>
             <div className="p-2 bg-warm/20 text-warm rounded-lg"><PhoneCall size={20} /></div>
           </div>
-        </div>
-        <div className="card bg-gradient-to-br from-surface to-slate-50 border-l-4 border-l-won">
+        </Link>
+        <Link to="/leads?status=Won" className="card bg-gradient-to-br from-surface to-slate-50 border-l-4 border-l-won hover:shadow-md transition-shadow">
           <div className="flex justify-between items-start">
             <div>
               <p className="text-xs uppercase tracking-wider text-slate-500 mb-1">Total Won</p>
@@ -106,7 +106,7 @@ function Dashboard() {
             </div>
             <div className="p-2 bg-won/20 text-won rounded-lg"><CheckCircle size={20} /></div>
           </div>
-        </div>
+        </Link>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-2">

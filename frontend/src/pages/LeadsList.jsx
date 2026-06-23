@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { getLeads, createLead, extractLeadFromText, addCallLog, extractLogFromText } from '../api/apiClient';
 import { useScrollRestore } from '../hooks/useScrollRestore';
 import { extractMobileNumbers } from '../utils/contactUtils';
@@ -20,16 +20,20 @@ function LeadsList() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [viewLogsLead, setViewLogsLead] = useState(null);
   const [logModalLead, setLogModalLead] = useState(null);
-  const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
   const [contactActionLead, setContactActionLead] = useState(null);
   const [contactActionType, setContactActionType] = useState(null);
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+
   const [filters, setFilters] = useState({
-    status: '',
-    type: '',
+    status: searchParams.get('status') || '',
+    type: searchParams.get('type') || '',
     businessType: '',
     city: '',
     source: ''
   });
+
+  const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(!!searchParams.get('status') || !!searchParams.get('type'));
 
   useScrollRestore('leads-desktop-scroll', loading);
   useScrollRestore('leads-mobile-scroll', loading);
