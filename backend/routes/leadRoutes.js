@@ -487,7 +487,7 @@ router.post('/:id/call-logs', async (req, res) => {
     // Update lead's main status, type and followup based on the new log
     if (typeAtTime) lead.type = typeAtTime;
     if (statusAtTime) lead.status = statusAtTime;
-    
+
     if (nextFollowup) {
       lead.followupDate = nextFollowup;
       lead.lastFollowupCompletedDate = null;
@@ -527,7 +527,7 @@ router.put('/:id/call-logs/:logId', async (req, res) => {
     if (isLatestLog) {
       if (typeAtTime) lead.type = typeAtTime;
       if (statusAtTime) lead.status = statusAtTime;
-      
+
       if (nextFollowup) {
         lead.followupDate = nextFollowup;
         lead.lastFollowupCompletedDate = null;
@@ -554,7 +554,7 @@ router.delete('/:id/call-logs/:logId', async (req, res) => {
     if (!log) return res.status(404).json({ message: 'Call log not found' });
 
     lead.callLogs.pull(req.params.logId);
-    
+
     const updatedLead = await lead.save();
     res.json(updatedLead);
   } catch (err) {

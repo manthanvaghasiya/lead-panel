@@ -883,7 +883,14 @@ function LeadDetail() {
                     className="w-full border border-slate-200 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none bg-slate-50 focus:bg-white" 
                     placeholder="What did you discuss?"
                     value={note}
-                    onChange={e => setNote(e.target.value)}
+                    onChange={e => {
+                      const val = e.target.value;
+                      setNote(val);
+                      if (val.toLowerCase().includes('lost') || val.toLowerCase().includes('close')) {
+                        setLogStatus('Lost');
+                        setNextFollowup('');
+                      }
+                    }}
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-3">

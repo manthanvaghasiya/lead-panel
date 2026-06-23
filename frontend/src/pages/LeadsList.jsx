@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { getLeads, createLead, extractLeadFromText, addCallLog, extractLogFromText } from '../api/apiClient';
+import { getLeads, createLead, extractLeadFromText, addCallLog, extractLogFromText, deleteLead } from '../api/apiClient';
 import { useScrollRestore } from '../hooks/useScrollRestore';
 import { extractMobileNumbers, defaultWhatsappMessage } from '../utils/contactUtils';
 import SelectContactModal from '../components/Modals/SelectContactModal';
-import { Search, Plus, Filter, MoreHorizontal, FileText, MessageSquarePlus, X, Sparkles, ImagePlus, ChevronDown, RotateCcw } from 'lucide-react';
+import { Search, Plus, Filter, MoreHorizontal, FileText, MessageSquarePlus, X, Sparkles, ImagePlus, ChevronDown, RotateCcw, Trash2 } from 'lucide-react';
 import { FaWhatsapp, FaPhoneAlt } from 'react-icons/fa';
 
 const extractCity = (address) => {
@@ -64,6 +64,18 @@ function LeadsList() {
       if (type === 'whatsapp') window.location.href = `whatsapp://send?phone=91${numbers[0]}&text=${encodeURIComponent(defaultWhatsappMessage)}`;
     } else {
       alert('No valid mobile number found.');
+    }
+  };
+
+  const handleDeleteLead = async (id) => {
+    if (window.confirm('Are you sure you want to permanently delete this lead? This action cannot be undone.')) {
+      try {
+        await deleteLead(id);
+        setLeads(leads.filter(l => l._id !== id));
+      } catch (err) {
+        console.error(err);
+        alert('Failed to delete lead');
+      }
     }
   };
 
@@ -341,6 +353,13 @@ function LeadsList() {
                           <FaPhoneAlt size={12} />
                         </button>
                         <button 
+                          onClick={() => handleDeleteLead(lead._id)}
+                          className="p-1.5 bg-red-50 text-red-600 rounded-md hover:bg-red-100 transition-colors border border-red-200 shadow-sm"
+                          title="Delete Lead"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                        <button 
                           onClick={(e) => handleContactClick(e, lead, 'whatsapp')}
                           className="p-1.5 bg-green-50 text-green-600 rounded-md hover:bg-green-100 transition-colors border border-green-200 shadow-sm"
                           title="WhatsApp"
@@ -427,6 +446,7 @@ function LeadsList() {
                     window.open(`https://www.google.com/search?q=${query}`, '_blank');
                   }} className="p-2 bg-cyan-50 text-cyan-600 rounded-lg border border-cyan-200 shadow-sm" title="Google Search"><Search size={14} /></button>
                   <button onClick={(e) => handleContactClick(e, lead, 'call')} className="p-2 bg-blue-50 text-blue-600 rounded-lg border border-blue-200 shadow-sm"><FaPhoneAlt size={14} /></button>
+                  <button onClick={() => handleDeleteLead(lead._id)} className="p-2 bg-red-50 text-red-600 rounded-lg border border-red-200 shadow-sm" title="Delete Lead"><Trash2 size={16} /></button>
                   <button onClick={(e) => handleContactClick(e, lead, 'whatsapp')} className="p-2 bg-green-50 text-green-600 rounded-lg border border-green-200 shadow-sm"><FaWhatsapp size={16} /></button>
                   <button onClick={() => setLogModalLead(lead)} className="p-2 bg-indigo-50 text-indigo-600 rounded-lg border border-indigo-200 shadow-sm"><MessageSquarePlus size={16} /></button>
                   <Link to={`/leads/${lead._id}`} className="p-2 bg-slate-800 text-white rounded-lg shadow-sm"><MoreHorizontal size={16} /></Link>
@@ -967,7 +987,15 @@ function AddCallLogModal({ lead, onClose, onSuccess }) {
                 className="w-full border border-slate-200 rounded-md p-2 text-sm focus:border-primary focus:outline-none resize-none" 
                 placeholder="What did you discuss?"
                 value={formData.note}
-                onChange={e => setFormData({...formData, note: e.target.value})}
+                onChange={e => {
+                  const val = e.target.value;
+                  const updates = { note: val };
+                  if (val.toLowerCase().includes('lost') || val.toLowerCase().includes('close')) {
+                    updates.statusAtTime = 'Lost';
+                    updates.nextFollowup = '';
+                  }
+                  setFormData({...formData, ...updates});
+                }}
               />
             </div>
             
