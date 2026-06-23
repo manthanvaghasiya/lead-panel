@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, List, Calendar, FileDown, PieChart, LogOut, Settings as SettingsIcon, Images } from 'lucide-react';
+import { LayoutDashboard, List, Calendar, FileDown, PieChart, LogOut, Settings as SettingsIcon, Images, LayoutGrid } from 'lucide-react';
 import LeadsList from './pages/LeadsList';
+import Pipeline from './pages/Pipeline';
 import LeadDetail from './pages/LeadDetail';
 import Dashboard from './pages/Dashboard';
 import FollowUps from './pages/FollowUps';
@@ -31,6 +32,7 @@ function Layout({ children }) {
   const navItems = [
     { path: '/', label: 'Dashboard', icon: LayoutDashboard },
     { path: '/leads', label: 'Leads', icon: List },
+    { path: '/pipeline', label: 'Pipeline', icon: LayoutGrid },
     { path: '/follow-ups', label: 'Follow-ups', icon: Calendar },
     { path: '/analytics', label: 'Analytics', icon: PieChart },
     { path: '/import-export', label: 'Import / Export', icon: FileDown },
@@ -157,6 +159,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/leads" element={<LeadsList />} />
+          <Route path="/pipeline" element={<Pipeline />} />
           <Route path="/leads/:id" element={<LeadDetail />} />
           <Route path="/follow-ups" element={<FollowUps />} />
           <Route path="/analytics" element={<Analytics />} />
