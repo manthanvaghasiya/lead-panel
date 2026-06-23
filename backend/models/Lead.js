@@ -22,6 +22,7 @@ const leadSchema = new mongoose.Schema({
   type: { type: String, enum: ['Hot', 'Warm', 'Cold', 'Won', 'Lost'], default: 'Cold' },
   status: { type: String, default: 'Pending' },
   followupDate: { type: Date },
+  lastFollowupCompletedDate: { type: Date },
   callLogs: [callLogSchema],
   tags: [{ type: String }],
   socials: {

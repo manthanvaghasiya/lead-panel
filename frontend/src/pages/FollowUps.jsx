@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Calendar, AlertCircle, Clock, ChevronRight } from 'lucide-react';
+import { Calendar, AlertCircle, Clock, ChevronRight, CheckCircle } from 'lucide-react';
 import { getLeads } from '../api/apiClient';
 import { useScrollRestore } from '../hooks/useScrollRestore';
 
@@ -30,11 +30,12 @@ function FollowUps() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  // Filter only leads that have a followup date and are not Won or Lost
+  // Filter only leads that have a followup date and are not Won or Lost or Permanently Lost
   const activeFollowUps = leads.filter(l => 
     l.followupDate && 
     l.status !== 'Won' && 
-    l.status !== 'Lost'
+    l.status !== 'Lost' &&
+    l.status !== 'Permanently Lost'
   ).sort((a, b) => new Date(a.followupDate) - new Date(b.followupDate));
 
   const overdue = activeFollowUps.filter(l => new Date(l.followupDate) < today);
@@ -45,15 +46,21 @@ function FollowUps() {
   });
   const upcoming = activeFollowUps.filter(l => new Date(l.followupDate) > today);
 
+  const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const completed = leads.filter(l => 
+    l.lastFollowupCompletedDate && 
+    new Date(l.lastFollowupCompletedDate) >= twentyFourHoursAgo
+  ).sort((a, b) => new Date(b.lastFollowupCompletedDate) - new Date(a.lastFollowupCompletedDate));
+
   const renderLeadCard = (lead, type) => (
     <Link 
       key={lead._id} 
       to={`/leads/${lead._id}`}
-      className={`card flex items-center justify-between hover:bg-white/50 transition-colors group ${type === 'overdue' ? 'border-red-500/30 bg-red-500/5' : ''}`}
+      className={`card flex items-center justify-between hover:bg-white/50 transition-colors group ${type === 'overdue' ? 'border-red-500/30 bg-red-500/5' : type === 'completed' ? 'border-green-500/30 bg-green-500/5 opacity-80' : ''}`}
     >
       <div className="flex items-center gap-4">
-        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${type === 'overdue' ? 'bg-red-500/20 text-red-400' : type === 'today' ? 'bg-primary/20 text-primary' : 'bg-slate-100 text-slate-500'}`}>
-          {type === 'overdue' ? <AlertCircle size={20} /> : <Calendar size={20} />}
+        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${type === 'overdue' ? 'bg-red-500/20 text-red-400' : type === 'today' ? 'bg-primary/20 text-primary' : type === 'completed' ? 'bg-green-500/20 text-green-500' : 'bg-slate-100 text-slate-500'}`}>
+          {type === 'overdue' ? <AlertCircle size={20} /> : type === 'completed' ? <CheckCircle size={20} /> : <Calendar size={20} />}
         </div>
         <div>
           <h4 className="font-medium text-slate-800 group-hover:text-primary transition-colors flex items-center gap-2">
@@ -64,8 +71,8 @@ function FollowUps() {
             <span>{lead.mobile}</span>
             <span>•</span>
             <span className="flex items-center gap-1">
-              <Clock size={12} />
-              {type === 'upcoming' ? new Date(lead.followupDate).toLocaleDateString() : type === 'today' ? 'Today' : new Date(lead.followupDate).toLocaleDateString()}
+              {type === 'completed' ? <CheckCircle size={12} /> : <Clock size={12} />}
+              {type === 'upcoming' ? new Date(lead.followupDate).toLocaleDateString() : type === 'today' ? 'Today' : type === 'completed' ? 'Completed' : new Date(lead.followupDate).toLocaleDateString()}
             </span>
           </div>
         </div>
@@ -120,6 +127,17 @@ function FollowUps() {
           </div>
         )}
       </section>
+
+      {completed.length > 0 && (
+        <section>
+          <h2 className="text-lg font-medium text-green-600 mb-3 flex items-center gap-2">
+            <CheckCircle size={18} /> Recently Completed ({completed.length})
+          </h2>
+          <div className="flex flex-col gap-3">
+            {completed.map(l => renderLeadCard(l, 'completed'))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

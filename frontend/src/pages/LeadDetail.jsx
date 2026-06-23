@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Phone, Calendar, Clock, MapPin, Briefcase, Activity, Sparkles, BrainCircuit, MessageSquare, Target, Globe, Tags, X, Edit, ImagePlus, Star, Search } from 'lucide-react';
+import { ArrowLeft, Phone, Calendar, Clock, MapPin, Briefcase, Activity, Sparkles, BrainCircuit, MessageSquare, Target, Globe, Tags, X, Edit, Trash2, ImagePlus, Star, Search } from 'lucide-react';
 import { FaInstagram, FaFacebook, FaYoutube, FaLinkedin } from 'react-icons/fa';
-import { getLead, addCallLog, updateLead, getLeadAiInsight, extractLeadFromText, extractLogFromText, autoCleanLead, extractSocialProfiles, deleteLead } from '../api/apiClient';
+import { getLead, addCallLog, updateCallLog, deleteCallLog, updateLead, getLeadAiInsight, extractLeadFromText, extractLogFromText, autoCleanLead, extractSocialProfiles, deleteLead } from '../api/apiClient';
 import { useScrollRestore } from '../hooks/useScrollRestore';
 import { extractMobileNumbers } from '../utils/contactUtils';
 import SelectContactModal from '../components/Modals/SelectContactModal';
@@ -20,6 +20,7 @@ function LeadDetail() {
   const [logType, setLogType] = useState('Cold');
   const [logStatus, setLogStatus] = useState('Pending');
   const [nextFollowup, setNextFollowup] = useState('');
+  const [editingLogId, setEditingLogId] = useState(null);
 
   // Advanced Log Filters
   const [logSearch, setLogSearch] = useState('');
@@ -201,6 +202,39 @@ function LeadDetail() {
 
   if (loading) return <div className="p-12 text-center text-slate-500 font-medium">Loading Enterprise Profile...</div>;
   if (!lead) return null;
+
+  const handleEditLog = (log) => {
+    setEditingLogId(log._id);
+    setNote(log.note || '');
+    setLogType(log.typeAtTime || 'Cold');
+    setLogStatus(log.statusAtTime || 'Pending');
+    if (log.nextFollowup) {
+      setNextFollowup(new Date(log.nextFollowup).toISOString().split('T')[0]);
+    } else {
+      setNextFollowup('');
+    }
+    document.getElementById('log-form-container')?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const cancelEditLog = () => {
+    setEditingLogId(null);
+    setNote('');
+    setNextFollowup('');
+    setLogType(lead.type || 'Cold');
+    setLogStatus(lead.status || 'Pending');
+  };
+
+  const handleDeleteLog = async (logId) => {
+    if (window.confirm('Are you sure you want to delete this interaction log?')) {
+      try {
+        const { data } = await deleteCallLog(id, logId);
+        setLead(data);
+      } catch (err) {
+        console.error(err);
+        alert('Failed to delete interaction log.');
+      }
+    }
+  };
 
   return (
     <div className="max-w-7xl mx-auto flex flex-col gap-6 pb-12">
@@ -721,14 +755,22 @@ function LeadDetail() {
                             <Clock size={12} />
                             {new Date(log.date).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}
                           </span>
-                          {log.typeAtTime && (
-                            <span className={`inline-flex items-center justify-center px-2 py-0.5 rounded text-[10px] font-bold border 
-                              ${log.typeAtTime.toLowerCase() === 'hot' ? 'bg-red-50 text-red-600 border-red-200' :
-                                log.typeAtTime.toLowerCase() === 'warm' ? 'bg-orange-50 text-orange-600 border-orange-200' :
-                                'bg-blue-50 text-blue-600 border-blue-200'}`}>
-                              {log.typeAtTime}
-                            </span>
-                          )}
+                          <div className="flex items-center gap-2">
+                            {log.typeAtTime && (
+                              <span className={`inline-flex items-center justify-center px-2 py-0.5 rounded text-[10px] font-bold border 
+                                ${log.typeAtTime.toLowerCase() === 'hot' ? 'bg-red-50 text-red-600 border-red-200' :
+                                  log.typeAtTime.toLowerCase() === 'warm' ? 'bg-orange-50 text-orange-600 border-orange-200' :
+                                  'bg-blue-50 text-blue-600 border-blue-200'}`}>
+                                {log.typeAtTime}
+                              </span>
+                            )}
+                            <button onClick={() => handleEditLog(log)} className="text-slate-400 hover:text-primary transition-colors" title="Edit Interaction">
+                              <Edit size={14} />
+                            </button>
+                            <button onClick={() => handleDeleteLog(log._id)} className="text-slate-400 hover:text-red-500 transition-colors" title="Delete Interaction">
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
                         </div>
                         
                         {/* Note Content */}
@@ -766,7 +808,7 @@ function LeadDetail() {
           </div>
           
           {/* Activity Logger */}
-          <div className="bg-white border border-border rounded-xl shadow-sm overflow-hidden order-3 lg:order-none">
+          <div id="log-form-container" className="bg-white border border-border rounded-xl shadow-sm overflow-hidden order-3 lg:order-none">
             <div className="p-4 border-b border-slate-100 bg-slate-50/50">
               <h3 className="font-semibold text-slate-800 flex items-center gap-2">
                 <Activity size={16} className="text-primary" />
@@ -871,8 +913,13 @@ function LeadDetail() {
                   />
                 </div>
                 <button type="submit" disabled={savingLog} className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg font-medium shadow-sm transition-colors mt-2 text-sm">
-                  {savingLog ? 'Saving...' : 'Save Interaction'}
+                  {savingLog ? 'Saving...' : editingLogId ? 'Update Interaction' : 'Save Interaction'}
                 </button>
+                {editingLogId && (
+                  <button type="button" onClick={cancelEditLog} className="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg font-medium shadow-sm transition-colors text-sm">
+                    Cancel Edit
+                  </button>
+                )}
               </form>
             </div>
           </div>
@@ -906,10 +953,16 @@ function LeadDetail() {
     if (!note) return;
     setSavingLog(true);
     try {
-      const { data } = await addCallLog(id, { note, typeAtTime: logType, statusAtTime: logStatus, nextFollowup });
-      setLead(data);
-      setNote('');
-      setNextFollowup('');
+      if (editingLogId) {
+        const { data } = await updateCallLog(id, editingLogId, { note, typeAtTime: logType, statusAtTime: logStatus, nextFollowup });
+        setLead(data);
+        cancelEditLog();
+      } else {
+        const { data } = await addCallLog(id, { note, typeAtTime: logType, statusAtTime: logStatus, nextFollowup });
+        setLead(data);
+        setNote('');
+        setNextFollowup('');
+      }
       setMagicLogText('');
       setLogImageFile(null);
       setLogImagePreview(null);

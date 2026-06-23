@@ -487,8 +487,74 @@ router.post('/:id/call-logs', async (req, res) => {
     // Update lead's main status, type and followup based on the new log
     if (typeAtTime) lead.type = typeAtTime;
     if (statusAtTime) lead.status = statusAtTime;
-    if (nextFollowup) lead.followupDate = nextFollowup;
+    
+    if (nextFollowup) {
+      lead.followupDate = nextFollowup;
+      lead.lastFollowupCompletedDate = null;
+    } else {
+      lead.followupDate = null;
+      lead.lastFollowupCompletedDate = new Date();
+    }
 
+    const updatedLead = await lead.save();
+    res.json(updatedLead);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+});
+
+// Edit a call log
+router.put('/:id/call-logs/:logId', async (req, res) => {
+  try {
+    const { note, typeAtTime, statusAtTime, nextFollowup, outcome } = req.body;
+
+    const lead = await Lead.findById(req.params.id);
+    if (!lead) return res.status(404).json({ message: 'Lead not found' });
+
+    const log = lead.callLogs.id(req.params.logId);
+    if (!log) return res.status(404).json({ message: 'Call log not found' });
+
+    if (note !== undefined) log.note = note;
+    if (typeAtTime !== undefined) log.typeAtTime = typeAtTime;
+    if (statusAtTime !== undefined) log.statusAtTime = statusAtTime;
+    if (nextFollowup !== undefined) log.nextFollowup = nextFollowup;
+    if (outcome !== undefined) log.outcome = outcome;
+
+    // If we're updating the MOST RECENT call log, we should probably update the lead's main status too, 
+    // but the simplest approach is just to let the user edit the note/status on the log itself.
+    // However, it's a good idea to update the lead's main status if the edited log is the latest one.
+    const isLatestLog = lead.callLogs[lead.callLogs.length - 1]._id.toString() === log._id.toString();
+    if (isLatestLog) {
+      if (typeAtTime) lead.type = typeAtTime;
+      if (statusAtTime) lead.status = statusAtTime;
+      
+      if (nextFollowup) {
+        lead.followupDate = nextFollowup;
+        lead.lastFollowupCompletedDate = null;
+      } else if (nextFollowup === '' || nextFollowup === null) {
+        lead.followupDate = null;
+        lead.lastFollowupCompletedDate = new Date(log.date); // Use the log's date
+      }
+    }
+
+    const updatedLead = await lead.save();
+    res.json(updatedLead);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+});
+
+// Delete a call log
+router.delete('/:id/call-logs/:logId', async (req, res) => {
+  try {
+    const lead = await Lead.findById(req.params.id);
+    if (!lead) return res.status(404).json({ message: 'Lead not found' });
+
+    const log = lead.callLogs.id(req.params.logId);
+    if (!log) return res.status(404).json({ message: 'Call log not found' });
+
+    lead.callLogs.pull(req.params.logId);
+    
     const updatedLead = await lead.save();
     res.json(updatedLead);
   } catch (err) {

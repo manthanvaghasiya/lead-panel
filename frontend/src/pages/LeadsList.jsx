@@ -84,7 +84,11 @@ function LeadsList() {
     if (!matchesSearch) return false;
 
     // 2. Status Filter
-    if (filters.status && lead.status !== filters.status) return false;
+    if (!filters.status) {
+      if (lead.status === 'Lost' || lead.status === 'Permanently Lost') return false;
+    } else {
+      if (lead.status !== filters.status) return false;
+    }
 
     // 3. Lead Type Filter
     if (filters.type && lead.type !== filters.type) return false;
@@ -417,9 +421,13 @@ function LeadsList() {
       {isAddModalOpen && (
         <AddLeadModal 
           onClose={() => setIsAddModalOpen(false)} 
-          onSuccess={() => {
+          onSuccess={(newLead) => {
             setIsAddModalOpen(false);
-            fetchLeads();
+            if (newLead) {
+              setLeads(prev => [newLead, ...prev]);
+            } else {
+              fetchLeads();
+            }
           }}
         />
       )}
@@ -437,9 +445,13 @@ function LeadsList() {
         <AddCallLogModal 
           lead={logModalLead}
           onClose={() => setLogModalLead(null)}
-          onSuccess={() => {
+          onSuccess={(updatedLead) => {
             setLogModalLead(null);
-            fetchLeads();
+            if (updatedLead) {
+              setLeads(prev => prev.map(l => l._id === updatedLead._id ? updatedLead : l));
+            } else {
+              fetchLeads();
+            }
           }}
         />
       )}
@@ -548,8 +560,8 @@ function AddLeadModal({ onClose, onSuccess }) {
     e.preventDefault();
     setLoading(true);
     try {
-      await createLead(formData);
-      onSuccess();
+      const { data } = await createLead(formData);
+      onSuccess(data);
     } catch (err) {
       console.error(err);
       alert(err.response?.data?.message || 'Error creating lead');
@@ -856,8 +868,8 @@ function AddCallLogModal({ lead, onClose, onSuccess }) {
     if (!formData.note.trim()) return;
     setLoading(true);
     try {
-      await addCallLog(lead._id, formData);
-      onSuccess();
+      const { data } = await addCallLog(lead._id, formData);
+      onSuccess(data);
     } catch (err) {
       console.error(err);
       alert('Error saving log');

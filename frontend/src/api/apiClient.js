@@ -22,6 +22,8 @@ export const createLead = (data) => apiClient.post('/leads', data);
 export const bulkImportLeads = (data) => apiClient.post('/leads/bulk-import', data);
 export const updateLead = (id, data) => apiClient.patch(`/leads/${id}`, data);
 export const addCallLog = (id, data) => apiClient.post(`/leads/${id}/call-logs`, data);
+export const updateCallLog = (id, logId, data) => apiClient.put(`/leads/${id}/call-logs/${logId}`, data);
+export const deleteCallLog = (id, logId) => apiClient.delete(`/leads/${id}/call-logs/${logId}`);
 export const getLeadAiInsight = (id) => apiClient.get(`/leads/${id}/ai-insight`);
 export const autoCleanLead = (id) => apiClient.post(`/leads/${id}/auto-clean`);
 export const extractSocialProfiles = (id) => apiClient.post(`/leads/${id}/ai-social-extract`);
