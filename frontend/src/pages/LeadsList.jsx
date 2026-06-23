@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { getLeads, createLead, extractLeadFromText, addCallLog, extractLogFromText } from '../api/apiClient';
 import { useScrollRestore } from '../hooks/useScrollRestore';
-import { extractMobileNumbers } from '../utils/contactUtils';
+import { extractMobileNumbers, defaultWhatsappMessage } from '../utils/contactUtils';
 import SelectContactModal from '../components/Modals/SelectContactModal';
 import { Search, Plus, Filter, MoreHorizontal, FileText, MessageSquarePlus, X, Sparkles, ImagePlus, ChevronDown, RotateCcw } from 'lucide-react';
 import { FaWhatsapp, FaPhoneAlt } from 'react-icons/fa';
@@ -56,9 +56,12 @@ function LeadsList() {
   const handleContactClick = (e, lead, type) => {
     e.preventDefault();
     const numbers = extractMobileNumbers(lead.mobile);
-    if (numbers.length > 0) {
+    if (numbers.length > 1) {
       setContactActionLead(lead);
       setContactActionType(type);
+    } else if (numbers.length === 1) {
+      if (type === 'call') window.location.href = `tel:${numbers[0]}`;
+      if (type === 'whatsapp') window.location.href = `whatsapp://send?phone=91${numbers[0]}&text=${encodeURIComponent(defaultWhatsappMessage)}`;
     } else {
       alert('No valid mobile number found.');
     }
