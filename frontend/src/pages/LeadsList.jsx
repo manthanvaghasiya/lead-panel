@@ -323,6 +323,17 @@ function LeadsList() {
                     <td className="px-3 py-3 text-right">
                       <div className="flex items-center justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button 
+                          onClick={(e) => {
+                            e.preventDefault();
+                            const query = encodeURIComponent(`${lead.name} ${lead.mobile || ''}`);
+                            window.open(`https://www.google.com/search?q=${query}`, '_blank');
+                          }}
+                          className="p-1.5 bg-cyan-50 text-cyan-600 rounded-md hover:bg-cyan-100 transition-colors border border-cyan-200 shadow-sm"
+                          title="Google Search"
+                        >
+                          <Search size={12} />
+                        </button>
+                        <button 
                           onClick={(e) => handleContactClick(e, lead, 'call')}
                           className="p-1.5 bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 transition-colors border border-blue-200 shadow-sm"
                           title="Call"
@@ -410,6 +421,11 @@ function LeadsList() {
                   Logs ({lead.callLogs ? lead.callLogs.length : 0})
                 </button>
                 <div className="flex gap-2">
+                  <button onClick={(e) => {
+                    e.preventDefault();
+                    const query = encodeURIComponent(`${lead.name} ${lead.mobile || ''}`);
+                    window.open(`https://www.google.com/search?q=${query}`, '_blank');
+                  }} className="p-2 bg-cyan-50 text-cyan-600 rounded-lg border border-cyan-200 shadow-sm" title="Google Search"><Search size={14} /></button>
                   <button onClick={(e) => handleContactClick(e, lead, 'call')} className="p-2 bg-blue-50 text-blue-600 rounded-lg border border-blue-200 shadow-sm"><FaPhoneAlt size={14} /></button>
                   <button onClick={(e) => handleContactClick(e, lead, 'whatsapp')} className="p-2 bg-green-50 text-green-600 rounded-lg border border-green-200 shadow-sm"><FaWhatsapp size={16} /></button>
                   <button onClick={() => setLogModalLead(lead)} className="p-2 bg-indigo-50 text-indigo-600 rounded-lg border border-indigo-200 shadow-sm"><MessageSquarePlus size={16} /></button>

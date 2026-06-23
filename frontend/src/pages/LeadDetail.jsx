@@ -303,6 +303,18 @@ function LeadDetail() {
           {/* Action Buttons */}
           <div className="flex gap-2 w-full sm:w-auto">
             <button 
+              onClick={(e) => {
+                e.preventDefault();
+                const query = encodeURIComponent(`${lead.name} ${lead.mobile || ''}`);
+                window.open(`https://www.google.com/search?q=${query}`, '_blank');
+              }}
+              className="flex items-center justify-center gap-2 px-3 sm:px-5 py-2.5 bg-blue-50 border border-blue-100 text-blue-600 rounded-lg font-medium shadow-sm hover:bg-blue-100 transition-colors"
+              title="Google Search"
+            >
+              <Search size={16} />
+              <span>Search</span>
+            </button>
+            <button 
               onClick={(e) => handleContactClick(e, 'whatsapp')}
               className="flex items-center justify-center gap-2 px-3 sm:px-5 py-2.5 bg-[#25D366] text-white rounded-lg font-medium shadow-sm hover:bg-[#128C7E] transition-colors"
             >
