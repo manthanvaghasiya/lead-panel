@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
 import { LayoutDashboard, List, Calendar, FileDown, PieChart, LogOut, Settings as SettingsIcon, Images, LayoutGrid } from 'lucide-react';
 import LeadsList from './pages/LeadsList';
@@ -12,10 +12,14 @@ import Settings from './pages/Settings';
 import UpdatePrompt from './components/PWA/UpdatePrompt';
 import InstallButton from './components/PWA/InstallButton';
 import OfflineBadge from './components/PWA/OfflineBadge';
+import { AuthProvider, AuthContext } from './context/AuthContext';
+import PrivateRoute from './components/PrivateRoute';
+import Login from './pages/Login';
 
 function Layout({ children }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const { user, logout } = useContext(AuthContext);
 
   // Close mobile menu when route changes
   useEffect(() => {
@@ -115,10 +119,10 @@ function Layout({ children }) {
               <img src="/IMG_20251110_151125[1].jpg" alt="Admin" className="w-full h-full object-cover" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-slate-200 truncate">Admin User</p>
-              <p className="text-xs text-slate-500 truncate group-hover:text-slate-400 transition-colors">manthanvaghasiya@webiox.tech</p>
+              <p className="text-sm font-semibold text-slate-200 truncate">{user?.name || 'Admin User'}</p>
+              <p className="text-xs text-slate-500 truncate group-hover:text-slate-400 transition-colors">{user?.email || 'admin@webiox.tech'}</p>
             </div>
-            <button className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-red-500/10 hover:text-red-400 text-slate-500 transition-colors">
+            <button onClick={logout} className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-red-500/10 hover:text-red-400 text-slate-500 transition-colors">
               <LogOut size={18} />
             </button>
           </div>
@@ -152,20 +156,30 @@ function Layout({ children }) {
 
 function App() {
   return (
-    <Router>
-      <Layout>
+    <AuthProvider>
+      <Router>
         <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/leads" element={<LeadsList />} />
-          <Route path="/pipeline" element={<Pipeline />} />
-          <Route path="/leads/:id" element={<LeadDetail />} />
-          <Route path="/follow-ups" element={<FollowUps />} />
-          <Route path="/analytics" element={<Analytics />} />
-          <Route path="/import-export" element={<ImportExport />} />
-          <Route path="/settings" element={<Settings />} />
+          <Route path="/login" element={<Login />} />
+          
+          <Route element={<PrivateRoute />}>
+            <Route path="/*" element={
+              <Layout>
+                <Routes>
+                  <Route path="/" element={<Dashboard />} />
+                  <Route path="/leads" element={<LeadsList />} />
+                  <Route path="/pipeline" element={<Pipeline />} />
+                  <Route path="/leads/:id" element={<LeadDetail />} />
+                  <Route path="/follow-ups" element={<FollowUps />} />
+                  <Route path="/analytics" element={<Analytics />} />
+                  <Route path="/import-export" element={<ImportExport />} />
+                  <Route path="/settings" element={<Settings />} />
+                </Routes>
+              </Layout>
+            } />
+          </Route>
         </Routes>
-      </Layout>
-    </Router>
+      </Router>
+    </AuthProvider>
   );
 }
 

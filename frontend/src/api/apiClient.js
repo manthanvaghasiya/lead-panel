@@ -7,9 +7,22 @@ const apiClient = axios.create({
   }
 });
 
+apiClient.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
+    if (error.response?.status === 401) {
+      // Optional: Handle token expiration globally
+      // localStorage.removeItem('token');
+      // window.location.href = '/login';
+    }
     console.error('API Client Error Response Data:', error.response?.data || error.message);
     return Promise.reject(error);
   }
