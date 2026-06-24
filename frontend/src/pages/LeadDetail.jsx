@@ -245,7 +245,7 @@ function LeadDetail() {
         <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 blur-[80px] rounded-full pointer-events-none"></div>
 
         <div className="flex items-start md:items-center gap-4 w-full md:w-auto flex-1 z-10">
-          <button onClick={() => navigate('/leads')} className="mt-1 md:mt-0 p-2 bg-slate-50 border border-slate-200 text-slate-500 rounded-lg hover:bg-slate-100 hover:text-slate-800 transition-colors shrink-0">
+          <button onClick={() => navigate(-1)} className="mt-1 md:mt-0 p-2 bg-slate-50 border border-slate-200 text-slate-500 rounded-lg hover:bg-slate-100 hover:text-slate-800 transition-colors shrink-0">
             <ArrowLeft size={20} />
           </button>
 
