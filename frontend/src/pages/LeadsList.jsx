@@ -101,7 +101,7 @@ function LeadsList() {
 
     // 2. Status Filter
     if (!filters.status) {
-      if (lead.status === 'Lost' || lead.status === 'Permanently Lost') return false;
+      if (lead.status === 'Lost' || lead.status === 'Permanently Lost' || lead.status === 'Won') return false;
     } else {
       if (lead.status !== filters.status) return false;
     }
