@@ -458,7 +458,7 @@ router.patch('/:id', async (req, res) => {
     const updatedLead = await Lead.findByIdAndUpdate(
       req.params.id,
       updateData,
-      { returnDocument: 'after', runValidators: true }
+      { new: true, runValidators: true }
     );
     if (!updatedLead) return res.status(404).json({ message: 'Lead not found' });
     res.json(updatedLead);

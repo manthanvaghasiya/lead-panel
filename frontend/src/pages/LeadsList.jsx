@@ -1002,7 +1002,14 @@ export function AddCallLogModal({ lead, onClose, onSuccess }) {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-[11px] uppercase tracking-wider font-semibold text-slate-500 mb-1.5">Update Type</label>
-                <select className="w-full border border-slate-200 rounded-md p-2 text-sm bg-white focus:border-primary focus:outline-none" value={formData.typeAtTime} onChange={e => setFormData({...formData, typeAtTime: e.target.value})}>
+                <select className="w-full border border-slate-200 rounded-md p-2 text-sm bg-white focus:border-primary focus:outline-none" value={formData.typeAtTime} onChange={e => {
+                  const val = e.target.value;
+                  const updates = { typeAtTime: val };
+                  if (val === 'Lost' && !formData.note.trim()) {
+                    updates.note = 'Lost - Future needs / Not interested';
+                  }
+                  setFormData({...formData, ...updates});
+                }}>
                   <option value="Hot">Hot</option>
                   <option value="Warm">Warm</option>
                   <option value="Cold">Cold</option>
@@ -1015,7 +1022,14 @@ export function AddCallLogModal({ lead, onClose, onSuccess }) {
                 <select 
                   className="w-full border border-slate-200 rounded-md p-2 text-sm bg-white focus:border-primary focus:outline-none" 
                   value={formData.statusAtTime}
-                  onChange={e => setFormData({...formData, statusAtTime: e.target.value})}
+                  onChange={e => {
+                    const val = e.target.value;
+                    const updates = { statusAtTime: val };
+                    if ((val === 'Lost' || val === 'Permanently Lost') && !formData.note.trim()) {
+                      updates.note = 'Lost - Future needs / Not interested';
+                    }
+                    setFormData({...formData, ...updates});
+                  }}
                 >
                   <option value="Pending">Pending</option>
                   <option value="In Process">In Process</option>

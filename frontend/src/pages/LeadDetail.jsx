@@ -908,7 +908,13 @@ function LeadDetail() {
                 <div className="grid grid-cols-2 gap-3">
                   <div className="flex flex-col gap-1.5">
                     <label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Type</label>
-                    <select className="w-full border border-slate-200 rounded-md p-2 text-sm bg-white focus:outline-none focus:border-primary" value={logType} onChange={e => setLogType(e.target.value)}>
+                    <select className="w-full border border-slate-200 rounded-md p-2 text-sm bg-white focus:outline-none focus:border-primary" value={logType} onChange={e => {
+                      const val = e.target.value;
+                      setLogType(val);
+                      if (val === 'Lost' && !note.trim()) {
+                        setNote('Lost - Future needs / Not interested');
+                      }
+                    }}>
                       <option value="Hot">Hot</option>
                       <option value="Warm">Warm</option>
                       <option value="Cold">Cold</option>
@@ -921,7 +927,13 @@ function LeadDetail() {
                     <select 
                       className="w-full border border-slate-200 rounded-md p-2 text-sm bg-white focus:outline-none focus:border-primary" 
                       value={logStatus}
-                      onChange={e => setLogStatus(e.target.value)}
+                      onChange={e => {
+                        const val = e.target.value;
+                        setLogStatus(val);
+                        if ((val === 'Lost' || val === 'Permanently Lost') && !note.trim()) {
+                          setNote('Lost - Future needs / Not interested');
+                        }
+                      }}
                     >
                       <option value="Pending">Pending</option>
                       <option value="In Process">In Process</option>
@@ -964,6 +976,8 @@ function LeadDetail() {
           onClose={() => setIsUpdateModalOpen(false)}
           onSuccess={(updatedData) => {
             setLead(updatedData);
+            setLogType(updatedData.type || 'Cold');
+            setLogStatus(updatedData.status || 'Pending');
             setIsUpdateModalOpen(false);
           }}
         />
@@ -1302,6 +1316,8 @@ function UpdateLeadModal({ lead, onClose, onSuccess }) {
                   <option value="Hot">Hot</option>
                   <option value="Warm">Warm</option>
                   <option value="Cold">Cold</option>
+                  <option value="Won">Won</option>
+                  <option value="Lost">Lost</option>
                 </select>
               </div>
               <div>
