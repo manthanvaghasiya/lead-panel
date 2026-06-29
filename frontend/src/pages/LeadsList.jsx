@@ -30,7 +30,9 @@ function LeadsList() {
     type: searchParams.get('type') || '',
     businessType: '',
     city: '',
-    source: ''
+    source: '',
+    hasLogs: '',
+    hasFollowup: ''
   });
 
   const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(!!searchParams.get('status') || !!searchParams.get('type'));
@@ -118,6 +120,14 @@ function LeadsList() {
     // 6. Source Filter
     if (filters.source && lead.source !== filters.source) return false;
 
+    // 7. Has Logs Filter
+    if (filters.hasLogs === 'yes' && (!lead.callLogs || lead.callLogs.length === 0)) return false;
+    if (filters.hasLogs === 'no' && lead.callLogs && lead.callLogs.length > 0) return false;
+
+    // 8. Has Follow-up Filter
+    if (filters.hasFollowup === 'yes' && !lead.followupDate) return false;
+    if (filters.hasFollowup === 'no' && lead.followupDate) return false;
+
     return true;
   });
 
@@ -175,7 +185,7 @@ function LeadsList() {
           </h4>
           {activeFilterCount > 0 && (
             <button 
-              onClick={() => setFilters({ status: '', type: '', businessType: '', city: '', source: '' })}
+              onClick={() => setFilters({ status: '', type: '', businessType: '', city: '', source: '', hasLogs: '', hasFollowup: '' })}
               className="text-xs font-bold text-rose-500 bg-rose-50 px-2.5 py-1 rounded-md hover:bg-rose-100 transition-colors"
             >
               Reset All
@@ -227,6 +237,26 @@ function LeadsList() {
           >
             <option value="">Ask For: All</option>
             {uniqueSources.map(src => <option key={src} value={src}>{src}</option>)}
+          </select>
+
+          <select 
+            className="w-full text-xs font-semibold bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-2 outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 text-slate-700"
+            value={filters.hasLogs}
+            onChange={(e) => setFilters({ ...filters, hasLogs: e.target.value })}
+          >
+            <option value="">Logs: All</option>
+            <option value="yes">With Logs</option>
+            <option value="no">Without Logs</option>
+          </select>
+
+          <select 
+            className="w-full text-xs font-semibold bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-2 outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 text-slate-700"
+            value={filters.hasFollowup}
+            onChange={(e) => setFilters({ ...filters, hasFollowup: e.target.value })}
+          >
+            <option value="">Follow-up: All</option>
+            <option value="yes">Scheduled</option>
+            <option value="no">Not Scheduled</option>
           </select>
         </div>
       </div>

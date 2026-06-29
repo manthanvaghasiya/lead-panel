@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Phone, Calendar, Clock, MapPin, Briefcase, Activity, Sparkles, BrainCircuit, MessageSquare, Target, Globe, Tags, X, Edit, Trash2, ImagePlus, Star, Search } from 'lucide-react';
+import { ArrowLeft, Phone, Calendar, Clock, MapPin, Briefcase, Activity, Sparkles, BrainCircuit, MessageSquare, Target, Globe, Tags, X, Edit, Trash2, ImagePlus, Star, Search, ChevronDown, Copy } from 'lucide-react';
 import { FaInstagram, FaFacebook, FaYoutube, FaLinkedin } from 'react-icons/fa';
 import { getLead, addCallLog, updateCallLog, deleteCallLog, updateLead, getLeadAiInsight, extractLeadFromText, extractLogFromText, autoCleanLead, extractSocialProfiles, deleteLead } from '../api/apiClient';
 import { useScrollRestore } from '../hooks/useScrollRestore';
@@ -199,6 +199,26 @@ function LeadDetail() {
     }
   };
 
+  const handleCopySummary = () => {
+    const summary = `📌 *Lead Summary*
+👤 *Name*: ${lead.name}
+🏢 *Business*: ${lead.businessType || 'N/A'}
+📞 *Mobile*: ${lead.mobile || 'N/A'}
+📍 *City*: ${lead.city || 'N/A'}
+🏠 *Address*: ${lead.address || 'N/A'}
+🏷️ *Type*: ${lead.type || 'Cold'}
+📝 *Status*: ${lead.status || 'Pending'}
+🌐 *Source*: ${lead.source || 'N/A'}
+📅 *Next Follow-up*: ${lead.followupDate ? new Date(lead.followupDate).toLocaleDateString() : 'Not Set'}`;
+
+    navigator.clipboard.writeText(summary)
+      .then(() => alert('Lead summary copied to clipboard!'))
+      .catch(err => {
+        console.error('Failed to copy text: ', err);
+        alert('Failed to copy to clipboard.');
+      });
+  };
+
   const filteredLogs = (lead?.callLogs || []).filter(log => {
     if (logSearch && !log.note.toLowerCase().includes(logSearch.toLowerCase())) {
       return false;
@@ -252,11 +272,11 @@ function LeadDetail() {
     <div className="max-w-7xl mx-auto flex flex-col gap-6 pb-12">
       
       {/* 1. HERO HEADER */}
-      <div className="bg-white border border-border rounded-xl shadow-sm p-5 md:p-6 flex flex-col md:flex-row gap-5 md:gap-6 items-start md:items-center relative overflow-hidden">
+      <div className="bg-white border border-border rounded-xl shadow-sm p-5 md:p-6 flex flex-col md:flex-row md:flex-wrap gap-5 md:gap-6 items-start md:items-center relative overflow-hidden">
         {/* Subtle Background Accent */}
         <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 blur-[80px] rounded-full pointer-events-none"></div>
 
-        <div className="flex items-start md:items-center gap-4 w-full md:w-auto flex-1 z-10">
+        <div className="flex items-start md:items-center gap-4 w-full md:flex-1 min-w-[250px] z-10">
           <button onClick={() => navigate(-1)} className="mt-1 md:mt-0 p-2 bg-slate-50 border border-slate-200 text-slate-500 rounded-lg hover:bg-slate-100 hover:text-slate-800 transition-colors shrink-0">
             <ArrowLeft size={20} />
           </button>
@@ -295,7 +315,7 @@ function LeadDetail() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 md:flex md:flex-wrap md:items-center gap-2 md:gap-3 w-full md:w-auto z-10 border-t border-slate-100 pt-4 md:pt-0 md:border-none">
+        <div className="grid grid-cols-2 md:flex md:flex-wrap md:items-center gap-2 md:gap-3 w-full md:w-auto z-10 border-t border-slate-100 pt-4 md:pt-0 md:border-none shrink-0">
           <button 
             onClick={handleDelete}
             disabled={isDeleting}
@@ -311,6 +331,13 @@ function LeadDetail() {
           >
             <Edit size={16} />
             <span>Edit Profile</span>
+          </button>
+          <button 
+            onClick={handleCopySummary}
+            className="md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-lg font-medium shadow-sm hover:bg-indigo-100 transition-colors"
+          >
+            <Copy size={16} />
+            <span>Copy Summary</span>
           </button>
           {/* Action Buttons */}
           <div className="flex gap-2 w-full sm:w-auto">
