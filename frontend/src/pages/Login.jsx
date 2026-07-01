@@ -24,7 +24,7 @@ function Login() {
         setError('Invalid email or password');
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'An error occurred during login. Please try again.');
+      setError('An error occurred during login. Please try again.');
     } finally {
       setLoading(false);
     }

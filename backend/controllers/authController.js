@@ -10,7 +10,7 @@ const setupDefaultUser = async () => {
   try {
     const hashedPassword = await bcrypt.hash('webiox@07', 10);
     const existingAdmin = await User.findOne({ email: 'admin@webiox.tech' });
-    
+
     if (!existingAdmin) {
       await User.create({
         email: 'admin@webiox.tech',
@@ -39,7 +39,7 @@ const login = async (req, res) => {
 
   try {
     // 1. Check if user exists
-    const user = await User.findOne({ email: email.toLowerCase().trim() });
+    const user = await User.findOne({ email: email.toLowerCase() });
     if (!user) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }

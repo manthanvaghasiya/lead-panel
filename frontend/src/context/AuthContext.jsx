@@ -27,19 +27,14 @@ export const AuthProvider = ({ children }) => {
   }, [token]);
 
   const login = async (email, password) => {
-    try {
-      const res = await apiClient.post('/auth/login', { email, password });
-      if (res.data.success) {
-        setToken(res.data.token);
-        setUser(res.data.user);
-        localStorage.setItem('token', res.data.token);
-        return true;
-      }
-      return false;
-    } catch (error) {
-      console.error("Login failed:", error);
-      throw error;
+    const res = await apiClient.post('/auth/login', { email, password });
+    if (res.data.success) {
+      setToken(res.data.token);
+      setUser(res.data.user);
+      localStorage.setItem('token', res.data.token);
+      return true;
     }
+    return false;
   };
 
   const logout = () => {
