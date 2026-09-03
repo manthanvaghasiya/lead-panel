@@ -68,13 +68,13 @@ function Pipeline() {
 
     if (!matchesSearch) return false;
     
-    // EXCLUDE Lost and Permanently Lost
-    if (lead.status === 'Lost' || lead.status === 'Permanently Lost') return false;
+    // EXCLUDE Permanently Lost
+    if (lead.status === 'Permanently Lost') return false;
 
     return true;
   });
 
-  const boardStatuses = ['Pending', 'Contacted', 'Send Detail', 'Follow-up Letter', 'In Process', 'Won'];
+  const boardStatuses = ['New', 'Pending', 'Contacted', 'Send Detail', 'Follow-up Letter', 'In Process', 'Won', 'Lost'];
   
   const [draggedLeadId, setDraggedLeadId] = useState(null);
 
@@ -153,7 +153,7 @@ function Pipeline() {
                 >
                   <div className="p-3 border-b border-slate-200/60 bg-white/50 backdrop-blur-sm sticky top-0 flex items-center justify-between">
                     <h3 className="font-bold text-sm text-slate-700 flex items-center gap-2">
-                      <span className={`w-2 h-2 rounded-full ${status === 'Won' ? 'bg-green-500' : status === 'Pending' ? 'bg-cyan-500' : 'bg-blue-500'}`}></span>
+                      <span className={`w-2 h-2 rounded-full ${status === 'Won' ? 'bg-green-500' : status === 'Lost' ? 'bg-slate-400' : status === 'New' ? 'bg-purple-500' : status === 'Pending' ? 'bg-cyan-500' : 'bg-blue-500'}`}></span>
                       {status}
                     </h3>
                     <span className="text-xs font-semibold text-slate-500 bg-slate-200/50 px-2 py-0.5 rounded-full">

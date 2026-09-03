@@ -19,6 +19,7 @@ const leadSchema = new mongoose.Schema({
   mapsUrl: { type: String },
   website: { type: String },
   source: { type: String, default: 'Website' },
+  department: { type: String, enum: ['tech', 'marketing'], required: true },
   type: { type: String, enum: ['Hot', 'Warm', 'Cold', 'Won', 'Lost'], default: 'Cold' },
   status: { type: String, default: 'Pending' },
   followupDate: { type: Date },

@@ -269,7 +269,8 @@ router.post('/:id/ai-social-extract', async (req, res) => {
 // Get all leads
 router.get('/', async (req, res) => {
   try {
-    const leads = await Lead.find().sort({ updatedAt: -1 });
+    const departmentFilter = req.user && req.user.role ? { department: req.user.role } : {};
+    const leads = await Lead.find(departmentFilter).sort({ updatedAt: -1 });
     res.json(leads);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -279,7 +280,8 @@ router.get('/', async (req, res) => {
 // Get a single lead
 router.get('/:id', async (req, res) => {
   try {
-    const lead = await Lead.findById(req.params.id);
+    const departmentFilter = req.user && req.user.role ? { _id: req.params.id, department: req.user.role } : { _id: req.params.id };
+    const lead = await Lead.findOne(departmentFilter);
     if (!lead) return res.status(404).json({ message: 'Lead not found' });
     res.json(lead);
   } catch (err) {
@@ -362,6 +364,7 @@ router.post('/bulk-import', async (req, res) => {
           name: lead.name,
           mobile: mobileClean,
           source: lead.source || 'Website',
+          department: req.user && req.user.role ? req.user.role : 'tech',
           type: standardizedType,
           status: standardizedStatus,
           businessType: lead.businessType,
@@ -425,7 +428,7 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ message: `A lead with mobile number ${mobileClean} already exists (Lead name: "${existing.name}").` });
     }
 
-    const leadData = { ...req.body, mobile: mobileClean };
+    const leadData = { ...req.body, mobile: mobileClean, department: req.user && req.user.role ? req.user.role : 'tech' };
     const lead = new Lead(leadData);
     const newLead = await lead.save();
     res.status(201).json(newLead);
@@ -455,8 +458,9 @@ router.patch('/:id', async (req, res) => {
       }
     }
 
-    const updatedLead = await Lead.findByIdAndUpdate(
-      req.params.id,
+    const departmentFilter = req.user && req.user.role ? { _id: req.params.id, department: req.user.role } : { _id: req.params.id };
+    const updatedLead = await Lead.findOneAndUpdate(
+      departmentFilter,
       updateData,
       { new: true, runValidators: true }
     );
@@ -467,12 +471,12 @@ router.patch('/:id', async (req, res) => {
   }
 });
 
-// Add a call log and update lead status/type/followup
 router.post('/:id/call-logs', async (req, res) => {
   try {
     const { note, typeAtTime, statusAtTime, nextFollowup, outcome } = req.body;
 
-    const lead = await Lead.findById(req.params.id);
+    const departmentFilter = req.user && req.user.role ? { _id: req.params.id, department: req.user.role } : { _id: req.params.id };
+    const lead = await Lead.findOne(departmentFilter);
     if (!lead) return res.status(404).json({ message: 'Lead not found' });
 
     // Add to embedded call logs
@@ -617,7 +621,8 @@ router.get('/:id/ai-insight', async (req, res) => {
 // Delete a lead
 router.delete('/:id', async (req, res) => {
   try {
-    const lead = await Lead.findByIdAndDelete(req.params.id);
+    const departmentFilter = req.user && req.user.role ? { _id: req.params.id, department: req.user.role } : { _id: req.params.id };
+    const lead = await Lead.findOneAndDelete(departmentFilter);
     if (!lead) return res.status(404).json({ message: 'Lead not found' });
     res.json({ message: 'Lead deleted' });
   } catch (err) {

@@ -794,6 +794,7 @@ function AddLeadModal({ onClose, onSuccess }) {
           <div>
             <label className="block text-xs uppercase tracking-wider text-slate-500 mb-1.5">Initial Status</label>
             <select className="input-field" value={formData.status} onChange={e => setFormData({...formData, status: e.target.value})}>
+              <option value="New">New</option>
               <option value="Pending">Pending</option>
               <option value="In Process">In Process</option>
               <option value="Send Detail">Send Detail</option>
