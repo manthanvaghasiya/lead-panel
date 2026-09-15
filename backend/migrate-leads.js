@@ -1,4 +1,11 @@
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
+const dns = require('dns');
+try {
+  dns.setServers(['8.8.8.8', '1.1.1.1']);
+} catch (e) {
+  console.warn('Failed to set public DNS servers:', e.message);
+}
 const mongoose = require('mongoose');
 const Lead = require('./models/Lead');
 

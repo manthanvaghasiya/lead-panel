@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
 import { LayoutDashboard, List, Calendar, FileDown, PieChart, LogOut, Settings as SettingsIcon, Images, LayoutGrid } from 'lucide-react';
+import { FaLinkedin } from 'react-icons/fa';
 import LeadsList from './pages/LeadsList';
 import Pipeline from './pages/Pipeline';
 import LeadDetail from './pages/LeadDetail';
@@ -9,6 +10,7 @@ import FollowUps from './pages/FollowUps';
 import Analytics from './pages/Analytics';
 import ImportExport from './pages/ImportExport';
 import Settings from './pages/Settings';
+import LinkedIn from './pages/LinkedIn';
 import UpdatePrompt from './components/PWA/UpdatePrompt';
 import InstallButton from './components/PWA/InstallButton';
 import OfflineBadge from './components/PWA/OfflineBadge';
@@ -34,6 +36,7 @@ function Layout({ children }) {
 
   const navItems = [
     { path: '/', label: 'Dashboard', icon: LayoutDashboard },
+    { path: '/linkedin', label: 'LinkedIn', icon: FaLinkedin },
     { path: '/leads', label: 'Leads', icon: List },
     { path: '/pipeline', label: 'Pipeline', icon: LayoutGrid },
     { path: '/follow-ups', label: 'Follow-ups', icon: Calendar },
@@ -166,6 +169,7 @@ function App() {
               <Layout>
                 <Routes>
                   <Route path="/" element={<Dashboard />} />
+                  <Route path="/linkedin" element={<LinkedIn />} />
                   <Route path="/leads" element={<LeadsList />} />
                   <Route path="/pipeline" element={<Pipeline />} />
                   <Route path="/leads/:id" element={<LeadDetail />} />

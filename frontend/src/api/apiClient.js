@@ -47,4 +47,15 @@ export const deleteLead = (id) => apiClient.delete(`/leads/${id}`);
 export const getSettings = () => apiClient.get('/settings');
 export const updateSettings = (data) => apiClient.put('/settings', data);
 
+// LinkedIn Endpoints
+export const getLinkedInContacts = (params) => apiClient.get('/linkedin', { params });
+export const getLinkedInStats = () => apiClient.get('/linkedin/stats');
+export const getLinkedInContact = (id) => apiClient.get(`/linkedin/${id}`);
+export const createLinkedInContact = (data) => apiClient.post('/linkedin', data);
+export const updateLinkedInContact = (id, data) => apiClient.patch(`/linkedin/${id}`, data);
+export const deleteLinkedInContact = (id) => apiClient.delete(`/linkedin/${id}`);
+export const extractLinkedInData = (text) => apiClient.post('/linkedin/extract', { text });
+export const convertLinkedInToLead = (id) => apiClient.post(`/linkedin/${id}/convert-to-lead`);
+export const smartUpdateLinkedInContact = (id, prompt) => apiClient.post(`/linkedin/${id}/smart-update`, { prompt });
+
 export default apiClient;

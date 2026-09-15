@@ -49,11 +49,13 @@ app.use(async (req, res, next) => {
 const leadRoutes = require('./routes/leadRoutes');
 const settingsRoutes = require('./routes/settingsRoutes');
 const authRoutes = require('./routes/authRoutes');
+const linkedinRoutes = require('./routes/linkedinRoutes');
 const { protect } = require('./middleware/authMiddleware');
 
 app.use(['/_/backend/api/auth', '/api/auth'], authRoutes);
 app.use(['/_/backend/api/leads', '/api/leads'], protect, leadRoutes);
 app.use(['/_/backend/api/settings', '/api/settings'], protect, settingsRoutes);
+app.use(['/_/backend/api/linkedin', '/api/linkedin'], protect, linkedinRoutes);
 
 
 if (process.env.NODE_ENV !== 'production') {
