@@ -18,7 +18,7 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Database connection config
 const PORT = process.env.PORT || 5000;
-let MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://vaghasiyamanthan006_db_user:msWev0VzPN2rAjGf@cluster0.bdba3mi.mongodb.net/?appName=Cluster0';
+let MONGODB_URI = process.env.MONGODB_URI || '';
 
 if (!MONGODB_URI && process.env.MONGODB_USERNAME && process.env.MONGODB_PASSWORD) {
   MONGODB_URI = `mongodb+srv://${encodeURIComponent(process.env.MONGODB_USERNAME)}:${encodeURIComponent(process.env.MONGODB_PASSWORD)}@cluster0.bdba3mi.mongodb.net/?appName=Cluster0`;
