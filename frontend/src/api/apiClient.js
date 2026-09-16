@@ -9,6 +9,7 @@ const getBaseURL = () => {
 
 const apiClient = axios.create({
   baseURL: getBaseURL(),
+  withCredentials: true, // Sends HttpOnly SameSite=Strict session cookies securely
   headers: {
     'Content-Type': 'application/json'
   }

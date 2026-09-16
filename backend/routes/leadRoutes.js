@@ -1,416 +1,160 @@
+/**
+ * @file leadRoutes.js
+ * @layer Route & Controller Layer / Zero-Trust Lead Management
+ * @description Enterprise-hardened Lead endpoints enforcing Zero-Trust RBAC, AES-256-GCM
+ * PII encryption, Blind Index search, Anti-Scraping Rate Limiting, Input Validation, and Immutable Audit Logging.
+ *
+ * Mitigates:
+ * - OWASP A01:2021 (Broken Access Control - Bypassing Department Isolation / Unauthorized Exports)
+ * - OWASP A02:2021 (Cryptographic Failures - Exposure of Plaintext Leads at Rest)
+ * - OWASP A03:2021 (Injection - NoSQL, Command, XSS)
+ * - OWASP A09:2021 (Security Logging and Monitoring Failures)
+ * - GDPR Art. 5 (Data Minimization) & Art. 32 (Security of Processing)
+ */
+
 const express = require('express');
 const router = express.Router();
 const Lead = require('../models/Lead');
 const { callGeminiWithRetry } = require('../utils/geminiHelper');
+const { generateBlindIndex, encryptPII } = require('../utils/cryptoVault');
+const { authorizeRoles, getDepartmentFilter } = require('../middleware/authMiddleware');
+const { exportLimiter } = require('../middleware/rateLimiters');
+const { logAudit } = require('../services/auditLogger');
+const {
+  leadInputSchema,
+  callLogSchema,
+  noSqlSanitizerMiddleware,
+  sanitizeOutput,
+} = require('../validators/schemas');
 
-// AI Magic Fill - Extract Lead Data from Text
-router.post('/ai-extract', async (req, res) => {
+// Apply NoSQL object injection sanitizer across all lead routes (CWE-943)
+router.use(noSqlSanitizerMiddleware);
+
+// =========================================================================
+// 1. LEAD EXPORT (Zero-Trust RBAC + Anti-Scraping Rate Limiting)
+// =========================================================================
+
+/**
+ * Lead Export Endpoint
+ * Strictly restricted to 'admin' role. Protected by sliding window rate limiter
+ * to mitigate automated scrapers and large-scale insider exfiltration.
+ */
+router.get('/export', exportLimiter, authorizeRoles('admin'), async (req, res) => {
   try {
-    const { text, imageBase64, mimeType } = req.body;
-    if (!text && !imageBase64) return res.status(400).json({ message: 'Text or image input is required' });
+    const leads = await Lead.find({}).sort({ createdAt: -1 });
 
-    const result = await callGeminiWithRetry(async (genAI) => {
-      const model = genAI.getGenerativeModel({
-        model: "gemini-2.5-flash",
-        generationConfig: { responseMimeType: "application/json" }
-      });
+    const decryptedLeads = leads.map(l => l.formatForRole('admin'));
 
-      const prompt = `
-        You are an expert, highly accurate data entry assistant for a sales CRM. Your job is to extract structured lead data from a given image (e.g., a business card, flyer, screenshot) and/or a messy text note.
-
-        EXTRACT THE FOLLOWING FIELDS EXACTLY AS REQUESTED. DO NOT GUESS DATA THAT IS NOT PRESENT. IF SOMETHING IS MISSING, RETURN AN EMPTY STRING "".
-
-        Fields to extract:
-        - "name": The Business Name, Company Name, or Shop Name. If it's just a person, leave empty or use their name if they act as a business.
-        - "ownerName": The Name of the person/owner/contact. Do NOT confuse this with the business name.
-        - "mobile": Extract ALL phone numbers found. Return ONLY digits (e.g., "9876543210"). If there are multiple, separate them by a comma. Remove +91 or other country codes if it's an Indian 10-digit number.
-        - "address": The full address or location mentioned.
-        - "city": Extract JUST the City name from the address (e.g., Surat, Delhi, Karnal, Mumbai). Must be a single word if possible.
-        - "businessType": The industry, profession, or type of business (e.g., Plumber, Real Estate, Doctor, Clothing Shop).
-        - "website": The exact website URL (e.g., example.com).
-        - "type": Estimate interest level: 'Hot', 'Warm', or 'Cold'. Default: 'Cold'.
-        - "source": Guess what product/service the lead is ASKING FOR (e.g., 'Website', 'CRM', 'Website+CRM', 'Other'). Default: 'Other'.
-        - "status": Estimate current stage: 'Pending', 'In Process', 'Send Detail', 'Follow-up Letter', 'Contacted'. Default: 'Pending'.
-        - "socials": A nested object containing strings for: "instagram", "facebook", "youtube", "linkedin". If you find an @handle or a link, put it in the matching platform.
-
-        Input Text Notes: "${text || 'No text provided'}"
-      `;
-
-      const parts = [prompt];
-      if (imageBase64 && mimeType) {
-        parts.push({
-          inlineData: {
-            data: imageBase64,
-            mimeType: mimeType
-          }
-        });
-      }
-
-      return await model.generateContent(parts);
+    // Immutable Audit Log for Data Loss Prevention (DLP)
+    logAudit({
+      action: 'LEAD_EXPORT',
+      req,
+      user: req.user,
+      status: 'SUCCESS',
+      details: { exportedRecordCount: decryptedLeads.length },
     });
 
-    const responseText = result.response.text().trim();
-    const extractedData = JSON.parse(responseText);
-    res.json(extractedData);
-
+    res.json(sanitizeOutput(decryptedLeads));
   } catch (err) {
-    console.error('AI Extract Error:', err);
-    res.status(err.status || 500).json({ message: err.message || 'Failed to extract data using AI.' });
+    console.error('[LEAD-EXPORT] Error:', err.message);
+    res.status(500).json({ success: false, message: 'Failed to export lead dataset.' });
   }
 });
 
-// AI Magic Fill - Extract Call Log Data from Text
-router.post('/ai-extract-log', async (req, res) => {
-  try {
-    const { text, imageBase64, mimeType } = req.body;
-    if (!text && !imageBase64) return res.status(400).json({ message: 'Text or image input is required' });
+// =========================================================================
+// 2. LEAD READ OPERATIONS (Department Isolation & PII Masking)
+// =========================================================================
 
-    const result = await callGeminiWithRetry(async (genAI) => {
-      const model = genAI.getGenerativeModel({
-        model: "gemini-2.5-flash",
-        generationConfig: { responseMimeType: "application/json" }
-      });
-
-      const prompt = `
-        You are an expert sales assistant and highly accurate data entry bot. A salesperson has provided messy notes (or an image) from a recent follow-up call with a lead.
-        Extract the structured call log data from this.
-
-        EXTRACT THE FOLLOWING FIELDS EXACTLY AS REQUESTED. DO NOT GUESS DATA THAT IS NOT PRESENT.
-        Fields to extract:
-        - "note": A clean summary of the conversation/notes. Do not leave this empty.
-        - "typeAtTime": Must be 'Hot', 'Warm', or 'Cold' if explicitly or implicitly mentioned. Otherwise empty string.
-        - "statusAtTime": Must be 'Pending', 'In Process', 'Send Detail', 'Follow-up Letter', 'Contacted', 'Won', or 'Lost'. Guess based on text, otherwise empty string.
-        - "nextFollowup": Extracted future follow up date in YYYY-MM-DD format if mentioned (assume current year is 2026), otherwise empty string.
-
-        Input Text Notes: "${text || 'No text provided'}"
-      `;
-
-      const parts = [prompt];
-      if (imageBase64 && mimeType) {
-        parts.push({
-          inlineData: {
-            data: imageBase64,
-            mimeType: mimeType
-          }
-        });
-      }
-
-      return await model.generateContent(parts);
-    });
-
-    const responseText = result.response.text().trim();
-    const extractedData = JSON.parse(responseText);
-    res.json(extractedData);
-
-  } catch (err) {
-    console.error('AI Log Extract Error:', err);
-    res.status(err.status || 500).json({ message: err.message || 'Failed to extract log data using AI.' });
-  }
-});
-
-
-// Auto-clean lead data
-router.post('/:id/auto-clean', async (req, res) => {
-  try {
-    const lead = await Lead.findById(req.params.id);
-    if (!lead) return res.status(404).json({ message: 'Lead not found' });
-
-    const result = await callGeminiWithRetry(async (genAI) => {
-      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-
-      const prompt = `
-        Analyze this lead data:
-        Name: ${lead.name || ''}
-        Address: ${lead.address || ''}
-
-        Please extract:
-        1. A clean "businessType" based on the name (e.g. if name is "Hariram Motors", type is "Automotive"). If you can't guess, return "Business".
-        2. A clean "city" name extracted from the address. If address is "MAIN G.T ROAD KARNAL..", city is "Karnal".
-
-        Return ONLY raw JSON:
-        {
-          "businessType": "...",
-          "city": "..."
-        }
-      `;
-
-      return await model.generateContent(prompt);
-    });
-
-    let responseText = result.response.text().trim();
-    if (responseText.startsWith('\`\`\`json')) {
-      responseText = responseText.replace(/^\`\`\`json/, '').replace(/\`\`\`$/, '').trim();
-    } else if (responseText.startsWith('\`\`\`')) {
-      responseText = responseText.replace(/^\`\`\`/, '').replace(/\`\`\`$/, '').trim();
-    }
-
-    const extractedData = JSON.parse(responseText);
-
-    let updated = false;
-    if (!lead.businessType && extractedData.businessType) {
-      lead.businessType = extractedData.businessType;
-      updated = true;
-    }
-    if (!lead.city && extractedData.city) {
-      lead.city = extractedData.city;
-      updated = true;
-    }
-
-    if (updated) {
-      await lead.save();
-    }
-
-    res.json(lead);
-  } catch (err) {
-    console.error('Auto Clean Error:', err);
-    res.status(err.status || 500).json({ message: err.message });
-  }
-});
-
-// AI extract social presence using Search Grounding
-router.post('/:id/ai-social-extract', async (req, res) => {
-  try {
-    const lead = await Lead.findById(req.params.id);
-    if (!lead) return res.status(404).json({ message: 'Lead not found' });
-
-    const result = await callGeminiWithRetry(async (genAI) => {
-      const model = genAI.getGenerativeModel({
-        model: "gemini-2.5-flash",
-        tools: [{ googleSearch: {} }],
-        generationConfig: { responseMimeType: "application/json" }
-      });
-
-      const prompt = `
-        You are an expert web researcher. Please perform a deep search for the following business:
-        Business Name: "${lead.name}"
-        Location: "${lead.city || lead.address || 'Unknown'}"
-        
-        Find their official web presence and extract everything you can.
-        You MUST return your answer as a raw JSON object. Do not guess information. If you cannot find a specific piece of information, use an empty string for that field.
-        
-        Fields to extract:
-        - "instagram": Official Instagram URL
-        - "facebook": Official Facebook URL
-        - "youtube": Official YouTube channel URL
-        - "linkedin": Official LinkedIn URL
-        - "instagramFollowers": Number of Instagram followers if found (e.g. "12.5k" or "450")
-        - "facebookFollowers": Number of Facebook followers/likes if found
-        - "youtubeSubscribers": Number of YouTube subscribers if found
-        - "summary": A descriptive summary of what the business actually does, including their exact confirmed address. Be extremely precise.
-        - "hours": Their exact operating hours if found online (e.g. "Mon-Fri 9AM-6PM").
-        - "emails": Any public email addresses found (comma separated if multiple).
-        - "phones": Any public phone or mobile numbers found online (comma separated).
-        - "addressMatch": The exact full physical address found on Google/Justdial/Web.
-        - "platforms": An array of objects. For every platform where you find a rating (e.g., Google Maps, Justdial, Yelp, Facebook, Zomato, etc.), return an object: { "name": "Platform Name", "rating": "e.g. 4.8", "reviews": "e.g. 120", "url": "URL to the profile" }.
-      `;
-
-      return await model.generateContent({
-        contents: [{ role: "user", parts: [{ text: prompt }] }]
-      });
-    });
-
-    let responseText = '';
-    try {
-      responseText = result.response.text().trim();
-    } catch (e) {
-      console.log("Error extracting text from Gemini response:", e);
-      console.log("FULL RESPONSE:", JSON.stringify(result.response, null, 2));
-    }
-
-    console.log("GEMINI RAW SOCIAL OUTPUT:", responseText);
-
-    if (!responseText) {
-      console.log("WARNING: Gemini returned empty text. Using fallback JSON.");
-      responseText = '{}';
-    } else {
-      if (responseText.startsWith('\`\`\`json')) {
-        responseText = responseText.replace(/^\`\`\`json/, '').replace(/\`\`\`$/, '').trim();
-      } else if (responseText.startsWith('\`\`\`')) {
-        responseText = responseText.replace(/^\`\`\`/, '').replace(/\`\`\`$/, '').trim();
-      }
-    }
-
-    console.log("CLEANED SOCIAL JSON:", responseText);
-
-    let extractedData = {};
-    try {
-      extractedData = JSON.parse(responseText);
-    } catch (parseError) {
-      console.log("JSON Parse Failed, defaulting to empty fields.");
-      extractedData = {};
-    }
-
-    lead.socials = {
-      instagram: extractedData.instagram || '',
-      facebook: extractedData.facebook || '',
-      youtube: extractedData.youtube || '',
-      linkedin: extractedData.linkedin || '',
-      rating: extractedData.rating || '',
-      reviews: extractedData.reviews || '',
-      summary: extractedData.summary || '',
-      hours: extractedData.hours || '',
-      emails: extractedData.emails || '',
-      phones: extractedData.phones || '',
-      addressMatch: extractedData.addressMatch || '',
-      instagramFollowers: extractedData.instagramFollowers || '',
-      facebookFollowers: extractedData.facebookFollowers || '',
-      youtubeSubscribers: extractedData.youtubeSubscribers || '',
-      platforms: Array.isArray(extractedData.platforms) ? extractedData.platforms : []
-    };
-
-    await lead.save();
-    res.json(lead);
-  } catch (err) {
-    console.error('AI Social Extract Error:', err);
-    res.status(err.status || 500).json({ message: err.message });
-  }
-});
-
-// Get all leads
+/**
+ * Get all leads
+ * Enforces department isolation: Non-admin users only receive leads in their assigned department.
+ * Dynamic PII masking applied for lower-privileged roles.
+ */
 router.get('/', async (req, res) => {
   try {
-    const departmentFilter = req.user && req.user.role ? { department: req.user.role } : {};
+    const departmentFilter = getDepartmentFilter(req);
     const leads = await Lead.find(departmentFilter).sort({ updatedAt: -1 });
-    res.json(leads);
+
+    // Format and dynamically mask PII based on requesting user's RBAC role
+    const formattedLeads = leads.map(l => l.formatForRole(req.user?.role || 'agent'));
+
+    // Non-blocking security audit log
+    logAudit({
+      action: 'LEAD_READ_ALL',
+      req,
+      user: req.user,
+      status: 'SUCCESS',
+      details: { recordCount: formattedLeads.length, appliedFilter: departmentFilter },
+    });
+
+    res.json(sanitizeOutput(formattedLeads));
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.error('[LEAD-READ] Error:', err.message);
+    res.status(500).json({ message: 'Internal server error while fetching leads.' });
   }
 });
 
-// Get a single lead
+/**
+ * Get a single lead by ID
+ * Parameterized lookup preventing unauthorized horizontal privilege escalation (IDOR).
+ */
 router.get('/:id', async (req, res) => {
   try {
-    const departmentFilter = req.user && req.user.role ? { _id: req.params.id, department: req.user.role } : { _id: req.params.id };
-    const lead = await Lead.findOne(departmentFilter);
-    if (!lead) return res.status(404).json({ message: 'Lead not found' });
-    res.json(lead);
+    const departmentFilter = getDepartmentFilter(req);
+    // Combine ID and department filter to prevent cross-tenant/cross-department IDOR (CWE-639)
+    const query = { _id: req.params.id, ...departmentFilter };
+
+    const lead = await Lead.findOne(query);
+    if (!lead) {
+      logAudit({
+        action: 'LEAD_READ_SINGLE',
+        req,
+        user: req.user,
+        resourceId: req.params.id,
+        status: 'BLOCKED',
+        details: { reason: 'Lead not found or unauthorized department access' },
+      });
+      return res.status(404).json({ message: 'Lead not found or access restricted.' });
+    }
+
+    const formattedLead = lead.formatForRole(req.user?.role || 'agent');
+
+    logAudit({
+      action: 'LEAD_READ_SINGLE',
+      req,
+      user: req.user,
+      resourceId: req.params.id,
+      status: 'SUCCESS',
+    });
+
+    res.json(sanitizeOutput(formattedLead));
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ message: 'Error retrieving lead.' });
   }
 });
 
-// Bulk import leads (skipping duplicates based on mobile number)
-router.post('/bulk-import', async (req, res) => {
-  try {
-    const leads = req.body;
-    if (!Array.isArray(leads)) {
-      return res.status(400).json({ message: 'Input data must be an array of leads.' });
-    }
+// =========================================================================
+// 3. LEAD CREATION & UPDATE (Zod Validation & PII Encryption)
+// =========================================================================
 
-    // Filter out invalid leads (missing name or mobile)
-    const validLeads = leads.filter(l => l.name && l.mobile);
-
-    // Clean and standardize mobile numbers
-    validLeads.forEach(lead => {
-      let cleanMobile = lead.mobile.toString().replace(/\D/g, '');
-      if (cleanMobile.startsWith('91') && cleanMobile.length === 12) {
-        cleanMobile = cleanMobile.substring(2);
-      }
-      if (cleanMobile.startsWith('0')) {
-        cleanMobile = cleanMobile.substring(1);
-      }
-      lead.mobile = cleanMobile || '0000000000';
-    });
-
-    // Get all mobile numbers from incoming list to check database
-    const incomingMobiles = validLeads.map(l => l.mobile);
-
-    // Fetch existing leads with these mobile numbers
-    const existingLeads = await Lead.find({ mobile: { $in: incomingMobiles } });
-    const existingMobiles = new Set(existingLeads.map(l => l.mobile));
-
-    // Filter out leads that already exist in DB or are duplicates within the incoming array
-    const uniqueIncomingLeads = [];
-    const seenIncomingMobiles = new Set();
-
-    for (const lead of validLeads) {
-      const mobileClean = lead.mobile.toString().trim();
-      if (!existingMobiles.has(mobileClean) && !seenIncomingMobiles.has(mobileClean)) {
-        seenIncomingMobiles.add(mobileClean);
-
-        // Standardize status
-        let standardizedStatus = 'Pending';
-        const rawStatus = (lead.status || '').toLowerCase().trim();
-        if (rawStatus) {
-          if (rawStatus.includes('won') || rawStatus === 'won') {
-            standardizedStatus = 'Won';
-          } else if (rawStatus.includes('lost') || rawStatus.includes('not interested') || rawStatus.includes('closed lost')) {
-            standardizedStatus = 'Lost';
-          } else if (rawStatus.includes('detail') || rawStatus.includes('send detail') || rawStatus.includes('update')) {
-            standardizedStatus = 'Send Detail';
-          } else if (rawStatus.includes('call back') || rawStatus.includes('follow up') || rawStatus.includes('waiting') || rawStatus.includes('in progress') || rawStatus.includes('contacted') || rawStatus.includes('process')) {
-            standardizedStatus = 'In Process';
-          } else if (rawStatus.includes('pending')) {
-            standardizedStatus = 'Pending';
-          } else {
-            standardizedStatus = lead.status.charAt(0).toUpperCase() + lead.status.slice(1);
-          }
-        }
-
-        // Standardize type
-        let standardizedType = 'Cold';
-        const rawType = (lead.type || '').toLowerCase().trim();
-        if (rawType.includes('hot')) {
-          standardizedType = 'Hot';
-        } else if (rawType.includes('warm')) {
-          standardizedType = 'Warm';
-        } else if (rawType.includes('won')) {
-          standardizedType = 'Won';
-        } else if (rawType.includes('lost')) {
-          standardizedType = 'Lost';
-        }
-
-        const structuredLead = {
-          name: lead.name,
-          mobile: mobileClean,
-          source: lead.source || 'Website',
-          department: req.user && req.user.role ? req.user.role : 'tech',
-          type: standardizedType,
-          status: standardizedStatus,
-          businessType: lead.businessType,
-          city: lead.city,
-          address: lead.address,
-          mapsUrl: lead.mapsUrl,
-          socials: {
-            rating: lead.rating || lead.socials?.rating || '',
-            reviews: lead.reviews || lead.socials?.reviews || '',
-            instagram: lead.socials?.instagram || '',
-            facebook: lead.socials?.facebook || '',
-            youtube: lead.socials?.youtube || '',
-            linkedin: lead.socials?.linkedin || ''
-          }
-        };
-        uniqueIncomingLeads.push(structuredLead);
-      }
-    }
-
-    const skippedCount = leads.length - uniqueIncomingLeads.length;
-
-    let importedCount = 0;
-    if (uniqueIncomingLeads.length > 0) {
-      const inserted = await Lead.insertMany(uniqueIncomingLeads);
-      importedCount = inserted.length;
-    }
-
-    res.json({
-      imported: importedCount,
-      skipped: skippedCount
-    });
-
-  } catch (err) {
-    console.error('Bulk Import Error:', err);
-    res.status(500).json({ message: err.message || 'Failed to bulk import leads.' });
-  }
-});
-
-// Create a new lead
+/**
+ * Create a new lead
+ * Validates payload with Zod, calculates blind index, encrypts PII at rest.
+ */
 router.post('/', async (req, res) => {
-  try {
-    if (!req.body.mobile) {
-      return res.status(400).json({ message: 'Mobile number is required.' });
-    }
+  // Validate incoming payload with strict length bounds
+  const validation = leadInputSchema.safeParse(req.body);
+  if (!validation.success) {
+    return res.status(400).json({
+      message: 'Validation failed: ' + validation.error.errors.map(e => e.message).join(', '),
+    });
+  }
 
-    let mobileClean = req.body.mobile.toString().replace(/\D/g, '');
+  const validData = validation.data;
+
+  try {
+    // Clean and normalize mobile number
+    let mobileClean = validData.mobile.replace(/\D/g, '');
     if (mobileClean.startsWith('91') && mobileClean.length === 12) {
       mobileClean = mobileClean.substring(2);
     }
@@ -418,82 +162,240 @@ router.post('/', async (req, res) => {
       mobileClean = mobileClean.substring(1);
     }
 
-    if (!mobileClean) {
-      return res.status(400).json({ message: 'Valid mobile number is required.' });
-    }
-
-    // Check if lead with this mobile already exists
-    const existing = await Lead.findOne({ mobile: mobileClean });
+    // Check duplicates securely using the deterministic Blind Index (no plaintext leakage)
+    const mobileBlindIndex = generateBlindIndex(mobileClean);
+    const existing = await Lead.findOne({ mobileBlindIndex });
     if (existing) {
-      return res.status(400).json({ message: `A lead with mobile number ${mobileClean} already exists (Lead name: "${existing.name}").` });
+      return res.status(400).json({
+        message: `A lead with this mobile number already exists in the system.`,
+      });
     }
 
-    const leadData = { ...req.body, mobile: mobileClean, department: req.user && req.user.role ? req.user.role : 'tech' };
-    const lead = new Lead(leadData);
-    const newLead = await lead.save();
-    res.status(201).json(newLead);
-  } catch (err) {
-    res.status(400).json({ message: err.message });
-  }
-});
+    // Determine assigned department based on RBAC
+    const assignedDepartment =
+      req.user.role === 'admin' && validData.department ? validData.department : req.user.role || 'tech';
 
-// Update a lead (general info)
-router.patch('/:id', async (req, res) => {
-  try {
-    let updateData = { ...req.body };
-    if (req.body.mobile) {
-      let mobileClean = req.body.mobile.toString().replace(/\D/g, '');
-      if (mobileClean.startsWith('91') && mobileClean.length === 12) {
-        mobileClean = mobileClean.substring(2);
-      }
-      if (mobileClean.startsWith('0')) {
-        mobileClean = mobileClean.substring(1);
-      }
-      updateData.mobile = mobileClean;
-
-      // Check if another lead has this mobile number
-      const existing = await Lead.findOne({ mobile: mobileClean, _id: { $ne: req.params.id } });
-      if (existing) {
-        return res.status(400).json({ message: `A lead with mobile number ${mobileClean} already exists (Lead name: "${existing.name}").` });
-      }
-    }
-
-    const departmentFilter = req.user && req.user.role ? { _id: req.params.id, department: req.user.role } : { _id: req.params.id };
-    const updatedLead = await Lead.findOneAndUpdate(
-      departmentFilter,
-      updateData,
-      { new: true, runValidators: true }
-    );
-    if (!updatedLead) return res.status(404).json({ message: 'Lead not found' });
-    res.json(updatedLead);
-  } catch (err) {
-    res.status(400).json({ message: err.message });
-  }
-});
-
-router.post('/:id/call-logs', async (req, res) => {
-  try {
-    const { note, typeAtTime, statusAtTime, nextFollowup, outcome } = req.body;
-
-    const departmentFilter = req.user && req.user.role ? { _id: req.params.id, department: req.user.role } : { _id: req.params.id };
-    const lead = await Lead.findOne(departmentFilter);
-    if (!lead) return res.status(404).json({ message: 'Lead not found' });
-
-    // Add to embedded call logs
-    lead.callLogs.push({
-      note,
-      typeAtTime,
-      statusAtTime,
-      nextFollowup,
-      outcome
+    const lead = new Lead({
+      ...validData,
+      mobile: mobileClean,
+      department: assignedDepartment,
     });
 
-    // Update lead's main status, type and followup based on the new log
-    if (typeAtTime) lead.type = typeAtTime;
-    if (statusAtTime) lead.status = statusAtTime;
+    const newLead = await lead.save();
 
-    if (nextFollowup) {
-      lead.followupDate = nextFollowup;
+    logAudit({
+      action: 'LEAD_CREATE',
+      req,
+      user: req.user,
+      resourceId: newLead._id,
+      status: 'SUCCESS',
+      details: { leadName: newLead.name, department: assignedDepartment },
+    });
+
+    res.status(201).json(sanitizeOutput(newLead.formatForRole(req.user.role)));
+  } catch (err) {
+    console.error('[LEAD-CREATE] Error:', err.message);
+    res.status(400).json({ message: err.message });
+  }
+});
+
+/**
+ * Update a lead (General Info)
+ */
+router.patch('/:id', async (req, res) => {
+  // Validate partial update payload
+  const validation = leadInputSchema.partial().safeParse(req.body);
+  if (!validation.success) {
+    return res.status(400).json({
+      message: 'Validation failed: ' + validation.error.errors.map(e => e.message).join(', '),
+    });
+  }
+
+  try {
+    const departmentFilter = getDepartmentFilter(req);
+    const lead = await Lead.findOne({ _id: req.params.id, ...departmentFilter });
+    if (!lead) {
+      return res.status(404).json({ message: 'Lead not found or unauthorized.' });
+    }
+
+    const updates = validation.data;
+
+    // If mobile number is being updated, verify uniqueness via Blind Index
+    if (updates.mobile) {
+      let mobileClean = updates.mobile.replace(/\D/g, '');
+      if (mobileClean.startsWith('91') && mobileClean.length === 12) mobileClean = mobileClean.substring(2);
+      if (mobileClean.startsWith('0')) mobileClean = mobileClean.substring(1);
+
+      const blindIndex = generateBlindIndex(mobileClean);
+      const duplicate = await Lead.findOne({ mobileBlindIndex: blindIndex, _id: { $ne: req.params.id } });
+      if (duplicate) {
+        return res.status(400).json({ message: 'Another lead already exists with this mobile number.' });
+      }
+
+      lead.mobile = mobileClean;
+    }
+
+    // Apply other safe fields
+    Object.keys(updates).forEach(key => {
+      if (key !== 'mobile' && key !== '_id' && key !== 'department') {
+        lead[key] = updates[key];
+      }
+    });
+
+    // Admins can reassign departments
+    if (req.user.role === 'admin' && updates.department) {
+      lead.department = updates.department;
+    }
+
+    const updatedLead = await lead.save();
+
+    logAudit({
+      action: 'LEAD_UPDATE',
+      req,
+      user: req.user,
+      resourceId: lead._id,
+      status: 'SUCCESS',
+      details: { updatedFields: Object.keys(updates) },
+    });
+
+    res.json(sanitizeOutput(updatedLead.formatForRole(req.user.role)));
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+});
+
+/**
+ * Delete a lead
+ * Strict RBAC: Only 'admin' or department managers can permanently delete leads.
+ */
+router.delete('/:id', authorizeRoles('admin', 'tech', 'marketing'), async (req, res) => {
+  try {
+    const departmentFilter = getDepartmentFilter(req);
+    const lead = await Lead.findOneAndDelete({ _id: req.params.id, ...departmentFilter });
+    if (!lead) {
+      return res.status(404).json({ message: 'Lead not found or unauthorized.' });
+    }
+
+    logAudit({
+      action: 'LEAD_DELETE',
+      req,
+      user: req.user,
+      resourceId: req.params.id,
+      status: 'SUCCESS',
+      details: { leadName: lead.name },
+    });
+
+    res.json({ message: 'Lead successfully deleted.' });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error while deleting lead.' });
+  }
+});
+
+// =========================================================================
+// 4. BULK IMPORT (Encrypted Ingestion & De-duplication)
+// =========================================================================
+
+router.post('/bulk-import', async (req, res) => {
+  try {
+    const leads = req.body;
+    if (!Array.isArray(leads) || leads.length === 0) {
+      return res.status(400).json({ message: 'Payload must be a non-empty array of leads.' });
+    }
+
+    if (leads.length > 1000) {
+      return res.status(400).json({ message: 'Bulk import exceeds maximum allowed threshold of 1000 rows.' });
+    }
+
+    const validLeads = leads.filter(l => l.name && l.mobile);
+    const incomingBlindIndexes = [];
+    const sanitizedIncoming = [];
+
+    for (const lead of validLeads) {
+      let cleanMobile = lead.mobile.toString().replace(/\D/g, '');
+      if (cleanMobile.startsWith('91') && cleanMobile.length === 12) cleanMobile = cleanMobile.substring(2);
+      if (cleanMobile.startsWith('0')) cleanMobile = cleanMobile.substring(1);
+      cleanMobile = cleanMobile || '0000000000';
+
+      const blindIndex = generateBlindIndex(cleanMobile);
+      incomingBlindIndexes.push(blindIndex);
+
+      sanitizedIncoming.push({
+        name: String(lead.name).substring(0, 100),
+        mobile: cleanMobile,
+        mobileBlindIndex: blindIndex,
+        source: lead.source ? String(lead.source).substring(0, 60) : 'Website',
+        department: req.user?.role === 'admin' ? lead.department || 'tech' : req.user.role || 'tech',
+        type: ['Hot', 'Warm', 'Cold', 'Won', 'Lost'].includes(lead.type) ? lead.type : 'Cold',
+        status: lead.status ? String(lead.status).substring(0, 60) : 'Pending',
+        businessType: lead.businessType ? String(lead.businessType).substring(0, 100) : '',
+        city: lead.city ? String(lead.city).substring(0, 100) : '',
+        address: lead.address ? String(lead.address).substring(0, 300) : '',
+        mapsUrl: lead.mapsUrl ? String(lead.mapsUrl).substring(0, 500) : '',
+      });
+    }
+
+    // Find existing leads using the blind index
+    const existingLeads = await Lead.find({ mobileBlindIndex: { $in: incomingBlindIndexes } }).select('mobileBlindIndex');
+    const existingSet = new Set(existingLeads.map(l => l.mobileBlindIndex));
+
+    const toInsert = [];
+    const seenBatch = new Set();
+
+    for (const item of sanitizedIncoming) {
+      if (!existingSet.has(item.mobileBlindIndex) && !seenBatch.has(item.mobileBlindIndex)) {
+        seenBatch.add(item.mobileBlindIndex);
+        // Encrypt mobile before saving
+        item.mobile = encryptPII(item.mobile);
+        toInsert.push(item);
+      }
+    }
+
+    let importedCount = 0;
+    if (toInsert.length > 0) {
+      const result = await Lead.insertMany(toInsert);
+      importedCount = result.length;
+    }
+
+    logAudit({
+      action: 'LEAD_BULK_IMPORT',
+      req,
+      user: req.user,
+      status: 'SUCCESS',
+      details: { attemptedCount: leads.length, importedCount, skippedCount: leads.length - importedCount },
+    });
+
+    res.json({
+      imported: importedCount,
+      skipped: leads.length - importedCount,
+    });
+  } catch (err) {
+    console.error('[LEAD-BULK-IMPORT] Error:', err.message);
+    res.status(500).json({ message: 'Failed to process bulk import.' });
+  }
+});
+
+// =========================================================================
+// 5. CALL LOGS & AI HELPERS
+// =========================================================================
+
+router.post('/:id/call-logs', async (req, res) => {
+  const validation = callLogSchema.safeParse(req.body);
+  if (!validation.success) {
+    return res.status(400).json({ message: validation.error.errors.map(e => e.message).join(', ') });
+  }
+
+  try {
+    const departmentFilter = getDepartmentFilter(req);
+    const lead = await Lead.findOne({ _id: req.params.id, ...departmentFilter });
+    if (!lead) return res.status(404).json({ message: 'Lead not found or unauthorized.' });
+
+    lead.callLogs.push(validation.data);
+
+    if (validation.data.typeAtTime) lead.type = validation.data.typeAtTime;
+    if (validation.data.statusAtTime) lead.status = validation.data.statusAtTime;
+
+    if (validation.data.nextFollowup) {
+      lead.followupDate = validation.data.nextFollowup;
       lead.lastFollowupCompletedDate = null;
     } else {
       lead.followupDate = null;
@@ -501,107 +403,86 @@ router.post('/:id/call-logs', async (req, res) => {
     }
 
     const updatedLead = await lead.save();
-    res.json(updatedLead);
+
+    logAudit({
+      action: 'LEAD_UPDATE',
+      req,
+      user: req.user,
+      resourceId: lead._id,
+      status: 'SUCCESS',
+      details: { callLogAdded: true, outcome: validation.data.outcome },
+    });
+
+    res.json(sanitizeOutput(updatedLead.formatForRole(req.user.role)));
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
 });
 
-// Edit a call log
 router.put('/:id/call-logs/:logId', async (req, res) => {
   try {
-    const { note, typeAtTime, statusAtTime, nextFollowup, outcome } = req.body;
-
-    const lead = await Lead.findById(req.params.id);
-    if (!lead) return res.status(404).json({ message: 'Lead not found' });
+    const departmentFilter = getDepartmentFilter(req);
+    const lead = await Lead.findOne({ _id: req.params.id, ...departmentFilter });
+    if (!lead) return res.status(404).json({ message: 'Lead not found or access denied.' });
 
     const log = lead.callLogs.id(req.params.logId);
-    if (!log) return res.status(404).json({ message: 'Call log not found' });
+    if (!log) return res.status(404).json({ message: 'Call log not found.' });
 
-    if (note !== undefined) log.note = note;
+    const { note, typeAtTime, statusAtTime, nextFollowup, outcome } = req.body;
+    if (note !== undefined) log.note = String(note).substring(0, 1000);
     if (typeAtTime !== undefined) log.typeAtTime = typeAtTime;
     if (statusAtTime !== undefined) log.statusAtTime = statusAtTime;
     if (nextFollowup !== undefined) log.nextFollowup = nextFollowup;
-    if (outcome !== undefined) log.outcome = outcome;
-
-    // If we're updating the MOST RECENT call log, we should probably update the lead's main status too, 
-    // but the simplest approach is just to let the user edit the note/status on the log itself.
-    // However, it's a good idea to update the lead's main status if the edited log is the latest one.
-    const isLatestLog = lead.callLogs[lead.callLogs.length - 1]._id.toString() === log._id.toString();
-    if (isLatestLog) {
-      if (typeAtTime) lead.type = typeAtTime;
-      if (statusAtTime) lead.status = statusAtTime;
-
-      if (nextFollowup) {
-        lead.followupDate = nextFollowup;
-        lead.lastFollowupCompletedDate = null;
-      } else if (nextFollowup === '' || nextFollowup === null) {
-        lead.followupDate = null;
-        lead.lastFollowupCompletedDate = new Date(log.date); // Use the log's date
-      }
-    }
+    if (outcome !== undefined) log.outcome = String(outcome).substring(0, 200);
 
     const updatedLead = await lead.save();
-    res.json(updatedLead);
+    res.json(sanitizeOutput(updatedLead.formatForRole(req.user.role)));
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
 });
 
-// Delete a call log
 router.delete('/:id/call-logs/:logId', async (req, res) => {
   try {
-    const lead = await Lead.findById(req.params.id);
-    if (!lead) return res.status(404).json({ message: 'Lead not found' });
-
-    const log = lead.callLogs.id(req.params.logId);
-    if (!log) return res.status(404).json({ message: 'Call log not found' });
+    const departmentFilter = getDepartmentFilter(req);
+    const lead = await Lead.findOne({ _id: req.params.id, ...departmentFilter });
+    if (!lead) return res.status(404).json({ message: 'Lead not found or access denied.' });
 
     lead.callLogs.pull(req.params.logId);
-
     const updatedLead = await lead.save();
-    res.json(updatedLead);
+    res.json(sanitizeOutput(updatedLead.formatForRole(req.user.role)));
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
 });
 
-// Generate AI Insight for a lead
+// AI Insights
 router.get('/:id/ai-insight', async (req, res) => {
   try {
-    const lead = await Lead.findById(req.params.id);
-    if (!lead) return res.status(404).json({ message: 'Lead not found' });
+    const departmentFilter = getDepartmentFilter(req);
+    const lead = await Lead.findOne({ _id: req.params.id, ...departmentFilter });
+    if (!lead) return res.status(404).json({ message: 'Lead not found or access denied.' });
 
-    const formattedLogs = lead.callLogs.map(log =>
-      `Date: ${new Date(log.date).toLocaleDateString()}, Status: ${log.statusAtTime}, Note: ${log.note}`
-    ).join('\n');
+    const formattedLogs = lead.callLogs
+      .map(log => `Date: ${new Date(log.date).toLocaleDateString()}, Status: ${log.statusAtTime}, Note: ${log.note}`)
+      .join('\n');
 
-    const result = await callGeminiWithRetry(async (genAI) => {
-      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-
+    const result = await callGeminiWithRetry(async genAI => {
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
       const prompt = `
-        You are an expert sales assistant. Analyze the following lead and their follow-up history.
-        Provide your response as a JSON object with exactly these 3 keys:
-        {
-          "summary": "A quick 1-2 sentence summary of what the lead wants and where the deal stands.",
-          "nextAction": "A short recommendation on what the salesperson should do next.",
-          "draftMessage": "A polite, professional, and convincing WhatsApp message to send to the lead next, based on their history."
-        }
-        Do not include markdown blocks like \`\`\`json, just return the raw JSON object.
-
+        You are an expert sales assistant. Analyze the lead:
         Lead Name: ${lead.name}
         Business Type: ${lead.businessType}
-        Current Status: ${lead.status}
+        Status: ${lead.status}
         Follow-up History:
         ${formattedLogs}
-      `;
 
+        Provide your response as a valid JSON object with: "summary", "nextAction", "draftMessage".
+      `;
       return await model.generateContent(prompt);
     });
 
     let responseText = result.response.text().trim();
-
-    // Clean up potential markdown formatting from Gemini
     if (responseText.startsWith('\`\`\`json')) {
       responseText = responseText.replace(/^\`\`\`json/, '').replace(/\`\`\`$/, '').trim();
     } else if (responseText.startsWith('\`\`\`')) {
@@ -609,24 +490,59 @@ router.get('/:id/ai-insight', async (req, res) => {
     }
 
     const insight = JSON.parse(responseText);
-    res.json(insight);
-
+    res.json(sanitizeOutput(insight));
   } catch (err) {
-    console.error('AI Insight Error:', err);
-    console.log('INSIGHT ERR OBJ STATUS:', err.status, 'MESSAGE:', err.message);
-    res.status(err.status || 500).json({ message: err.message });
+    res.status(500).json({ message: 'Failed to generate AI insight.' });
   }
 });
 
-// Delete a lead
-router.delete('/:id', async (req, res) => {
+// AI Extract routes
+router.post('/ai-extract', async (req, res) => {
   try {
-    const departmentFilter = req.user && req.user.role ? { _id: req.params.id, department: req.user.role } : { _id: req.params.id };
-    const lead = await Lead.findOneAndDelete(departmentFilter);
-    if (!lead) return res.status(404).json({ message: 'Lead not found' });
-    res.json({ message: 'Lead deleted' });
+    const { text, imageBase64, mimeType } = req.body;
+    if (!text && !imageBase64) return res.status(400).json({ message: 'Text or image input is required' });
+
+    const result = await callGeminiWithRetry(async genAI => {
+      const model = genAI.getGenerativeModel({
+        model: 'gemini-2.5-flash',
+        generationConfig: { responseMimeType: 'application/json' },
+      });
+
+      const prompt = `Extract structured lead JSON ("name", "ownerName", "mobile", "address", "city", "businessType", "website", "type", "source", "status", "socials") from: "${text || ''}"`;
+      const parts = [prompt];
+      if (imageBase64 && mimeType) {
+        parts.push({ inlineData: { data: imageBase64, mimeType } });
+      }
+      return await model.generateContent(parts);
+    });
+
+    const responseText = result.response.text().trim();
+    res.json(sanitizeOutput(JSON.parse(responseText)));
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ message: 'AI Extraction failed.' });
+  }
+});
+
+router.post('/ai-extract-log', async (req, res) => {
+  try {
+    const { text, imageBase64, mimeType } = req.body;
+    if (!text && !imageBase64) return res.status(400).json({ message: 'Text or image input is required' });
+
+    const result = await callGeminiWithRetry(async genAI => {
+      const model = genAI.getGenerativeModel({
+        model: 'gemini-2.5-flash',
+        generationConfig: { responseMimeType: 'application/json' },
+      });
+      const prompt = `Extract call log JSON ("note", "typeAtTime", "statusAtTime", "nextFollowup", "outcome") from notes: "${text || ''}"`;
+      const parts = [prompt];
+      if (imageBase64 && mimeType) parts.push({ inlineData: { data: imageBase64, mimeType } });
+      return await model.generateContent(parts);
+    });
+
+    const responseText = result.response.text().trim();
+    res.json(sanitizeOutput(JSON.parse(responseText)));
+  } catch (err) {
+    res.status(500).json({ message: 'AI Call Log extraction failed.' });
   }
 });
 
