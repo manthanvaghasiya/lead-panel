@@ -4,7 +4,7 @@ const getBaseURL = () => {
   if (import.meta.env.VITE_API_URL) {
     return import.meta.env.VITE_API_URL.replace(/\/+$/, '');
   }
-  return import.meta.env.DEV ? 'http://localhost:5000/api' : '/_/backend/api';
+  return import.meta.env.DEV ? 'http://localhost:5000/api' : '/api';
 };
 
 const apiClient = axios.create({
