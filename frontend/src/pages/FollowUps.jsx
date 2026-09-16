@@ -25,9 +25,10 @@ function FollowUps() {
   const fetchLeads = async () => {
     try {
       const { data } = await getLeads();
-      setLeads(data);
+      setLeads(Array.isArray(data) ? data : (data?.leads || []));
     } catch (err) {
       console.error(err);
+      setLeads([]);
     } finally {
       setLoading(false);
     }
@@ -51,7 +52,7 @@ function FollowUps() {
     if (window.confirm('Are you sure you want to permanently delete this lead? This action cannot be undone.')) {
       try {
         await deleteLead(id);
-        setLeads(leads.filter(l => l._id !== id));
+        setLeads(prev => (Array.isArray(prev) ? prev : []).filter(l => l._id !== id));
       } catch (err) {
         console.error(err);
         alert('Failed to delete lead');
@@ -64,8 +65,10 @@ function FollowUps() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
+  const safeLeads = Array.isArray(leads) ? leads : [];
+
   // Filter only leads that have a followup date and are not Won or Lost or Permanently Lost
-  const activeFollowUps = leads.filter(l => 
+  const activeFollowUps = safeLeads.filter(l => 
     l.followupDate && 
     l.status !== 'Won' && 
     l.status !== 'Lost' &&
@@ -81,7 +84,7 @@ function FollowUps() {
   const upcoming = activeFollowUps.filter(l => new Date(l.followupDate) > today);
 
   const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-  const completed = leads.filter(l => 
+  const completed = safeLeads.filter(l => 
     l.lastFollowupCompletedDate && 
     new Date(l.lastFollowupCompletedDate) >= twentyFourHoursAgo
   ).sort((a, b) => new Date(b.lastFollowupCompletedDate) - new Date(a.lastFollowupCompletedDate));

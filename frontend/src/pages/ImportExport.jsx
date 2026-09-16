@@ -178,7 +178,7 @@ function ImportExport() {
     setExporting(true);
     try {
       const { data } = await getLeads();
-      let filteredData = data;
+      let filteredData = Array.isArray(data) ? data : (data?.leads || []);
 
       // Status Filter
       if (exportFilter.status !== 'all') {

@@ -116,9 +116,10 @@ export default function LinkedIn() {
       if (search.trim()) params.search = search.trim();
 
       const { data } = await getLinkedInContacts(params);
-      setContacts(data);
+      setContacts(Array.isArray(data) ? data : (data?.contacts || []));
     } catch (err) {
       console.error('Failed to load LinkedIn contacts:', err);
+      setContacts([]);
     } finally {
       setLoading(false);
     }
@@ -305,7 +306,7 @@ export default function LinkedIn() {
     if (!window.confirm(`Are you sure you want to delete "${name}"?`)) return;
     try {
       await deleteLinkedInContact(id);
-      setContacts(contacts.filter(c => c._id !== id));
+      setContacts(prev => (Array.isArray(prev) ? prev : []).filter(c => c._id !== id));
       fetchStats();
       if (selectedContact?._id === id) setSelectedContact(null);
     } catch (err) {

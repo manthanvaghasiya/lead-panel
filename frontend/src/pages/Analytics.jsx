@@ -18,9 +18,10 @@ function Analytics() {
   const fetchLeads = async () => {
     try {
       const { data } = await getLeads();
-      setLeads(data);
+      setLeads(Array.isArray(data) ? data : (data?.leads || []));
     } catch (err) {
       console.error(err);
+      setLeads([]);
     } finally {
       setLoading(false);
     }
@@ -28,10 +29,12 @@ function Analytics() {
 
   if (loading) return <div className="p-12 text-center text-slate-500 font-medium">Gathering insights...</div>;
 
+  const safeLeads = Array.isArray(leads) ? leads : [];
+
   // --- KPI Metrics ---
-  const totalLeads = leads.length;
-  const wonLeads = leads.filter(l => l.status === 'Won').length;
-  const lostLeads = leads.filter(l => l.status === 'Lost' || l.status === 'Permanently Lost').length;
+  const totalLeads = safeLeads.length;
+  const wonLeads = safeLeads.filter(l => l.status === 'Won').length;
+  const lostLeads = safeLeads.filter(l => l.status === 'Lost' || l.status === 'Permanently Lost').length;
   const activeLeads = totalLeads - wonLeads - lostLeads;
   const winRate = totalLeads > 0 ? Math.round((wonLeads / totalLeads) * 100) : 0;
 
@@ -43,7 +46,7 @@ function Analytics() {
   }).reverse();
 
   const leadsOverTime = last7Days.map(dateStr => {
-    const count = leads.filter(l => {
+    const count = safeLeads.filter(l => {
       const createdDate = l.createdAt ? new Date(l.createdAt).toISOString().split('T')[0] : null;
       return createdDate === dateStr;
     }).length;
@@ -57,14 +60,14 @@ function Analytics() {
 
   // --- Type Distribution (Pie) ---
   const typeData = [
-    { name: 'Hot', value: leads.filter(l => l.type === 'Hot').length, color: '#ef4444' }, // Red
-    { name: 'Warm', value: leads.filter(l => l.type === 'Warm').length, color: '#f97316' }, // Orange
-    { name: 'Cold', value: leads.filter(l => l.type === 'Cold').length, color: '#0ea5e9' }, // Sky
+    { name: 'Hot', value: safeLeads.filter(l => l.type === 'Hot').length, color: '#ef4444' }, // Red
+    { name: 'Warm', value: safeLeads.filter(l => l.type === 'Warm').length, color: '#f97316' }, // Orange
+    { name: 'Cold', value: safeLeads.filter(l => l.type === 'Cold').length, color: '#0ea5e9' }, // Sky
   ].filter(d => d.value > 0);
 
   // --- Source / Ask For (Bar) ---
   const sourceCount = {};
-  leads.forEach(l => {
+  safeLeads.forEach(l => {
     const src = l.source || 'Unknown';
     sourceCount[src] = (sourceCount[src] || 0) + 1;
   });
@@ -78,7 +81,7 @@ function Analytics() {
   const funnelData = pipelineOrder.map(status => {
     return {
       status,
-      count: leads.filter(l => l.status === status).length
+      count: safeLeads.filter(l => l.status === status).length
     };
   }).filter(d => d.count > 0);
 

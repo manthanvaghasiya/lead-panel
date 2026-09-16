@@ -23,9 +23,10 @@ function Pipeline() {
   const fetchLeads = async () => {
     try {
       const { data } = await getLeads();
-      setLeads(data);
+      setLeads(Array.isArray(data) ? data : (data?.leads || []));
     } catch (err) {
       console.error('Error fetching leads:', err);
+      setLeads([]);
     } finally {
       setLoading(false);
     }
@@ -46,10 +47,11 @@ function Pipeline() {
   };
 
   const handleDropLead = async (leadId, newStatus) => {
-    const leadToUpdate = leads.find(l => l._id === leadId);
+    const safeLeads = Array.isArray(leads) ? leads : [];
+    const leadToUpdate = safeLeads.find(l => l._id === leadId);
     if (!leadToUpdate || leadToUpdate.status === newStatus) return;
 
-    setLeads(prev => prev.map(l => l._id === leadId ? { ...l, status: newStatus } : l));
+    setLeads(prev => (Array.isArray(prev) ? prev : []).map(l => l._id === leadId ? { ...l, status: newStatus } : l));
     try {
       await updateLead(leadId, { status: newStatus });
     } catch (err) {
@@ -58,7 +60,8 @@ function Pipeline() {
     }
   };
 
-  const filteredLeads = leads.filter(lead => {
+  const safeLeads = Array.isArray(leads) ? leads : [];
+  const filteredLeads = safeLeads.filter(lead => {
     const searchLower = search.toLowerCase();
     const matchesSearch = 
       lead.name.toLowerCase().includes(searchLower) || 

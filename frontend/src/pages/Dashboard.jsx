@@ -18,9 +18,10 @@ function Dashboard() {
   const fetchLeads = async () => {
     try {
       const { data } = await getLeads();
-      setLeads(data);
+      setLeads(Array.isArray(data) ? data : (data?.leads || []));
     } catch (err) {
       console.error(err);
+      setLeads([]);
     } finally {
       setLoading(false);
     }
@@ -28,17 +29,18 @@ function Dashboard() {
 
   // Memoized stats calculation
   const stats = useMemo(() => {
-    const total = leads.length;
-    const hot = leads.filter(l => l.type === 'Hot').length;
-    const warm = leads.filter(l => l.type === 'Warm').length;
-    const cold = leads.filter(l => l.type === 'Cold').length;
-    const won = leads.filter(l => l.status === 'Won').length;
+    const safeLeads = Array.isArray(leads) ? leads : [];
+    const total = safeLeads.length;
+    const hot = safeLeads.filter(l => l.type === 'Hot').length;
+    const warm = safeLeads.filter(l => l.type === 'Warm').length;
+    const cold = safeLeads.filter(l => l.type === 'Cold').length;
+    const won = safeLeads.filter(l => l.status === 'Won').length;
     const winRate = total > 0 ? ((won / total) * 100).toFixed(1) : '0.0';
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const followUps = leads.filter(l => l.followupDate && l.status !== 'Won' && l.status !== 'Lost');
+    const followUps = safeLeads.filter(l => l.followupDate && l.status !== 'Won' && l.status !== 'Lost');
     const overdue = followUps.filter(l => new Date(l.followupDate) < today);
     const todayList = followUps.filter(l => {
       const d = new Date(l.followupDate);
@@ -59,7 +61,7 @@ function Dashboard() {
     ].filter(d => d.value > 0);
 
     // Recent leads
-    const recentLeads = [...leads].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 6);
+    const recentLeads = [...safeLeads].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 6);
 
     return { total, hot, warm, cold, won, winRate, overdue, todayList, trendData, pipelineData, recentLeads };
   }, [leads]);

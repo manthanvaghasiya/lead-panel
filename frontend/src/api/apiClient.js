@@ -1,7 +1,14 @@
 import axios from 'axios';
 
+const getBaseURL = () => {
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL.replace(/\/+$/, '');
+  }
+  return import.meta.env.DEV ? 'http://localhost:5000/api' : '/_/backend/api';
+};
+
 const apiClient = axios.create({
-  baseURL: import.meta.env.DEV ? 'http://localhost:5000/api' : '/_/backend/api',
+  baseURL: getBaseURL(),
   headers: {
     'Content-Type': 'application/json'
   }
@@ -16,7 +23,19 @@ apiClient.interceptors.request.use((config) => {
 });
 
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // If an API route fell back to SPA index.html, reject instead of returning raw HTML
+    const contentType = response.headers?.['content-type'] || '';
+    if (
+      typeof response.data === 'string' &&
+      (contentType.includes('text/html') || response.data.trim().startsWith('<!doctype html') || response.data.trim().startsWith('<html'))
+    ) {
+      const err = new Error(`API endpoint ${response.config.url} returned HTML instead of JSON. Check API baseURL or deployment routing.`);
+      err.response = response;
+      return Promise.reject(err);
+    }
+    return response;
+  },
   (error) => {
     if (error.response?.status === 401) {
       // Optional: Handle token expiration globally

@@ -47,9 +47,10 @@ function LeadsList() {
   const fetchLeads = async () => {
     try {
       const { data } = await getLeads();
-      setLeads(data);
+      setLeads(Array.isArray(data) ? data : (data?.leads || []));
     } catch (err) {
       console.error('Error fetching leads:', err);
+      setLeads([]);
     } finally {
       setLoading(false);
     }
@@ -73,7 +74,7 @@ function LeadsList() {
     if (window.confirm('Are you sure you want to permanently delete this lead? This action cannot be undone.')) {
       try {
         await deleteLead(id);
-        setLeads(leads.filter(l => l._id !== id));
+        setLeads(prev => (Array.isArray(prev) ? prev : []).filter(l => l._id !== id));
       } catch (err) {
         console.error(err);
         alert('Failed to delete lead');
@@ -81,16 +82,18 @@ function LeadsList() {
     }
   };
 
+  const safeLeads = Array.isArray(leads) ? leads : [];
+
   // Extract unique values dynamically for filters
-  const uniqueStatuses = [...new Set(leads.map(lead => lead.status).filter(Boolean))].sort();
+  const uniqueStatuses = [...new Set(safeLeads.map(lead => lead.status).filter(Boolean))].sort();
   const uniqueTypes = ['Hot', 'Warm', 'Cold'];
-  const uniqueBusinessTypes = [...new Set(leads.map(lead => lead.businessType).filter(Boolean))].sort();
-  const uniqueCities = [...new Set(leads.map(lead => lead.city).filter(Boolean))].sort();
-  const uniqueSources = [...new Set(leads.map(lead => lead.source).filter(Boolean))].sort();
+  const uniqueBusinessTypes = [...new Set(safeLeads.map(lead => lead.businessType).filter(Boolean))].sort();
+  const uniqueCities = [...new Set(safeLeads.map(lead => lead.city).filter(Boolean))].sort();
+  const uniqueSources = [...new Set(safeLeads.map(lead => lead.source).filter(Boolean))].sort();
 
   const activeFilterCount = Object.values(filters).filter(Boolean).length;
 
-  const filteredLeads = leads.filter(lead => {
+  const filteredLeads = safeLeads.filter(lead => {
     // 1. Search Query
     const searchLower = search.toLowerCase();
     const matchesSearch = 

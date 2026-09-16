@@ -17,6 +17,7 @@ import OfflineBadge from './components/PWA/OfflineBadge';
 import { AuthProvider, AuthContext } from './context/AuthContext';
 import PrivateRoute from './components/PrivateRoute';
 import Login from './pages/Login';
+import ErrorBoundary from './components/ErrorBoundary';
 
 function Layout({ children }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -148,7 +149,9 @@ function Layout({ children }) {
         </div>
 
         <main id="main-scroll-container" className="flex-1 overflow-y-auto p-4 md:p-8">
-          {children}
+          <ErrorBoundary>
+            {children}
+          </ErrorBoundary>
         </main>
       </div>
       </div>
