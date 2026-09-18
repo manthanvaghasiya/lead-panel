@@ -88,7 +88,9 @@ leadSchema.pre('save', function (next) {
     this.socials.emails = encryptPII(this.socials.emails);
   }
 
-  next();
+  if (typeof next === 'function') {
+    next();
+  }
 });
 
 /**
