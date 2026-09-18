@@ -77,5 +77,7 @@ export const deleteLinkedInContact = (id) => apiClient.delete(`/linkedin/${id}`)
 export const extractLinkedInData = (text) => apiClient.post('/linkedin/extract', { text });
 export const convertLinkedInToLead = (id) => apiClient.post(`/linkedin/${id}/convert-to-lead`);
 export const smartUpdateLinkedInContact = (id, prompt) => apiClient.post(`/linkedin/${id}/smart-update`, { prompt });
+export const getLinkedInBackup = () => apiClient.get('/linkedin/backup');
+export const restoreLinkedInBackup = (data) => apiClient.post('/linkedin/restore', data);
 
 export default apiClient;

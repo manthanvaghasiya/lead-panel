@@ -98,7 +98,9 @@ function heuristicExtract(text) {
   }
 
   // Extract Connection Reason
-  if (/Freelance BDE|Commission basis|BDE Opportunity/i.test(text)) {
+  if (/Active Partner|Closed \/ Partnered|Freelancer BDE\b/i.test(text)) {
+    result.reason = 'Freelancer BDE';
+  } else if (/Freelance BDE|Commission basis|BDE Opportunity/i.test(text)) {
     result.reason = 'Freelance BDE Opportunity';
   } else if (/Client|IT Services|Website development|App development|Project execution/i.test(text) && !/Freelance BDE/i.test(text)) {
     result.reason = 'IT Client / Project Lead';
@@ -119,17 +121,29 @@ function heuristicExtract(text) {
   const commonSkills = ['Lead Generation', 'B2B Sales', 'Client Acquisition', 'LinkedIn Sales Navigator', 'Upwork', 'Fiverr', 'Node.js', 'React', 'Cold Calling', 'Negotiation', 'Market Research', 'CRM'];
   result.skills = commonSkills.filter(s => new RegExp(`\\b${s}\\b`, 'i').test(text));
 
-  // Summary & Notes
+  // Summary & Notes (Aligned with 4-Step Standard Pipeline)
+  // Step 1: LinkedIn Chat -> Step 2: 10-Min Google Meet -> Step 3: Demo & Finalize -> Step 4: WhatsApp Handoff
   if (result.meetingLink) {
-    result.summary = `Meeting scheduled via Google Meet. WhatsApp number collected: ${result.mobile || 'N/A'}. Interested in ${result.reason}.`;
-  } else if (result.mobile) {
-    result.summary = `Connected on LinkedIn, shared phone number (${result.mobile}) and moved to WhatsApp for follow-up.`;
-    result.status = 'WhatsApp Connected';
+    result.summary = `10-minute Google Meet scheduled via Google Meet. Step 2 of Outreach Funnel. Interested in ${result.reason}.`;
+  } else if (/Closed \/ Partnered|Partnered/i.test(text)) {
+    result.summary = `Finalized partnership with Webiox. Step 4 Active Partner: WhatsApp enabled for live client lead handoffs.`;
+    result.status = 'Closed / Partnered';
   } else {
-    result.summary = `Initiated discussion on LinkedIn regarding ${result.reason}.`;
+    result.summary = `Initiated discussion on LinkedIn regarding ${result.reason}. Standard Next Step: Request email on LinkedIn to schedule 10-minute Google Meet (WhatsApp unlocked post-Meet for active leads).`;
   }
 
-  result.notes = `Extracted from LinkedIn interaction:\n- Connection Purpose: ${result.reason}\n- Current Position: ${result.position || 'N/A'}\n- Company: ${result.company || 'N/A'}`;
+  result.notes = `• Standard Funnel Progress:
+  1. LinkedIn Chat (Interest / Pitch) → ${result.status === 'In Conversation' ? 'In Progress / Interest Shown' : 'Completed'}
+  2. 10-Minute Google Meet (Lock time & email) → ${result.status === 'Meeting Scheduled' ? 'Scheduled' : 'Next Step: Propose time & collect email'}
+  3. Demo & Finalize Partnership / Deal → Showcase Webiox tech builds & lock 15%–20% commission
+  4. WhatsApp (Active Lead Handoffs) → Only shared after Meet for routing active deals
+
+• Role & Organization:
+  - Role: ${result.position || 'N/A'}
+  - Company: ${result.company || 'N/A'}
+  - Location: ${result.location || 'N/A'}
+  - Terms: ${result.dealTerms || '15%–20% milestone referral fee on client builds'}
+  - Contact Channel: ${result.email ? 'Email: ' + result.email : 'LinkedIn DM (Request email for 10-min Meet)'}`;
 
   return result;
 }
@@ -351,7 +365,23 @@ router.post('/extract', async (req, res) => {
 
       const prompt = `
         You are an expert data parsing assistant for a professional CRM.
-        A user has copied raw text from a LinkedIn profile, a LinkedIn direct messaging conversation, and/or a subsequent WhatsApp chat with a contact.
+        CRITICAL OUTREACH FUNNEL RULES (Webiox SOP):
+        Pipeline Stages:
+        Step 1: LinkedIn Chat (Interest / Pitch)
+               ↓
+        Step 2: 10-Minute Google Meet (Lock time & email)
+               ↓
+        Step 3: Demo & Finalize Partnership / Deal
+               ↓
+        Step 4: WhatsApp (Only shared AFTER the Meet for active lead handoffs)
+
+        Guidelines:
+        - If still in LinkedIn chat and interest is shown (e.g. 'Sure', 'Interested'), status is 'In Conversation' (Step 1). The next step is to request their email to send a 10-min Google Meet invite.
+        - Do NOT set status to 'WhatsApp Connected' for initial LinkedIn chats. WhatsApp is strictly reserved for post-Meet active lead routing!
+        - If Google Meet / call time is locked, status is 'Meeting Scheduled' (Step 2).
+        - If demo/sync completed, status is 'Call Completed' (Step 3).
+        - If partnership deal is finalized with active projects, status is 'Closed / Partnered' (Step 4).
+
         Extract the following structured fields in valid JSON:
 
         {
@@ -359,17 +389,17 @@ router.post('/extract', async (req, res) => {
           "position": "Their professional title/headline/role (e.g. 'Business Development Executive | Driving Revenue Growth | Client Relationship Management')",
           "company": "Current company or employer if found (e.g. 'DI Solutions')",
           "location": "Their city/location if found (e.g. 'Surat, Gujarat, India')",
-          "reason": "Connection purpose / category. Choose from or specify: 'Freelance BDE Opportunity', 'IT Client / Project Lead', 'Agency Partnership', 'Hiring / Candidate', 'General Networking'",
+          "reason": "Connection purpose / category. Choose from or specify: 'Freelancer BDE', 'Freelance BDE Opportunity', 'IT Client / Project Lead', 'Agency Partnership', 'Hiring / Candidate', 'General Networking'",
           "linkedinUrl": "Full LinkedIn URL to their profile if present",
           "mobile": "Extract their 10-digit mobile/WhatsApp number if shared (e.g. '7567664748')",
           "email": "Email address if found, else empty string",
-          "status": "Estimate current pipeline stage: 'In Conversation', 'WhatsApp Connected', 'Meeting Scheduled', 'Call Completed', 'Closed / Partnered'",
+          "status": "Estimate current pipeline stage: 'In Conversation', 'Meeting Scheduled', 'Call Completed', 'Proposal / Terms Sent', 'Closed / Partnered'",
           "priority": "'Hot' if they showed strong excitement/urgency or scheduled a call immediately, 'Warm' if normally interested, 'Cold' if hesitant",
           "meetingLink": "Google Meet or Zoom URL if shared (e.g. 'https://meet.google.com/qbb-roeq-hwa')",
           "meetingTimeStr": "Mentioned meeting time if any (e.g. '5:30 PM today')",
           "skills": ["Array of skills mentioned in profile or conversation, e.g. 'B2B Sales', 'Lead Generation', 'Node.js'"],
-          "summary": "2-3 sentence executive summary of the interaction, what was discussed, commission/rates or requirements, and immediate next step.",
-          "notes": "Detailed notes on agreed points (e.g. commission rate up to 15%, channels used like Upwork/LinkedIn, scheduled call details)"
+          "summary": "2-3 sentence executive summary of the interaction, agreed terms, and explicit next step aligned with the 4-step SOP.",
+          "notes": "Detailed notes on background, agreed points (e.g. 15%-20% referral fee), and next step according to the 4-step funnel."
         }
 
         Raw Text:
@@ -663,6 +693,71 @@ router.post('/:id/smart-update', async (req, res) => {
   } catch (err) {
     console.error('Smart update error:', err);
     res.status(500).json({ message: err.message || 'Failed to apply smart update' });
+  }
+});
+
+// 10. GET /backup - Full JSON Database Export for Disaster Recovery
+router.get('/backup', async (req, res) => {
+  try {
+    const contacts = await LinkedInContact.find({}).sort({ createdAt: -1 });
+    const backupData = {
+      system: 'Webiox Lead Panel CRM',
+      backupVersion: '2.0',
+      exportedAt: new Date().toISOString(),
+      totalRecords: contacts.length,
+      contacts: contacts
+    };
+    res.json(backupData);
+  } catch (err) {
+    console.error('Backup export error:', err);
+    res.status(500).json({ message: 'Failed to generate database backup' });
+  }
+});
+
+// 11. POST /restore - Disaster Recovery Restore from JSON Backup
+router.post('/restore', async (req, res) => {
+  try {
+    const { contacts } = req.body;
+    if (!contacts || !Array.isArray(contacts)) {
+      return res.status(400).json({ message: 'Invalid backup file format. Expected contacts array.' });
+    }
+
+    let restoredCount = 0;
+    let insertedCount = 0;
+
+    for (const item of contacts) {
+      if (!item.name) continue;
+      
+      const cleanItem = { ...item };
+      delete cleanItem._id;
+      delete cleanItem.__v;
+
+      const existing = await LinkedInContact.findOne({
+        $or: [
+          { name: cleanItem.name },
+          ...(cleanItem.linkedinUrl ? [{ linkedinUrl: cleanItem.linkedinUrl }] : [])
+        ]
+      });
+
+      if (existing) {
+        await LinkedInContact.findByIdAndUpdate(existing._id, cleanItem, { returnDocument: 'after' });
+        restoredCount++;
+      } else {
+        await LinkedInContact.create(cleanItem);
+        insertedCount++;
+      }
+    }
+
+    res.json({
+      success: true,
+      message: `Database restore complete: ${restoredCount} updated, ${insertedCount} newly inserted.`,
+      restoredCount,
+      insertedCount,
+      totalProcessed: contacts.length
+    });
+  } catch (err) {
+    console.error('Database restore error:', err);
+    res.status(500).json({ message: 'Failed to restore database from backup' });
   }
 });
 

@@ -25,7 +25,7 @@ const cookieParser = require('cookie-parser');
 const { configuredCors, configuredHelmet } = require('./middleware/securityHeaders');
 const { generalApiLimiter } = require('./middleware/rateLimiters');
 const { noSqlSanitizerMiddleware } = require('./validators/schemas');
-const { protect } = require('./middleware/authMiddleware');
+const { protect, authorizeRoles } = require('./middleware/authMiddleware');
 
 const app = express();
 
@@ -89,7 +89,7 @@ const linkedinRoutes = require('./routes/linkedinRoutes');
 app.use(['/_/backend/api/auth', '/api/auth'], authRoutes);
 app.use(['/_/backend/api/leads', '/api/leads'], protect, leadRoutes);
 app.use(['/_/backend/api/settings', '/api/settings'], protect, settingsRoutes);
-app.use(['/_/backend/api/linkedin', '/api/linkedin'], protect, linkedinRoutes);
+app.use(['/_/backend/api/linkedin', '/api/linkedin'], protect, authorizeRoles('admin', 'tech'), linkedinRoutes);
 
 // 8. Fail-Secure Global Error Handler (CWE-209: Never leak stack traces to client in production)
 app.use((err, req, res, next) => {
