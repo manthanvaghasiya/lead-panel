@@ -77,6 +77,9 @@ const setupDefaultUser = async () => {
           isMfaEnabled: u.role === 'admin', // Admin enforces MFA by default
           mfaSecret: crypto.randomBytes(20).toString('hex'), // Seed MFA secret
         });
+      } else if (u.email === 'admin@webiox.tech' && existingUser.role !== 'admin') {
+        existingUser.role = 'admin';
+        await existingUser.save({ validateBeforeSave: false });
       }
     }
   } catch (err) {

@@ -4,7 +4,8 @@ import { getLeads, createLead, extractLeadFromText, addCallLog, extractLogFromTe
 import { useScrollRestore } from '../hooks/useScrollRestore';
 import { extractMobileNumbers, defaultWhatsappMessage } from '../utils/contactUtils';
 import SelectContactModal from '../components/Modals/SelectContactModal';
-import { Search, Plus, Filter, MoreHorizontal, FileText, MessageSquarePlus, X, Sparkles, ImagePlus, ChevronDown, RotateCcw, Trash2 } from 'lucide-react';
+import UpdateLeadModal from '../components/Modals/UpdateLeadModal';
+import { Search, Plus, Filter, MoreHorizontal, FileText, MessageSquarePlus, X, Sparkles, ImagePlus, ChevronDown, RotateCcw, Trash2, Edit } from 'lucide-react';
 import { FaWhatsapp, FaPhoneAlt } from 'react-icons/fa';
 
 const extractCity = (address) => {
@@ -20,6 +21,7 @@ function LeadsList() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [viewLogsLead, setViewLogsLead] = useState(null);
   const [logModalLead, setLogModalLead] = useState(null);
+  const [editModalLead, setEditModalLead] = useState(null);
   const [contactActionLead, setContactActionLead] = useState(null);
   const [contactActionType, setContactActionType] = useState(null);
   const location = useLocation();
@@ -296,7 +298,9 @@ function LeadsList() {
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
                         <div className="flex flex-col min-w-0">
-                          <span className="font-semibold text-slate-900 truncate">{lead.name}</span>
+                          <Link to={`/leads/${lead._id}`} className="font-semibold text-slate-900 truncate hover:text-indigo-600 transition-colors">
+                            {lead.name}
+                          </Link>
                           <span className="text-xs text-slate-500 truncate flex items-center gap-1 mt-0.5">
                             {lead.source}
                             {lead.followupDate && (
@@ -406,10 +410,17 @@ function LeadsList() {
                         >
                           <MessageSquarePlus size={14} />
                         </button>
+                        <button 
+                          onClick={() => setEditModalLead(lead)}
+                          className="p-1.5 bg-slate-100 text-slate-700 rounded-md hover:bg-slate-200 transition-colors border border-slate-200 shadow-sm"
+                          title="Edit Lead Profile"
+                        >
+                          <Edit size={14} />
+                        </button>
                         <Link 
                           to={`/leads/${lead._id}`}
                           className="p-1.5 bg-slate-50 text-slate-600 rounded-md hover:bg-slate-100 transition-colors border border-slate-200 shadow-sm"
-                          title="Edit Lead"
+                          title="View Lead Details"
                         >
                           <MoreHorizontal size={14} />
                         </Link>
@@ -481,8 +492,9 @@ function LeadsList() {
                   <button onClick={(e) => handleContactClick(e, lead, 'call')} className="p-2 bg-blue-50 text-blue-600 rounded-lg border border-blue-200 shadow-sm"><FaPhoneAlt size={14} /></button>
                   <button onClick={() => handleDeleteLead(lead._id)} className="p-2 bg-red-50 text-red-600 rounded-lg border border-red-200 shadow-sm" title="Delete Lead"><Trash2 size={16} /></button>
                   <button onClick={(e) => handleContactClick(e, lead, 'whatsapp')} className="p-2 bg-green-50 text-green-600 rounded-lg border border-green-200 shadow-sm"><FaWhatsapp size={16} /></button>
-                  <button onClick={() => setLogModalLead(lead)} className="p-2 bg-indigo-50 text-indigo-600 rounded-lg border border-indigo-200 shadow-sm"><MessageSquarePlus size={16} /></button>
-                  <Link to={`/leads/${lead._id}`} className="p-2 bg-slate-800 text-white rounded-lg shadow-sm"><MoreHorizontal size={16} /></Link>
+                  <button onClick={() => setLogModalLead(lead)} className="p-2 bg-indigo-50 text-indigo-600 rounded-lg border border-indigo-200 shadow-sm" title="Add Follow-up"><MessageSquarePlus size={16} /></button>
+                  <button onClick={() => setEditModalLead(lead)} className="p-2 bg-slate-100 text-slate-700 rounded-lg border border-slate-200 shadow-sm" title="Edit Lead Profile"><Edit size={16} /></button>
+                  <Link to={`/leads/${lead._id}`} className="p-2 bg-slate-800 text-white rounded-lg shadow-sm" title="View Lead Details"><MoreHorizontal size={16} /></Link>
                 </div>
               </div>
             </div>
@@ -520,6 +532,22 @@ function LeadsList() {
           onClose={() => setLogModalLead(null)}
           onSuccess={(updatedLead) => {
             setLogModalLead(null);
+            if (updatedLead) {
+              setLeads(prev => prev.map(l => l._id === updatedLead._id ? updatedLead : l));
+            } else {
+              fetchLeads();
+            }
+          }}
+        />
+      )}
+
+      {/* Edit Lead Modal */}
+      {editModalLead && (
+        <UpdateLeadModal 
+          lead={editModalLead}
+          onClose={() => setEditModalLead(null)}
+          onSuccess={(updatedLead) => {
+            setEditModalLead(null);
             if (updatedLead) {
               setLeads(prev => prev.map(l => l._id === updatedLead._id ? updatedLead : l));
             } else {
@@ -942,11 +970,16 @@ export function AddCallLogModal({ lead, onClose, onSuccess }) {
     if (!formData.note.trim()) return;
     setLoading(true);
     try {
-      const { data } = await addCallLog(lead._id, formData);
+      const { data } = await addCallLog(lead._id, {
+        note: formData.note.trim(),
+        typeAtTime: formData.typeAtTime,
+        statusAtTime: formData.statusAtTime,
+        nextFollowup: formData.nextFollowup || null
+      });
       onSuccess(data);
     } catch (err) {
       console.error(err);
-      alert('Error saving log');
+      alert(err.response?.data?.message || 'Error saving follow-up log');
     } finally {
       setLoading(false);
     }

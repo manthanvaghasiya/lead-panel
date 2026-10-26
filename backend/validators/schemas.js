@@ -52,44 +52,84 @@ const mfaVerifySchema = z.object({
 }).strict();
 
 /**
- * Lead Creation & Update Schema with strict length constraints to prevent resource exhaustion
+ * Date preprocessor: accepts full ISO datetime, date-only YYYY-MM-DD, Date objects,
+ * or empty strings/nulls converting them safely to a Date instance or null.
+ */
+const dateOrNull = z.preprocess((val) => {
+  if (val === '' || val === null || val === undefined) return null;
+  if (typeof val === 'string' || typeof val === 'number' || val instanceof Date) {
+    const d = new Date(val);
+    if (!isNaN(d.getTime())) return d;
+  }
+  return val;
+}, z.date().nullable().optional());
+
+/**
+ * Social Media and Web Presence Schema
+ */
+const socialsSchema = z.object({
+  instagram: z.string().trim().max(500).optional().nullable().or(z.literal('')),
+  facebook: z.string().trim().max(500).optional().nullable().or(z.literal('')),
+  youtube: z.string().trim().max(500).optional().nullable().or(z.literal('')),
+  linkedin: z.string().trim().max(500).optional().nullable().or(z.literal('')),
+  rating: z.string().trim().max(50).optional().nullable().or(z.literal('')),
+  reviews: z.string().trim().max(50).optional().nullable().or(z.literal('')),
+  summary: z.string().trim().max(2000).optional().nullable().or(z.literal('')),
+  hours: z.string().trim().max(300).optional().nullable().or(z.literal('')),
+  emails: z.string().trim().max(500).optional().nullable().or(z.literal('')),
+  phones: z.string().trim().max(500).optional().nullable().or(z.literal('')),
+  addressMatch: z.string().trim().max(500).optional().nullable().or(z.literal('')),
+  instagramFollowers: z.string().trim().max(100).optional().nullable().or(z.literal('')),
+  facebookFollowers: z.string().trim().max(100).optional().nullable().or(z.literal('')),
+  youtubeSubscribers: z.string().trim().max(100).optional().nullable().or(z.literal('')),
+  platforms: z.array(z.object({
+    name: z.string().trim().max(150).optional().nullable().or(z.literal('')),
+    rating: z.string().trim().max(50).optional().nullable().or(z.literal('')),
+    reviews: z.string().trim().max(50).optional().nullable().or(z.literal('')),
+    url: z.string().trim().max(500).optional().nullable().or(z.literal('')),
+  })).optional().nullable()
+}).passthrough().optional().nullable();
+
+/**
+ * Lead Creation & Update Schema with proper bounds and support for socials
  */
 const leadInputSchema = z.object({
   name: z
     .string()
     .trim()
     .min(1, 'Lead name is required')
-    .max(100, 'Name must not exceed 100 characters'),
-  ownerName: z.string().trim().max(100).optional().nullable(),
+    .max(150, 'Name must not exceed 150 characters'),
+  ownerName: z.string().trim().max(100).optional().nullable().or(z.literal('')),
   mobile: z
     .string()
     .trim()
     .min(5, 'Mobile number must be at least 5 digits')
-    .max(25, 'Mobile number must not exceed 25 characters')
-    .regex(/^[\d\s+\-().]+$/, 'Mobile number contains invalid characters'),
-  businessType: z.string().trim().max(100).optional().nullable(),
-  city: z.string().trim().max(100).optional().nullable(),
-  address: z.string().trim().max(300).optional().nullable(),
-  mapsUrl: z.string().trim().max(500).url('Invalid maps URL').optional().nullable().or(z.literal('')),
-  website: z.string().trim().max(300).optional().nullable(),
-  source: z.string().trim().max(60).default('Website'),
-  department: z.enum(['tech', 'marketing']).default('tech'),
-  type: z.enum(['Hot', 'Warm', 'Cold', 'Won', 'Lost']).default('Cold'),
-  status: z.string().trim().max(60).default('Pending'),
-  followupDate: z.string().datetime().optional().nullable().or(z.literal('')).or(z.date()),
-  tags: z.array(z.string().trim().max(40)).max(20).optional(),
-}).strict();
+    .max(50, 'Mobile number must not exceed 50 characters')
+    .regex(/^[\d\s+\-().,/]+$/, 'Mobile number contains invalid characters'),
+  businessType: z.string().trim().max(150).optional().nullable().or(z.literal('')),
+  city: z.string().trim().max(100).optional().nullable().or(z.literal('')),
+  address: z.string().trim().max(500).optional().nullable().or(z.literal('')),
+  mapsUrl: z.string().trim().max(500).optional().nullable().or(z.literal('')),
+  website: z.string().trim().max(300).optional().nullable().or(z.literal('')),
+  source: z.string().trim().max(60).optional().default('Website'),
+  department: z.enum(['tech', 'marketing']).optional().default('tech'),
+  type: z.enum(['Hot', 'Warm', 'Cold', 'Won', 'Lost']).optional().default('Cold'),
+  status: z.string().trim().max(60).optional().default('Pending'),
+  followupDate: dateOrNull,
+  tags: z.array(z.string().trim().max(40)).max(50).optional(),
+  socials: socialsSchema,
+}).passthrough();
 
 /**
  * Call Log Schema
  */
 const callLogSchema = z.object({
   note: z.string().trim().min(1, 'Call note is required').max(1000, 'Note must not exceed 1000 characters'),
-  statusAtTime: z.string().trim().max(60).optional(),
-  typeAtTime: z.enum(['Hot', 'Warm', 'Cold', 'Won', 'Lost']).optional(),
-  nextFollowup: z.string().datetime().optional().nullable().or(z.literal('')).or(z.date()),
-  outcome: z.string().trim().max(200).optional(),
-}).strict();
+  statusAtTime: z.string().trim().max(60).optional().nullable().or(z.literal('')),
+  typeAtTime: z.enum(['Hot', 'Warm', 'Cold', 'Won', 'Lost']).optional().nullable().or(z.literal('')),
+  nextFollowup: dateOrNull,
+  outcome: z.string().trim().max(200).optional().nullable().or(z.literal('')),
+}).passthrough();
 
 // ==========================================
 // 2. NoSQL Injection Sanitization

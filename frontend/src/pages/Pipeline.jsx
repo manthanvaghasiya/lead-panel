@@ -3,9 +3,10 @@ import { Link } from 'react-router-dom';
 import { getLeads, updateLead } from '../api/apiClient';
 import { extractMobileNumbers, defaultWhatsappMessage } from '../utils/contactUtils';
 import SelectContactModal from '../components/Modals/SelectContactModal';
-import { Search, Plus, Filter, MoreHorizontal, FileText, MessageSquarePlus, X, Sparkles, ImagePlus, ChevronDown, RotateCcw, Trash2, LayoutGrid, Calendar } from 'lucide-react';
+import { Search, Plus, Filter, MoreHorizontal, FileText, MessageSquarePlus, X, Sparkles, ImagePlus, ChevronDown, RotateCcw, Trash2, LayoutGrid, Calendar, Edit } from 'lucide-react';
 import { FaWhatsapp, FaPhoneAlt } from 'react-icons/fa';
 import { AddCallLogModal, ViewLogsModal } from './LeadsList';
+import UpdateLeadModal from '../components/Modals/UpdateLeadModal';
 
 function Pipeline() {
   const [leads, setLeads] = useState([]);
@@ -13,6 +14,7 @@ function Pipeline() {
   const [search, setSearch] = useState('');
   const [viewLogsLead, setViewLogsLead] = useState(null);
   const [logModalLead, setLogModalLead] = useState(null);
+  const [editModalLead, setEditModalLead] = useState(null);
   const [contactActionLead, setContactActionLead] = useState(null);
   const [contactActionType, setContactActionType] = useState(null);
 
@@ -208,7 +210,8 @@ function Pipeline() {
                           <div className="flex items-center gap-1 opacity-0 md:group-hover:opacity-100 transition-opacity">
                             <button onClick={(e) => handleContactClick(e, lead, 'call')} className="p-1 text-blue-600 hover:bg-blue-50 rounded" title="Call"><FaPhoneAlt size={10} /></button>
                             <button onClick={(e) => handleContactClick(e, lead, 'whatsapp')} className="p-1 text-green-600 hover:bg-green-50 rounded" title="WhatsApp"><FaWhatsapp size={12} /></button>
-                            <button onClick={() => setLogModalLead(lead)} className="p-1 text-indigo-600 hover:bg-indigo-50 rounded" title="Add Log"><MessageSquarePlus size={12} /></button>
+                            <button onClick={() => setEditModalLead(lead)} className="p-1 text-amber-600 hover:bg-amber-50 rounded" title="Edit Lead"><Edit size={12} /></button>
+                            <button onClick={() => setLogModalLead(lead)} className="p-1 text-indigo-600 hover:bg-indigo-50 rounded" title="Add Follow-up"><MessageSquarePlus size={12} /></button>
                           </div>
                         </div>
                       </div>
@@ -239,6 +242,21 @@ function Pipeline() {
           onClose={() => setLogModalLead(null)}
           onSuccess={(updatedLead) => {
             setLogModalLead(null);
+            if (updatedLead) {
+              setLeads(prev => prev.map(l => l._id === updatedLead._id ? updatedLead : l));
+            } else {
+              fetchLeads();
+            }
+          }}
+        />
+      )}
+
+      {editModalLead && (
+        <UpdateLeadModal 
+          lead={editModalLead}
+          onClose={() => setEditModalLead(null)}
+          onSuccess={(updatedLead) => {
+            setEditModalLead(null);
             if (updatedLead) {
               setLeads(prev => prev.map(l => l._id === updatedLead._id ? updatedLead : l));
             } else {

@@ -154,7 +154,13 @@ const getDepartmentFilter = (req) => {
   if (!req.user || req.user.role === 'admin') {
     return {}; // Full access
   }
-  return { department: req.user.role };
+  return {
+    $or: [
+      { department: req.user.role },
+      { department: { $exists: false } },
+      { department: null },
+    ],
+  };
 };
 
 module.exports = {
