@@ -23,21 +23,21 @@ const callLogSchema = new mongoose.Schema({
 });
 
 const leadSchema = new mongoose.Schema({
-  name: { type: String, required: true, trim: true, maxlength: 100 },
-  ownerName: { type: String, trim: true, maxlength: 100 },
+  name: { type: String, required: true, trim: true, maxlength: 250 },
+  ownerName: { type: String, trim: true, maxlength: 150 },
   // Stored as iv:authTag:ciphertext (AES-256-GCM encrypted)
   mobile: { type: String, required: true },
   // Deterministic blind index for querying mobile without decrypting all database rows
   mobileBlindIndex: { type: String, index: true },
-  businessType: { type: String, trim: true, maxlength: 100 },
-  city: { type: String, trim: true, maxlength: 100 },
-  address: { type: String, trim: true, maxlength: 300 },
-  mapsUrl: { type: String, trim: true, maxlength: 500 },
-  website: { type: String, trim: true, maxlength: 300 },
-  source: { type: String, default: 'Website', maxlength: 60 },
-  department: { type: String, enum: ['tech', 'marketing'], required: true, index: true },
-  type: { type: String, enum: ['Hot', 'Warm', 'Cold', 'Won', 'Lost'], default: 'Cold', index: true },
-  status: { type: String, default: 'Pending', index: true },
+  businessType: { type: String, trim: true, maxlength: 250 },
+  city: { type: String, trim: true, maxlength: 150 },
+  address: { type: String, trim: true, maxlength: 1000 },
+  mapsUrl: { type: String, trim: true, maxlength: 1000 },
+  website: { type: String, trim: true, maxlength: 500 },
+  source: { type: String, default: 'Website', maxlength: 100 },
+  department: { type: String, default: 'marketing', index: true },
+  type: { type: String, default: 'Cold', index: true },
+  status: { type: String, default: 'Pending', index: true, maxlength: 100 },
   followupDate: { type: Date, index: true },
   lastFollowupCompletedDate: { type: Date },
   callLogs: [callLogSchema],

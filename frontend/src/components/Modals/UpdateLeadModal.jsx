@@ -15,6 +15,7 @@ export default function UpdateLeadModal({ lead, onClose, onSuccess }) {
     source: lead?.source || 'Website',
     type: lead?.type || 'Cold',
     status: lead?.status || 'Pending',
+    followupDate: lead?.followupDate ? new Date(lead.followupDate).toISOString().split('T')[0] : '',
     socials: {
       instagram: lead?.socials?.instagram || '',
       facebook: lead?.socials?.facebook || '',
@@ -33,6 +34,42 @@ export default function UpdateLeadModal({ lead, onClose, onSuccess }) {
       platforms: lead?.socials?.platforms || []
     }
   });
+
+  useEffect(() => {
+    if (lead) {
+      setFormData({
+        name: lead.name || '',
+        ownerName: lead.ownerName || '',
+        mobile: lead.mobile || '',
+        address: lead.address || '',
+        mapsUrl: lead.mapsUrl || '',
+        website: lead.website || '',
+        businessType: lead.businessType || '',
+        city: lead.city || '',
+        source: lead.source || 'Website',
+        type: lead.type || 'Cold',
+        status: lead.status || 'Pending',
+        followupDate: lead.followupDate ? new Date(lead.followupDate).toISOString().split('T')[0] : '',
+        socials: {
+          instagram: lead.socials?.instagram || '',
+          facebook: lead.socials?.facebook || '',
+          youtube: lead.socials?.youtube || '',
+          linkedin: lead.socials?.linkedin || '',
+          rating: lead.socials?.rating || '',
+          reviews: lead.socials?.reviews || '',
+          summary: lead.socials?.summary || '',
+          hours: lead.socials?.hours || '',
+          emails: lead.socials?.emails || '',
+          phones: lead.socials?.phones || '',
+          addressMatch: lead.socials?.addressMatch || '',
+          instagramFollowers: lead.socials?.instagramFollowers || '',
+          facebookFollowers: lead.socials?.facebookFollowers || '',
+          youtubeSubscribers: lead.socials?.youtubeSubscribers || '',
+          platforms: lead.socials?.platforms || []
+        }
+      });
+    }
+  }, [lead]);
 
   const [loading, setLoading] = useState(false);
   const [magicText, setMagicText] = useState('');
@@ -124,7 +161,11 @@ export default function UpdateLeadModal({ lead, onClose, onSuccess }) {
     setLoading(true);
     setErrorMessage('');
     try {
-      const { data } = await updateLead(lead._id, formData);
+      const payload = {
+        ...formData,
+        followupDate: formData.followupDate ? formData.followupDate : null,
+      };
+      const { data } = await updateLead(lead._id, payload);
       onSuccess(data);
     } catch (err) {
       console.error(err);
@@ -351,6 +392,16 @@ export default function UpdateLeadModal({ lead, onClose, onSuccess }) {
                   <option value="Other">Other</option>
                 </select>
               </div>
+            </div>
+
+            <div>
+              <label className="block text-xs uppercase tracking-wider text-slate-500 font-semibold mb-1">Next Follow-up Date</label>
+              <input 
+                type="date"
+                className="w-full border border-slate-300 rounded-lg p-2.5 text-sm bg-white focus:border-slate-800 focus:outline-none"
+                value={formData.followupDate}
+                onChange={e => setFormData({...formData, followupDate: e.target.value})}
+              />
             </div>
 
             {/* Social Media Details */}
