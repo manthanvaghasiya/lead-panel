@@ -120,7 +120,7 @@ function LeadDetail() {
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        fetchLead();
+        fetchLead(true);
       }
     };
 
@@ -131,9 +131,9 @@ function LeadDetail() {
     };
   }, [id]);
 
-  const fetchLead = async () => {
+  const fetchLead = async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       setError(null);
       let { data } = await getLead(id);
 
@@ -331,10 +331,10 @@ function LeadDetail() {
 
           <div className="flex items-center gap-4 md:gap-5 flex-1 min-w-0">
             <div className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-indigo-50 border border-indigo-100 text-primary flex items-center justify-center text-xl md:text-2xl font-bold shadow-sm shrink-0">
-              {lead.name.charAt(0).toUpperCase()}
+              {(lead?.name || 'Lead').charAt(0).toUpperCase()}
             </div>
             <div className="flex flex-col min-w-0">
-              <h1 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight truncate">{lead.name}</h1>
+              <h1 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight truncate">{lead?.name || 'Untitled Lead'}</h1>
               <div className="flex items-center gap-2 md:gap-3 mt-1 text-xs md:text-sm font-medium text-slate-500 flex-wrap">
                 {lead.businessType && (
                   <>
@@ -392,7 +392,7 @@ function LeadDetail() {
             <button 
               onClick={(e) => {
                 e.preventDefault();
-                const query = encodeURIComponent(`${lead.name} ${lead.mobile || ''}`);
+                const query = encodeURIComponent(`${lead?.name || ''} ${lead?.mobile || ''}`);
                 window.open(`https://www.google.com/search?q=${query}`, '_blank');
               }}
               className="flex items-center justify-center gap-2 px-3 sm:px-5 py-2.5 bg-blue-50 border border-blue-100 text-blue-600 rounded-lg font-medium shadow-sm hover:bg-blue-100 transition-colors"

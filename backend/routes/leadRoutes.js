@@ -257,8 +257,8 @@ router.patch('/:id', async (req, res) => {
       }
     });
 
-    // Reassign department if provided
-    if (updates.department) {
+    // Admins can reassign departments
+    if (req.user.role === 'admin' && updates.department) {
       lead.department = updates.department;
     }
 

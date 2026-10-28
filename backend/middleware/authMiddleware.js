@@ -146,11 +146,22 @@ const authorizeRoles = (...allowedRoles) => {
 };
 
 /**
- * Enforces Department / Ownership Access.
- * All authenticated CRM roles (admin, marketing, tech) have full access to view, update, and manage leads.
+ * Enforces Department / Ownership Isolation.
+ * Users with role 'tech' can ONLY query and modify leads in their own department (tech).
+ * Users with role 'marketing' can ONLY query and modify leads in their own department (marketing).
+ * Admins have omni-privilege access across all departments.
  */
 const getDepartmentFilter = (req) => {
-  return {};
+  if (!req.user || req.user.role === 'admin') {
+    return {}; // Full access for Admin across all departments
+  }
+  return {
+    $or: [
+      { department: req.user.role },
+      { department: { $exists: false } },
+      { department: null },
+    ],
+  };
 };
 
 module.exports = {
