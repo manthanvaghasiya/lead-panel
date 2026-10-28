@@ -98,25 +98,25 @@ const leadInputSchema = z.object({
     .string()
     .trim()
     .min(1, 'Lead name is required')
-    .max(250, 'Name must not exceed 250 characters'),
-  ownerName: z.string().trim().max(150).optional().nullable().or(z.literal('')),
+    .max(150, 'Name must not exceed 150 characters'),
+  ownerName: z.string().trim().max(100).optional().nullable().or(z.literal('')),
   mobile: z
     .string()
     .trim()
     .min(5, 'Mobile number must be at least 5 digits')
     .max(50, 'Mobile number must not exceed 50 characters')
     .regex(/^[\d\s+\-().,/]+$/, 'Mobile number contains invalid characters'),
-  businessType: z.string().trim().max(250).optional().nullable().or(z.literal('')),
-  city: z.string().trim().max(150).optional().nullable().or(z.literal('')),
-  address: z.string().trim().max(1000).optional().nullable().or(z.literal('')),
-  mapsUrl: z.string().trim().max(1000).optional().nullable().or(z.literal('')),
-  website: z.string().trim().max(500).optional().nullable().or(z.literal('')),
-  source: z.string().trim().max(100).optional().default('Website'),
-  department: z.string().optional().default('marketing'),
-  type: z.string().optional().default('Cold'),
-  status: z.string().trim().max(100).optional().default('Pending'),
+  businessType: z.string().trim().max(150).optional().nullable().or(z.literal('')),
+  city: z.string().trim().max(100).optional().nullable().or(z.literal('')),
+  address: z.string().trim().max(500).optional().nullable().or(z.literal('')),
+  mapsUrl: z.string().trim().max(500).optional().nullable().or(z.literal('')),
+  website: z.string().trim().max(300).optional().nullable().or(z.literal('')),
+  source: z.string().trim().max(60).optional().default('Website'),
+  department: z.enum(['tech', 'marketing']).optional().default('tech'),
+  type: z.enum(['Hot', 'Warm', 'Cold', 'Won', 'Lost']).optional().default('Cold'),
+  status: z.string().trim().max(60).optional().default('Pending'),
   followupDate: dateOrNull,
-  tags: z.array(z.string().trim().max(50)).max(50).optional(),
+  tags: z.array(z.string().trim().max(40)).max(50).optional(),
   socials: socialsSchema,
 }).passthrough();
 

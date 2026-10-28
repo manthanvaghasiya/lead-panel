@@ -381,34 +381,13 @@ function LeadDetail() {
           <div className="bg-white border border-border rounded-xl shadow-sm overflow-hidden order-1 lg:order-none">
             <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
               <h3 className="font-semibold text-slate-800">Lead Intelligence</h3>
-              <select
-                value={lead.status || 'Pending'}
-                onChange={async (e) => {
-                  const newStatus = e.target.value;
-                  try {
-                    const { data } = await updateLead(id, { status: newStatus });
-                    setLead(data);
-                  } catch (err) {
-                    console.error(err);
-                    alert('Failed to update status');
-                  }
-                }}
-                className={`text-xs font-bold px-2.5 py-1 rounded-full border cursor-pointer outline-none bg-white transition-all shadow-2xs ${
-                  lead.status?.toLowerCase() === 'won' ? 'text-green-700 border-green-200' : 
-                  lead.status?.toLowerCase() === 'lost' ? 'text-slate-600 border-slate-200' : 
-                  'text-cyan-700 border-cyan-200'
-                }`}
-                title="Click to change status"
-              >
-                <option value="Pending">Pending</option>
-                <option value="In Process">In Process</option>
-                <option value="Send Detail">Send Detail</option>
-                <option value="Follow-up Letter">Follow-up Letter</option>
-                <option value="Contacted">Contacted</option>
-                <option value="Won">Won</option>
-                <option value="Lost">Lost</option>
-                <option value="Permanently Lost">Permanently Lost</option>
-              </select>
+              <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border
+                ${lead.status?.toLowerCase() === 'won' ? 'bg-green-50 text-green-700 border-green-200' : 
+                  lead.status?.toLowerCase() === 'lost' ? 'bg-slate-100 text-slate-600 border-slate-200' : 
+                  'bg-cyan-50 text-cyan-700 border-cyan-200'}`}>
+                <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${lead.status?.toLowerCase() === 'won' ? 'bg-green-500' : lead.status?.toLowerCase() === 'lost' ? 'bg-slate-400' : 'bg-cyan-500 animate-pulse'}`}></span>
+                <span>{lead.status || 'Pending'}</span>
+              </span>
             </div>
             <div className="p-5 flex flex-col gap-5">
               
@@ -482,31 +461,12 @@ function LeadDetail() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1">
                   <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Lead Type</span>
-                  <select
-                    value={lead.type || 'Cold'}
-                    onChange={async (e) => {
-                      const newType = e.target.value;
-                      try {
-                        const { data } = await updateLead(id, { type: newType });
-                        setLead(data);
-                      } catch (err) {
-                        console.error(err);
-                        alert('Failed to update type');
-                      }
-                    }}
-                    className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-bold border cursor-pointer outline-none bg-white w-max ${
-                      lead.type?.toLowerCase() === 'hot' ? 'text-red-600 border-red-200' :
-                      lead.type?.toLowerCase() === 'warm' ? 'text-orange-600 border-orange-200' :
-                      'text-blue-600 border-blue-200'
-                    }`}
-                    title="Click to change lead type"
-                  >
-                    <option value="Hot">🔥 Hot</option>
-                    <option value="Warm">⚡ Warm</option>
-                    <option value="Cold">❄️ Cold</option>
-                    <option value="Won">🏆 Won</option>
-                    <option value="Lost">❌ Lost</option>
-                  </select>
+                  <span className={`inline-flex items-center justify-center px-2 py-1 rounded-md text-xs font-bold border w-max
+                    ${lead.type?.toLowerCase() === 'hot' ? 'bg-red-50 text-red-600 border-red-200' :
+                      lead.type?.toLowerCase() === 'warm' ? 'bg-orange-50 text-orange-600 border-orange-200' :
+                      'bg-blue-50 text-blue-600 border-blue-200'}`}>
+                    {lead.type || 'Cold'}
+                  </span>
                 </div>
                 <div className="flex flex-col gap-1">
                   <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Ask For</span>
