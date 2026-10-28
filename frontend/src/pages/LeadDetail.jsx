@@ -13,6 +13,7 @@ function LeadDetail() {
   const navigate = useNavigate();
   const [lead, setLead] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   
@@ -132,43 +133,51 @@ function LeadDetail() {
 
   const fetchLead = async () => {
     try {
+      setLoading(true);
+      setError(null);
       let { data } = await getLead(id);
 
-      // Auto-clean if missing city or business type
-      if (!data.city || !data.businessType) {
-        const cooldown = localStorage.getItem('ai_cooldown_until');
-        if (!cooldown || Date.now() > parseInt(cooldown)) {
-          try {
-            const cleanRes = await autoCleanLead(id);
-            data = cleanRes.data;
-          } catch(e) {
-            console.error("Auto clean failed", e);
-            if (e.response?.status === 429) {
-              // Block background AI tasks for 60 seconds to save quota
-              localStorage.setItem('ai_cooldown_until', Date.now() + 60000);
-            }
-          }
-        } else {
-          console.log("Background AI paused due to rate limit.");
-        }
-      }
-
+      // Render lead data immediately to avoid holding user on loading screen
       setLead(data);
       setLogType(data.type || 'Cold');
       setLogStatus(data.status || 'Pending');
       
       if (data.followupDate) {
         const d = new Date(data.followupDate);
-        setNextFollowup(d.toISOString().split('T')[0]);
+        if (!isNaN(d.getTime())) {
+          setNextFollowup(d.toISOString().split('T')[0]);
+        } else {
+          setNextFollowup('');
+        }
       } else {
         const tomorrow = new Date();
         tomorrow.setDate(tomorrow.getDate() + 1);
         setNextFollowup(tomorrow.toISOString().split('T')[0]);
       }
+
+      setLoading(false);
+
+      // Asynchronously trigger auto-clean in background without blocking the UI
+      if (!data.city || !data.businessType) {
+        const cooldown = localStorage.getItem('ai_cooldown_until');
+        if (!cooldown || Date.now() > parseInt(cooldown)) {
+          autoCleanLead(id)
+            .then(cleanRes => {
+              if (cleanRes?.data) {
+                setLead(prev => ({ ...prev, ...cleanRes.data }));
+              }
+            })
+            .catch(e => {
+              console.error("Auto clean failed", e);
+              if (e.response?.status === 429) {
+                localStorage.setItem('ai_cooldown_until', Date.now() + 60000);
+              }
+            });
+        }
+      }
     } catch (err) {
-      console.error(err);
-      navigate('/leads');
-    } finally {
+      console.error('Error fetching lead:', err);
+      setError(err.response?.data?.message || 'Failed to load enterprise profile. The lead could not be retrieved.');
       setLoading(false);
     }
   };
@@ -233,8 +242,41 @@ function LeadDetail() {
     return true;
   });
 
-  if (loading) return <div className="p-12 text-center text-slate-500 font-medium">Loading Enterprise Profile...</div>;
-  if (!lead) return null;
+  if (loading) {
+    return (
+      <div className="p-16 flex flex-col items-center justify-center text-center">
+        <div className="w-10 h-10 border-4 border-slate-800 border-t-transparent rounded-full animate-spin mb-4"></div>
+        <div className="text-slate-700 font-semibold text-base">Loading Enterprise Profile...</div>
+        <p className="text-slate-400 text-xs mt-1">Retrieving lead intelligence and call logs</p>
+      </div>
+    );
+  }
+
+  if (error || !lead) {
+    return (
+      <div className="max-w-md mx-auto my-16 p-8 bg-white border border-slate-200 rounded-2xl shadow-sm text-center flex flex-col items-center">
+        <div className="w-12 h-12 rounded-full bg-red-50 text-red-500 flex items-center justify-center mb-4">
+          <X size={24} />
+        </div>
+        <h3 className="text-lg font-bold text-slate-800 mb-2">Unable to Open Profile</h3>
+        <p className="text-sm text-slate-500 mb-6">{error || 'The requested lead profile could not be found or access was restricted.'}</p>
+        <div className="flex gap-3">
+          <button 
+            onClick={() => fetchLead()} 
+            className="px-4 py-2 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 font-semibold text-sm rounded-lg transition-colors cursor-pointer"
+          >
+            Retry
+          </button>
+          <button 
+            onClick={() => navigate('/leads')} 
+            className="px-4 py-2 bg-slate-900 text-white hover:bg-slate-800 font-semibold text-sm rounded-lg transition-colors cursor-pointer"
+          >
+            Back to Leads
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const handleEditLog = (log) => {
     setEditingLogId(log._id);
@@ -242,7 +284,12 @@ function LeadDetail() {
     setLogType(log.typeAtTime || 'Cold');
     setLogStatus(log.statusAtTime || 'Pending');
     if (log.nextFollowup) {
-      setNextFollowup(new Date(log.nextFollowup).toISOString().split('T')[0]);
+      const d = new Date(log.nextFollowup);
+      if (!isNaN(d.getTime())) {
+        setNextFollowup(d.toISOString().split('T')[0]);
+      } else {
+        setNextFollowup('');
+      }
     } else {
       setNextFollowup('');
     }

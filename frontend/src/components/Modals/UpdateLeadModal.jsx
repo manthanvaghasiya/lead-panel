@@ -41,6 +41,44 @@ export default function UpdateLeadModal({ lead, onClose, onSuccess }) {
   const [imagePreview, setImagePreview] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
 
+  useEffect(() => {
+    if (lead) {
+      setFormData({
+        name: lead.name || '',
+        ownerName: lead.ownerName || '',
+        mobile: lead.mobile || '',
+        address: lead.address || '',
+        mapsUrl: lead.mapsUrl || '',
+        website: lead.website || '',
+        businessType: lead.businessType || '',
+        city: lead.city || '',
+        source: lead.source || 'Website',
+        type: lead.type || 'Cold',
+        status: lead.status || 'Pending',
+        followupDate: lead.followupDate && !isNaN(new Date(lead.followupDate).getTime())
+          ? new Date(lead.followupDate).toISOString().split('T')[0]
+          : '',
+        socials: {
+          instagram: lead.socials?.instagram || '',
+          facebook: lead.socials?.facebook || '',
+          youtube: lead.socials?.youtube || '',
+          linkedin: lead.socials?.linkedin || '',
+          rating: lead.socials?.rating || '',
+          reviews: lead.socials?.reviews || '',
+          summary: lead.socials?.summary || '',
+          hours: lead.socials?.hours || '',
+          emails: lead.socials?.emails || '',
+          phones: lead.socials?.phones || '',
+          addressMatch: lead.socials?.addressMatch || '',
+          instagramFollowers: lead.socials?.instagramFollowers || '',
+          facebookFollowers: lead.socials?.facebookFollowers || '',
+          youtubeSubscribers: lead.socials?.youtubeSubscribers || '',
+          platforms: lead.socials?.platforms || []
+        }
+      });
+    }
+  }, [lead]);
+
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -124,7 +162,11 @@ export default function UpdateLeadModal({ lead, onClose, onSuccess }) {
     setLoading(true);
     setErrorMessage('');
     try {
-      const { data } = await updateLead(lead._id, formData);
+      const payload = {
+        ...formData,
+        followupDate: formData.followupDate ? formData.followupDate : null,
+      };
+      const { data } = await updateLead(lead._id, payload);
       onSuccess(data);
     } catch (err) {
       console.error(err);
