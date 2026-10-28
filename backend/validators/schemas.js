@@ -12,6 +12,7 @@
  */
 
 const { z } = require('zod');
+const mongoose = require('mongoose');
 
 // ==========================================
 // 1. Zod Input Validation Schemas
@@ -186,27 +187,36 @@ function noSqlSanitizerMiddleware(req, res, next) {
 function escapeHtml(str) {
   if (typeof str !== 'string') return str;
   return str
-    .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#x27;')
-    .replace(/\//g, '&#x2F;');
+    .replace(/>/g, '&gt;');
 }
 
 /**
- * Recursively sanitizes string fields in an object before sending response to client.
+ * Recursively sanitizes data before sending response to client.
+ * Converts Mongoose ObjectIds to hex strings and prevents XSS while preserving URLs and punctuation.
  */
 function sanitizeOutput(data) {
   if (data === null || data === undefined) return data;
+  if (
+    data instanceof mongoose.Types.ObjectId ||
+    data?._bsontype === 'ObjectID' ||
+    (typeof data === 'object' && data?.constructor?.name === 'ObjectId') ||
+    (data && typeof data === 'object' && data.buffer && typeof data.toHexString === 'function')
+  ) {
+    return data.toString();
+  }
+  if (data instanceof Date) return data;
   if (typeof data === 'string') return escapeHtml(data);
   if (Array.isArray(data)) return data.map(sanitizeOutput);
-  if (typeof data === 'object' && !(data instanceof Date)) {
-    // If it's a Mongoose document, convert to plain object
-    const plain = typeof data.toObject === 'function' ? data.toObject() : { ...data };
+  if (typeof data === 'object') {
+    const plain = typeof data.toObject === 'function' ? data.toObject() : data;
     const result = {};
     for (const [key, val] of Object.entries(plain)) {
-      result[key] = sanitizeOutput(val);
+      if (key === '_id' || key === 'id') {
+        result[key] = val ? val.toString() : val;
+      } else {
+        result[key] = sanitizeOutput(val);
+      }
     }
     return result;
   }

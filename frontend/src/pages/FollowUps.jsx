@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Calendar, AlertCircle, Clock, ChevronRight, CheckCircle, Search, FileText, MessageSquarePlus, MoreHorizontal, Trash2, Edit } from 'lucide-react';
+import { Calendar, AlertCircle, Clock, ChevronRight, CheckCircle, Search, FileText, MessageSquarePlus, MoreHorizontal, Eye, Trash2, Edit } from 'lucide-react';
 import { FaWhatsapp, FaPhoneAlt } from 'react-icons/fa';
 import { getLeads, deleteLead } from '../api/apiClient';
 import { useScrollRestore } from '../hooks/useScrollRestore';
 import { extractMobileNumbers, defaultWhatsappMessage } from '../utils/contactUtils';
 import SelectContactModal from '../components/Modals/SelectContactModal';
 import UpdateLeadModal from '../components/Modals/UpdateLeadModal';
-import { ViewLogsModal, AddCallLogModal } from './LeadsList';
+import { ViewLogsModal, AddCallLogModal, getLeadId } from './LeadsList';
 
 function FollowUps() {
   const [leads, setLeads] = useState([]);
@@ -108,13 +108,15 @@ function FollowUps() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 bg-white">
-              {filteredLeads.map((lead) => (
-                  <tr key={lead._id} className="hover:bg-slate-50/80 transition-all duration-200 group">
+              {filteredLeads.map((lead) => {
+                const leadId = getLeadId(lead);
+                return (
+                  <tr key={leadId || lead._id} className="hover:bg-slate-50/80 transition-all duration-200 group">
                     {/* 1. Lead Profile */}
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
                         <div className="flex flex-col min-w-0">
-                          <Link to={`/leads/${lead._id}`} className="font-semibold text-slate-900 hover:text-cyan-600 hover:underline truncate">
+                          <Link to={`/leads/${leadId}`} className="font-semibold text-slate-900 hover:text-cyan-600 hover:underline truncate">
                             {lead.name}
                           </Link>
                           <span className="text-xs text-slate-500 truncate flex items-center gap-1 mt-0.5">
@@ -234,16 +236,17 @@ function FollowUps() {
                           <MessageSquarePlus size={14} />
                         </button>
                         <Link 
-                          to={`/leads/${lead._id}`}
+                          to={`/leads/${leadId}`}
                           className="p-1.5 bg-slate-50 text-slate-600 rounded-md hover:bg-slate-100 transition-colors border border-slate-200 shadow-sm"
                           title="View Details"
                         >
-                          <MoreHorizontal size={14} />
+                          <Eye size={14} />
                         </Link>
                       </div>
                     </td>
                   </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -251,11 +254,13 @@ function FollowUps() {
 
       {/* Leads List (Mobile Card View) */}
       <div className="md:hidden flex-1 space-y-3 mb-6">
-        {filteredLeads.map((lead) => (
-            <div key={lead._id} className="bg-white p-4 border border-slate-100 rounded-xl shadow-sm flex flex-col gap-3">
+        {filteredLeads.map((lead) => {
+          const leadId = getLeadId(lead);
+          return (
+            <div key={leadId || lead._id} className="bg-white p-4 border border-slate-100 rounded-xl shadow-sm flex flex-col gap-3">
               <div className="flex justify-between items-start gap-2">
                 <div className="flex flex-col min-w-0">
-                  <Link to={`/leads/${lead._id}`} className="font-bold text-slate-900 hover:text-cyan-600 truncate">
+                  <Link to={`/leads/${leadId}`} className="font-bold text-slate-900 hover:text-cyan-600 truncate">
                     {lead.name}
                   </Link>
                   <div className="text-xs text-slate-500 mt-0.5 flex flex-wrap items-center gap-1.5">
@@ -306,11 +311,12 @@ function FollowUps() {
                   <button onClick={(e) => handleContactClick(e, lead, 'whatsapp')} className="p-2 bg-green-50 text-green-600 rounded-lg border border-green-200 shadow-sm"><FaWhatsapp size={16} /></button>
                   <button onClick={() => setEditModalLead(lead)} className="p-2 bg-amber-50 text-amber-600 rounded-lg border border-amber-200 shadow-sm" title="Edit Lead"><Edit size={16} /></button>
                   <button onClick={() => setLogModalLead(lead)} className="p-2 bg-indigo-50 text-indigo-600 rounded-lg border border-indigo-200 shadow-sm"><MessageSquarePlus size={16} /></button>
-                  <Link to={`/leads/${lead._id}`} className="p-2 bg-slate-800 text-white rounded-lg shadow-sm" title="View Details"><MoreHorizontal size={16} /></Link>
+                  <Link to={`/leads/${leadId}`} className="p-2 bg-slate-800 text-white rounded-lg shadow-sm" title="View Details"><Eye size={16} /></Link>
                 </div>
               </div>
             </div>
-        ))}
+          );
+        })}
       </div>
     </>
   );

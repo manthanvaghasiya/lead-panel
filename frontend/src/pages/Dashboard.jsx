@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Users, PhoneCall, CheckCircle, TrendingUp, AlertCircle, Clock, ArrowRight, Activity, MessageSquare, Phone, ChevronRight, Target } from 'lucide-react';
 import { getLeads } from '../api/apiClient';
 import { useScrollRestore } from '../hooks/useScrollRestore';
+import { getLeadId } from './LeadsList';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, AreaChart, Area } from 'recharts';
 
 function Dashboard() {
@@ -108,11 +109,14 @@ function Dashboard() {
             <h3 className="text-red-700 font-semibold text-sm">Critical: Overdue Follow-ups</h3>
             <p className="text-sm text-red-600/80 mt-1 mb-3">You have {overdue.length} leads that have slipped past their scheduled follow-up date.</p>
             <div className="flex flex-wrap gap-2">
-              {overdue.slice(0, 5).map(lead => (
-                <Link key={lead._id} to={`/leads/${lead._id}`} className="inline-flex items-center gap-1 text-xs font-medium bg-red-50 border border-red-100 text-red-700 px-2.5 py-1 rounded-md hover:bg-red-100 transition-colors shadow-sm">
-                  {lead.name} <ChevronRight size={12} />
-                </Link>
-              ))}
+              {overdue.slice(0, 5).map(lead => {
+                const leadId = getLeadId(lead);
+                return (
+                  <Link key={leadId || lead._id} to={`/leads/${leadId}`} className="inline-flex items-center gap-1 text-xs font-medium bg-red-50 border border-red-100 text-red-700 px-2.5 py-1 rounded-md hover:bg-red-100 transition-colors shadow-sm">
+                    {lead.name} <ChevronRight size={12} />
+                  </Link>
+                );
+              })}
               {overdue.length > 5 && <span className="text-xs text-red-500 font-medium px-2 py-1">+{overdue.length - 5} more</span>}
             </div>
           </div>
@@ -263,7 +267,7 @@ function Dashboard() {
                           {lead.name.charAt(0).toUpperCase()}
                         </div>
                         <div className="min-w-0">
-                          <Link to={`/leads/${lead._id}`} className="text-base font-bold text-slate-900 hover:text-indigo-600 truncate block transition-colors">
+                          <Link to={`/leads/${getLeadId(lead)}`} className="text-base font-bold text-slate-900 hover:text-indigo-600 truncate block transition-colors">
                             {lead.name}
                           </Link>
                           <div className="text-sm text-slate-500 mt-0.5 truncate">{lead.mobile}</div>
@@ -312,7 +316,7 @@ function Dashboard() {
                   
                   <div className="flex flex-col">
                     <div className="flex justify-between items-start gap-2">
-                      <Link to={`/leads/${lead._id}`} className="text-sm font-bold text-slate-900 hover:text-indigo-600 transition-colors">
+                      <Link to={`/leads/${getLeadId(lead)}`} className="text-sm font-bold text-slate-900 hover:text-indigo-600 transition-colors">
                         {lead.name}
                       </Link>
                       <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider shrink-0 mt-0.5">

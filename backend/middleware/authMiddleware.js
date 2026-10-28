@@ -17,7 +17,7 @@ const User = require('../models/User');
 const { logAudit } = require('../services/auditLogger');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'webiox_enterprise_super_secret_key_2026_jwt_protect!';
-const SESSION_INACTIVITY_LIMIT_MS = 15 * 60 * 1000; // 15 Minutes Inactivity Timeout (NIST SP 800-63B)
+const SESSION_INACTIVITY_LIMIT_MS = 7 * 24 * 60 * 60 * 1000; // 7 Days Session Expiration
 
 /**
  * Protect Middleware:
@@ -86,9 +86,10 @@ const protect = async (req, res, next) => {
       });
     }
 
-    // Refresh lastActive timestamp asynchronously (Sliding Window Session)
-    user.lastActive = new Date();
-    await user.save({ validateBeforeSave: false });
+    // Refresh lastActive timestamp asynchronously without blocking or failing on concurrent writes
+    User.updateOne({ _id: user._id }, { $set: { lastActive: new Date() } }).catch(err => {
+      console.warn('[AUTH] Non-fatal lastActive update error:', err.message);
+    });
 
     // Attach validated user context to request
     req.user = user;

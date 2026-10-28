@@ -14,6 +14,7 @@
 
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
 const Lead = require('../models/Lead');
 const { callGeminiWithRetry } = require('../utils/geminiHelper');
 const { generateBlindIndex, encryptPII } = require('../utils/cryptoVault');
@@ -100,6 +101,10 @@ router.get('/', async (req, res) => {
  */
 router.get('/:id', async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(404).json({ message: 'Invalid lead ID format.' });
+    }
+
     const departmentFilter = getDepartmentFilter(req);
     // Combine ID and department filter to prevent cross-tenant/cross-department IDOR (CWE-639)
     const query = { _id: req.params.id, ...departmentFilter };
@@ -129,6 +134,7 @@ router.get('/:id', async (req, res) => {
 
     res.json(sanitizeOutput(formattedLead));
   } catch (err) {
+    console.error('[LEAD-READ-SINGLE] Error:', err.message);
     res.status(500).json({ message: 'Error retrieving lead.' });
   }
 });

@@ -39,9 +39,11 @@ apiClient.interceptors.response.use(
   },
   (error) => {
     if (error.response?.status === 401) {
-      // Optional: Handle token expiration globally
-      // localStorage.removeItem('token');
-      // window.location.href = '/login';
+      if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+      }
     }
     console.error('API Client Error Response Data:', error.response?.data || error.message);
     return Promise.reject(error);

@@ -5,7 +5,7 @@ import { extractMobileNumbers, defaultWhatsappMessage } from '../utils/contactUt
 import SelectContactModal from '../components/Modals/SelectContactModal';
 import { Search, Plus, Filter, MoreHorizontal, FileText, MessageSquarePlus, X, Sparkles, ImagePlus, ChevronDown, RotateCcw, Trash2, LayoutGrid, Calendar, Edit } from 'lucide-react';
 import { FaWhatsapp, FaPhoneAlt } from 'react-icons/fa';
-import { AddCallLogModal, ViewLogsModal } from './LeadsList';
+import { AddCallLogModal, ViewLogsModal, getLeadId } from './LeadsList';
 import UpdateLeadModal from '../components/Modals/UpdateLeadModal';
 
 function Pipeline() {
@@ -167,18 +167,20 @@ function Pipeline() {
                   </div>
                   
                   <div className="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar">
-                    {columnLeads.map(lead => (
+                    {columnLeads.map(lead => {
+                      const leadId = getLeadId(lead);
+                      return (
                       <div 
-                        key={lead._id}
-                        id={`pipeline-card-${lead._id}`}
+                        key={leadId || lead._id}
+                        id={`pipeline-card-${leadId || lead._id}`}
                         draggable
-                        onDragStart={(e) => handleDragStart(e, lead._id)}
-                        onDragEnd={(e) => handleDragEnd(e, lead._id)}
+                        onDragStart={(e) => handleDragStart(e, leadId || lead._id)}
+                        onDragEnd={(e) => handleDragEnd(e, leadId || lead._id)}
                         className="bg-white p-3 border border-slate-200 rounded-lg shadow-sm cursor-grab active:cursor-grabbing hover:border-cyan-300 hover:shadow-md transition-all group relative"
                       >
                         <div className="flex justify-between items-start mb-2">
                           <div className="flex flex-col min-w-0 pr-2">
-                            <Link to={`/leads/${lead._id}`} className="font-bold text-sm text-slate-900 truncate hover:text-cyan-600 transition-colors">
+                            <Link to={`/leads/${leadId}`} className="font-bold text-sm text-slate-900 truncate hover:text-cyan-600 transition-colors">
                               {lead.name}
                             </Link>
                             <span className="text-xs font-medium text-slate-500 mt-0.5">{lead.mobile}</span>
@@ -215,7 +217,8 @@ function Pipeline() {
                           </div>
                         </div>
                       </div>
-                    ))}
+                      );
+                    })}
                     {columnLeads.length === 0 && (
                       <div className="h-24 flex items-center justify-center border-2 border-dashed border-slate-200/60 rounded-lg text-xs text-slate-400 font-medium bg-slate-50/30">
                         Drop leads here

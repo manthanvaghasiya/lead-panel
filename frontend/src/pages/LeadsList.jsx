@@ -5,8 +5,24 @@ import { useScrollRestore } from '../hooks/useScrollRestore';
 import { extractMobileNumbers, defaultWhatsappMessage } from '../utils/contactUtils';
 import SelectContactModal from '../components/Modals/SelectContactModal';
 import UpdateLeadModal from '../components/Modals/UpdateLeadModal';
-import { Search, Plus, Filter, MoreHorizontal, FileText, MessageSquarePlus, X, Sparkles, ImagePlus, ChevronDown, RotateCcw, Trash2, Edit } from 'lucide-react';
+import { Search, Plus, Filter, MoreHorizontal, Eye, FileText, MessageSquarePlus, X, Sparkles, ImagePlus, ChevronDown, RotateCcw, Trash2, Edit } from 'lucide-react';
 import { FaWhatsapp, FaPhoneAlt } from 'react-icons/fa';
+
+export const getLeadId = (lead) => {
+  if (!lead) return '';
+  if (typeof lead === 'string') return lead;
+  if (typeof lead._id === 'string') return lead._id;
+  if (lead._id?.$oid) return lead._id.$oid;
+  if (lead._id && typeof lead._id === 'object') {
+    if (lead._id.buffer) {
+      const values = Object.values(lead._id.buffer);
+      if (values.length === 12) {
+        return values.map(b => b.toString(16).padStart(2, '0')).join('');
+      }
+    }
+  }
+  return lead.id || String(lead._id || '');
+};
 
 const extractCity = (address) => {
   if (!address) return '-';
@@ -292,15 +308,17 @@ function LeadsList() {
                   <td colSpan="6" className="p-12 text-center text-slate-500 font-medium">No leads found. Add one!</td>
                 </tr>
               ) : (
-                filteredLeads.map((lead) => (
-                  <tr key={lead._id} className="hover:bg-slate-50/80 transition-all duration-200 group">
-                    {/* 1. Lead Profile */}
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-3">
-                        <div className="flex flex-col min-w-0">
-                          <Link to={`/leads/${lead._id}`} className="font-semibold text-slate-900 truncate hover:text-indigo-600 transition-colors">
-                            {lead.name}
-                          </Link>
+                filteredLeads.map((lead) => {
+                  const leadId = getLeadId(lead);
+                  return (
+                    <tr key={leadId || lead._id} className="hover:bg-slate-50/80 transition-all duration-200 group">
+                      {/* 1. Lead Profile */}
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-3">
+                          <div className="flex flex-col min-w-0">
+                            <Link to={`/leads/${leadId}`} className="font-semibold text-slate-900 truncate hover:text-indigo-600 transition-colors">
+                              {lead.name}
+                            </Link>
                           <span className="text-xs text-slate-500 truncate flex items-center gap-1 mt-0.5">
                             {lead.source}
                             {lead.followupDate && (
@@ -418,17 +436,18 @@ function LeadsList() {
                           <Edit size={14} />
                         </button>
                         <Link 
-                          to={`/leads/${lead._id}`}
+                          to={`/leads/${leadId}`}
                           className="p-1.5 bg-slate-50 text-slate-600 rounded-md hover:bg-slate-100 transition-colors border border-slate-200 shadow-sm"
                           title="View Lead Details"
                         >
-                          <MoreHorizontal size={14} />
+                          <Eye size={14} />
                         </Link>
                       </div>
                     </td>
                   </tr>
-                ))
-              )}
+                );
+              })
+            )}
             </tbody>
           </table>
         </div>
@@ -441,11 +460,15 @@ function LeadsList() {
         ) : filteredLeads.length === 0 ? (
           <div className="p-12 text-center text-slate-500 font-medium">No leads found. Add one!</div>
         ) : (
-          filteredLeads.map((lead) => (
-            <div key={lead._id} className="bg-white p-4 border border-slate-100 rounded-xl shadow-sm flex flex-col gap-3">
-              <div className="flex justify-between items-start gap-2">
-                <div className="flex flex-col min-w-0">
-                  <h3 className="font-bold text-slate-900 truncate">{lead.name}</h3>
+          filteredLeads.map((lead) => {
+            const leadId = getLeadId(lead);
+            return (
+              <div key={leadId || lead._id} className="bg-white p-4 border border-slate-100 rounded-xl shadow-sm flex flex-col gap-3">
+                <div className="flex justify-between items-start gap-2">
+                  <div className="flex flex-col min-w-0">
+                    <Link to={`/leads/${leadId}`} className="font-bold text-slate-900 truncate hover:text-indigo-600 transition-colors">
+                      {lead.name}
+                    </Link>
                   <div className="text-xs text-slate-500 mt-0.5 flex flex-wrap items-center gap-1.5">
                     <span className="font-medium text-slate-700">{lead.mobile}</span>
                     <span className="text-slate-300">•</span>
@@ -494,12 +517,13 @@ function LeadsList() {
                   <button onClick={(e) => handleContactClick(e, lead, 'whatsapp')} className="p-2 bg-green-50 text-green-600 rounded-lg border border-green-200 shadow-sm"><FaWhatsapp size={16} /></button>
                   <button onClick={() => setLogModalLead(lead)} className="p-2 bg-indigo-50 text-indigo-600 rounded-lg border border-indigo-200 shadow-sm" title="Add Follow-up"><MessageSquarePlus size={16} /></button>
                   <button onClick={() => setEditModalLead(lead)} className="p-2 bg-slate-100 text-slate-700 rounded-lg border border-slate-200 shadow-sm" title="Edit Lead Profile"><Edit size={16} /></button>
-                  <Link to={`/leads/${lead._id}`} className="p-2 bg-slate-800 text-white rounded-lg shadow-sm" title="View Lead Details"><MoreHorizontal size={16} /></Link>
+                  <Link to={`/leads/${leadId}`} className="p-2 bg-slate-800 text-white rounded-lg shadow-sm" title="View Lead Details"><Eye size={16} /></Link>
                 </div>
               </div>
             </div>
-          ))
-        )}
+          );
+        })
+      )}
       </div>
 
       {/* Add Lead Modal */}

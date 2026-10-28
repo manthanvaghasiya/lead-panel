@@ -104,6 +104,15 @@ leadSchema.pre('save', function (next) {
 leadSchema.methods.formatForRole = function (userRole) {
   const leadObj = this.toObject();
 
+  // Ensure _id and callLog _ids are hex strings
+  leadObj._id = this._id.toString();
+  if (Array.isArray(leadObj.callLogs)) {
+    leadObj.callLogs = leadObj.callLogs.map(log => ({
+      ...log,
+      _id: log._id ? log._id.toString() : log._id,
+    }));
+  }
+
   // Decrypt mobile
   const decryptedMobile = decryptPII(leadObj.mobile);
 

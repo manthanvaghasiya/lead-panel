@@ -135,6 +135,11 @@ function LeadDetail() {
     try {
       if (!silent) setLoading(true);
       setError(null);
+      if (!id || id === '[object Object]' || id === 'undefined' || id === 'null') {
+        setError('Invalid lead identifier. Please return to the leads list.');
+        setLoading(false);
+        return;
+      }
       let { data } = await getLead(id);
 
       // Render lead data immediately to avoid holding user on loading screen
@@ -230,7 +235,8 @@ function LeadDetail() {
   };
 
   const filteredLogs = (lead?.callLogs || []).filter(log => {
-    if (logSearch && !log.note.toLowerCase().includes(logSearch.toLowerCase())) {
+    if (!log) return false;
+    if (logSearch && !(log.note || '').toLowerCase().includes(logSearch.toLowerCase())) {
       return false;
     }
     if (logFilterType && log.typeAtTime !== logFilterType) {
@@ -460,7 +466,7 @@ function LeadDetail() {
                   <div className="flex flex-col pt-1">
                     <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-0.5">Mobile Number</span>
                     <span className="font-bold text-slate-900">
-                      {lead.mobile?.length > 10 ? lead.mobile.match(/.{1,10}/g).join(', ') : lead.mobile}
+                      {typeof lead.mobile === 'string' && lead.mobile.length > 10 ? (lead.mobile.match(/.{1,10}/g) || []).join(', ') : (lead.mobile || 'No mobile')}
                     </span>
                   </div>
                 </div>
@@ -588,10 +594,10 @@ function LeadDetail() {
                         </div>
                         <div className="flex flex-col">
                           <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{platform.name} Rating</span>
-                          {platform.rating ? (
+                          {platform.rating != null ? (
                             <div className="flex items-baseline gap-1">
                               <span className="font-black text-xl text-slate-800">
-                                {platform.rating.replace(/(\/.*|out of.*)/gi, '').trim()}
+                                {String(platform.rating).replace(/(\/.*|out of.*)/gi, '').trim()}
                               </span>
                               <span className="text-sm font-semibold text-amber-600">/ 5</span>
                             </div>
@@ -615,10 +621,10 @@ function LeadDetail() {
                     </div>
                     <div className="flex flex-col">
                       <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Rating</span>
-                      {lead.socials?.rating ? (
+                      {lead.socials?.rating != null ? (
                         <div className="flex items-baseline gap-1">
                           <span className="font-black text-xl text-slate-800">
-                            {lead.socials.rating.replace(/(\/.*|out of.*)/gi, '').trim()}
+                            {String(lead.socials.rating).replace(/(\/.*|out of.*)/gi, '').trim()}
                           </span>
                           <span className="text-sm font-semibold text-amber-600">/ 5</span>
                         </div>
@@ -680,7 +686,7 @@ function LeadDetail() {
                   </div>
                   <div className="flex flex-col min-w-0">
                     <span className="text-[10px] font-bold text-slate-400 uppercase">Instagram</span>
-                    {lead.socials?.instagram?.startsWith('http') ? (
+                    {typeof lead.socials?.instagram === 'string' && lead.socials.instagram.startsWith('http') ? (
                       <a href={lead.socials.instagram} target="_blank" rel="noreferrer" className="font-medium text-blue-600 hover:text-blue-800 hover:underline truncate" title={lead.socials.instagram}>{lead.socials.instagram.replace(/^https?:\/\/(www\.)?/, '')}</a>
                     ) : (
                       <span className="font-medium text-slate-700 truncate">{lead.socials?.instagram || '-'}</span>
@@ -699,7 +705,7 @@ function LeadDetail() {
                   </div>
                   <div className="flex flex-col min-w-0">
                     <span className="text-[10px] font-bold text-slate-400 uppercase">Facebook</span>
-                    {lead.socials?.facebook?.startsWith('http') ? (
+                    {typeof lead.socials?.facebook === 'string' && lead.socials.facebook.startsWith('http') ? (
                       <a href={lead.socials.facebook} target="_blank" rel="noreferrer" className="font-medium text-blue-600 hover:text-blue-800 hover:underline truncate" title={lead.socials.facebook}>{lead.socials.facebook.replace(/^https?:\/\/(www\.)?/, '')}</a>
                     ) : (
                       <span className="font-medium text-slate-700 truncate">{lead.socials?.facebook || '-'}</span>
@@ -718,7 +724,7 @@ function LeadDetail() {
                   </div>
                   <div className="flex flex-col min-w-0">
                     <span className="text-[10px] font-bold text-slate-400 uppercase">YouTube</span>
-                    {lead.socials?.youtube?.startsWith('http') ? (
+                    {typeof lead.socials?.youtube === 'string' && lead.socials.youtube.startsWith('http') ? (
                       <a href={lead.socials.youtube} target="_blank" rel="noreferrer" className="font-medium text-blue-600 hover:text-blue-800 hover:underline truncate" title={lead.socials.youtube}>{lead.socials.youtube.replace(/^https?:\/\/(www\.)?/, '')}</a>
                     ) : (
                       <span className="font-medium text-slate-700 truncate">{lead.socials?.youtube || '-'}</span>
@@ -737,7 +743,7 @@ function LeadDetail() {
                   </div>
                   <div className="flex flex-col min-w-0">
                     <span className="text-[10px] font-bold text-slate-400 uppercase">LinkedIn</span>
-                    {lead.socials?.linkedin?.startsWith('http') ? (
+                    {typeof lead.socials?.linkedin === 'string' && lead.socials.linkedin.startsWith('http') ? (
                       <a href={lead.socials.linkedin} target="_blank" rel="noreferrer" className="font-medium text-blue-600 hover:text-blue-800 hover:underline truncate" title={lead.socials.linkedin}>{lead.socials.linkedin.replace(/^https?:\/\/(www\.)?/, '')}</a>
                     ) : (
                       <span className="font-medium text-slate-700 truncate">{lead.socials?.linkedin || '-'}</span>

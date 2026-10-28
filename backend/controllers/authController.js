@@ -22,7 +22,7 @@ const { JWT_SECRET } = require('../middleware/authMiddleware');
 const MAX_FAILED_ATTEMPTS = 5;
 const LOCK_TIME_MS = 15 * 60 * 1000; // 15 Minute Lockout
 const SESSION_COOKIE_NAME = 'session_token';
-const SESSION_COOKIE_MAX_AGE = 15 * 60 * 1000; // 15 Minutes Inactivity Limit
+const SESSION_COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000; // 7 Days Session Cookie
 
 /**
  * Helper to generate standardized session tokens with absolute rotation
@@ -36,7 +36,7 @@ function generateSessionToken(user) {
       jti: crypto.randomBytes(16).toString('hex'), // Unique token ID preventing replay attacks
     },
     JWT_SECRET,
-    { expiresIn: '15m' } // Short-lived token enforcing 15-minute sliding session
+    { expiresIn: '7d' } // 7-day token
   );
 }
 
