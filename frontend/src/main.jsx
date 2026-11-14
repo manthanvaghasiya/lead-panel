@@ -9,11 +9,19 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   </React.StrictMode>,
 )
 
-// Force unregister any existing service workers to clear cache
+// Force unregister any existing service workers and clear cache
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.getRegistrations().then(function(registrations) {
     for(let registration of registrations) {
       registration.unregister();
     }
+  });
+}
+
+if (typeof window !== 'undefined' && 'caches' in window) {
+  caches.keys().then((names) => {
+    names.forEach((name) => {
+      caches.delete(name);
+    });
   });
 }

@@ -148,10 +148,10 @@ function Layout({ children }) {
             <InstallButton />
             <div className="flex items-center gap-3 p-2 rounded-xl hover:bg-slate-800 transition-all duration-200 cursor-pointer group">
               <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center shrink-0 border-2 border-slate-700 group-hover:border-slate-500 transition-colors overflow-hidden">
-                <img src="/IMG_20251110_151125[1].jpg" alt="Admin" className="w-full h-full object-cover" />
+                <img src="/IMG_20251110_151125[1].jpg" alt={user?.name || "Profile"} className="w-full h-full object-cover" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-slate-200 truncate">{user?.name || 'Admin User'}</p>
+                <p className="text-sm font-semibold text-slate-200 truncate">{user?.name || (user?.role === 'admin' ? 'Master Admin' : 'User')}</p>
                 <div className="flex items-center gap-1 mt-0.5">
                   <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded border ${
                     user?.role === 'tech'
@@ -162,9 +162,21 @@ function Layout({ children }) {
                       ? 'bg-amber-500/20 text-amber-300 border-amber-400/40'
                       : user?.role === 'linkedin'
                       ? 'bg-sky-500/20 text-sky-300 border-sky-400/40'
-                      : 'bg-emerald-500/20 text-emerald-300 border-emerald-400/40'
+                      : user?.role === 'admin'
+                      ? 'bg-emerald-500/20 text-emerald-300 border-emerald-400/40'
+                      : 'bg-slate-700/40 text-slate-300 border-slate-600/40'
                   }`}>
-                    {user?.role === 'tech' ? '💻 Tech Dept' : user?.role === 'marketing' ? '📢 Marketing Dept' : user?.role === 'oldata' ? '📦 Old Data' : user?.role === 'linkedin' ? '🔗 LinkedIn Dept' : '👑 Master Admin'}
+                    {user?.role === 'tech'
+                      ? '💻 Tech Dept'
+                      : user?.role === 'marketing'
+                      ? '📢 Marketing Dept'
+                      : user?.role === 'oldata'
+                      ? '📦 Old Data'
+                      : user?.role === 'linkedin'
+                      ? '🔗 LinkedIn Dept'
+                      : user?.role === 'admin'
+                      ? '👑 Master Admin'
+                      : '👤 User'}
                   </span>
                 </div>
               </div>
@@ -203,8 +215,15 @@ function Layout({ children }) {
 }
 
 function LinkedInRoute({ children }) {
-  const { user } = useContext(AuthContext);
-  if (user && user.role !== 'linkedin' && user.role !== 'admin') {
+  const { user, loading } = useContext(AuthContext);
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+  if (!user || (user.role !== 'linkedin' && user.role !== 'admin')) {
     return <Navigate to="/" replace />;
   }
   return children;

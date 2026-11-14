@@ -1,4 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
+import { Link } from 'react-router-dom';
+import { AuthContext } from '../context/AuthContext';
 import { 
   Users, Search, Plus, Sparkles, Filter, Calendar, ExternalLink, 
   MessageSquare, Phone, Video, Trash2, Edit3, CheckCircle2, 
@@ -212,9 +214,12 @@ const generateEmailMeetingUrl = (contact) => {
 };
 
 export default function LinkedIn() {
+  const { user } = useContext(AuthContext);
   const [contacts, setContacts] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [accessDenied, setAccessDenied] = useState(false);
+  const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
   const [selectedReason, setSelectedReason] = useState('All');
   const [selectedStatus, setSelectedStatus] = useState('All');
@@ -292,6 +297,8 @@ export default function LinkedIn() {
 
   const fetchContacts = async () => {
     setLoading(true);
+    setError(null);
+    setAccessDenied(false);
     try {
       const params = {};
       if (selectedReason !== 'All') params.reason = selectedReason;
@@ -303,6 +310,11 @@ export default function LinkedIn() {
       setContacts(Array.isArray(data) ? data : (data?.contacts || []));
     } catch (err) {
       console.error('Failed to load LinkedIn contacts:', err);
+      if (err.response?.status === 403) {
+        setAccessDenied(true);
+      } else {
+        setError(err.response?.data?.message || err.message || 'Failed to load LinkedIn contacts');
+      }
       setContacts([]);
     } finally {
       setLoading(false);
@@ -1021,6 +1033,43 @@ export default function LinkedIn() {
         <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl border border-slate-200">
           <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4" />
           <p className="text-slate-500 text-sm font-medium">Loading LinkedIn connections...</p>
+        </div>
+      ) : accessDenied ? (
+        <div className="bg-white rounded-2xl border border-amber-200 p-12 text-center space-y-4 shadow-sm">
+          <div className="w-16 h-16 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center mx-auto shadow-inner">
+            <ShieldCheck size={32} />
+          </div>
+          <div className="max-w-md mx-auto space-y-2">
+            <h3 className="text-xl font-bold text-slate-800">LinkedIn Outreach is Restricted</h3>
+            <p className="text-sm text-slate-600 leading-relaxed">
+              This department is exclusively assigned to the <strong>LinkedIn Department</strong> (<code className="bg-slate-100 px-1.5 py-0.5 rounded text-blue-600 font-semibold">linkedin@webiox.tech</code>) and <strong>Master Admin</strong> (<code className="bg-slate-100 px-1.5 py-0.5 rounded text-emerald-600 font-semibold">admin@webiox.tech</code>).
+            </p>
+            <p className="text-xs text-slate-500">
+              Your logged-in account ({user?.email || 'current account'}) has role: <span className="font-bold text-amber-700">{user?.role || 'restricted'}</span>.
+            </p>
+          </div>
+          <div className="flex items-center justify-center gap-3 pt-2">
+            <Link to="/" className="btn-primary flex items-center gap-2">
+              <ArrowRight size={16} />
+              <span>Go to Dashboard</span>
+            </Link>
+          </div>
+        </div>
+      ) : error ? (
+        <div className="bg-white rounded-2xl border border-red-200 p-12 text-center space-y-4 shadow-sm">
+          <div className="w-16 h-16 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto shadow-inner">
+            <AlertCircle size={32} />
+          </div>
+          <div className="max-w-md mx-auto space-y-1">
+            <h3 className="text-lg font-bold text-slate-800">Failed to Load Connections</h3>
+            <p className="text-sm text-red-600">{error}</p>
+          </div>
+          <div className="flex items-center justify-center gap-3 pt-2">
+            <button onClick={fetchContacts} className="btn-primary flex items-center gap-2">
+              <RefreshCw size={16} />
+              <span>Retry</span>
+            </button>
+          </div>
         </div>
       ) : displayedContacts.length === 0 ? (
         <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center space-y-4">
