@@ -17,6 +17,8 @@ function Pipeline() {
   const [editModalLead, setEditModalLead] = useState(null);
   const [contactActionLead, setContactActionLead] = useState(null);
   const [contactActionType, setContactActionType] = useState(null);
+  const [deptFilter, setDeptFilter] = useState('');
+  const [eraFilter, setEraFilter] = useState('');
 
   useEffect(() => {
     fetchLeads();
@@ -72,6 +74,13 @@ function Pipeline() {
       (lead.businessType || '').toLowerCase().includes(searchLower);
 
     if (!matchesSearch) return false;
+
+    // Department Filter
+    if (deptFilter && lead.department !== deptFilter) return false;
+
+    // Era Filter (New vs Old)
+    if (eraFilter === 'new' && lead.isOldData) return false;
+    if (eraFilter === 'old' && !lead.isOldData) return false;
     
     // EXCLUDE Permanently Lost
     if (lead.status === 'Permanently Lost') return false;
@@ -137,6 +146,26 @@ function Pipeline() {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
+
+        <select
+          className="text-xs font-bold bg-amber-50/80 border border-amber-200 text-amber-900 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-amber-500/20 shadow-sm"
+          value={eraFilter}
+          onChange={(e) => setEraFilter(e.target.value)}
+        >
+          <option value="">Data: All Eras</option>
+          <option value="new">✨ New Data</option>
+          <option value="old">📦 Old Data</option>
+        </select>
+
+        <select
+          className="text-xs font-bold bg-indigo-50/80 border border-indigo-200 text-indigo-900 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500/20 shadow-sm"
+          value={deptFilter}
+          onChange={(e) => setDeptFilter(e.target.value)}
+        >
+          <option value="">Dept: All</option>
+          <option value="tech">💻 Tech Dept</option>
+          <option value="marketing">📢 Marketing Dept</option>
+        </select>
       </div>
 
       <div className="flex-1 overflow-x-auto overflow-y-hidden pb-4 -mx-4 px-4 sm:mx-0 sm:px-0 custom-scrollbar">
@@ -183,7 +212,23 @@ function Pipeline() {
                             <Link to={`/leads/${leadId}`} className="font-bold text-sm text-slate-900 truncate hover:text-cyan-600 transition-colors">
                               {lead.name}
                             </Link>
-                            <span className="text-xs font-medium text-slate-500 mt-0.5">{lead.mobile}</span>
+                            <div className="flex items-center gap-1 mt-1 flex-wrap">
+                              <span className={`text-[8px] font-bold px-1 py-0.2 rounded border ${
+                                lead.isOldData
+                                  ? 'bg-amber-50 text-amber-700 border-amber-200'
+                                  : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                              }`}>
+                                {lead.isOldData ? '📦 Old' : '✨ New'}
+                              </span>
+                              <span className={`text-[8px] font-bold px-1 py-0.2 rounded border ${
+                                lead.department === 'marketing'
+                                  ? 'bg-purple-50 text-purple-700 border-purple-200'
+                                  : 'bg-blue-50 text-blue-700 border-blue-200'
+                              }`}>
+                                {lead.department === 'marketing' ? '📢 Mkt' : '💻 Tech'}
+                              </span>
+                            </div>
+                            <span className="text-xs font-medium text-slate-500 mt-1">{lead.mobile}</span>
                           </div>
                           <span className={`shrink-0 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border 
                             ${lead.type?.toLowerCase() === 'hot' ? 'bg-red-50 text-red-600 border-red-200' :

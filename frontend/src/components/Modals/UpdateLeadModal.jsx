@@ -13,6 +13,8 @@ export default function UpdateLeadModal({ lead, onClose, onSuccess }) {
     businessType: lead?.businessType || '',
     city: lead?.city || '',
     source: lead?.source || 'Website',
+    department: lead?.department || 'tech',
+    isOldData: lead?.isOldData !== undefined ? lead.isOldData : false,
     type: lead?.type || 'Cold',
     status: lead?.status || 'Pending',
     socials: {
@@ -53,6 +55,8 @@ export default function UpdateLeadModal({ lead, onClose, onSuccess }) {
         businessType: lead.businessType || '',
         city: lead.city || '',
         source: lead.source || 'Website',
+        department: lead.department || 'tech',
+        isOldData: lead.isOldData !== undefined ? Boolean(lead.isOldData) : false,
         type: lead.type || 'Cold',
         status: lead.status || 'Pending',
         followupDate: lead.followupDate && !isNaN(new Date(lead.followupDate).getTime())
@@ -391,6 +395,37 @@ export default function UpdateLeadModal({ lead, onClose, onSuccess }) {
                   <option value="CRM">CRM</option>
                   <option value="Website+CRM">Website+CRM</option>
                   <option value="Other">Other</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Department and Data Era Controls */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50 p-3 rounded-xl border border-slate-200">
+              <div>
+                <label className="block text-xs uppercase tracking-wider text-slate-700 font-bold mb-1">
+                  Department
+                </label>
+                <select
+                  className="w-full border border-slate-300 rounded-lg p-2.5 text-sm bg-white focus:border-slate-800 focus:outline-none font-semibold text-slate-800"
+                  value={formData.department}
+                  onChange={e => setFormData({ ...formData, department: e.target.value })}
+                >
+                  <option value="tech">💻 Tech Dept</option>
+                  <option value="marketing">📢 Marketing Dept</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs uppercase tracking-wider text-slate-700 font-bold mb-1">
+                  Data Era / Classification
+                </label>
+                <select
+                  className="w-full border border-slate-300 rounded-lg p-2.5 text-sm bg-white focus:border-slate-800 focus:outline-none font-semibold text-slate-800"
+                  value={formData.isOldData ? 'old' : 'new'}
+                  onChange={e => setFormData({ ...formData, isOldData: e.target.value === 'old' })}
+                >
+                  <option value="new">✨ New Data</option>
+                  <option value="old">📦 Old Data</option>
                 </select>
               </div>
             </div>

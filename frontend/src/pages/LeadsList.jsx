@@ -50,7 +50,9 @@ function LeadsList() {
     city: '',
     source: '',
     hasLogs: '',
-    hasFollowup: ''
+    hasFollowup: '',
+    department: '',
+    era: '',
   });
 
   const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(!!searchParams.get('status') || !!searchParams.get('type'));
@@ -149,6 +151,13 @@ function LeadsList() {
     if (filters.hasFollowup === 'yes' && !lead.followupDate) return false;
     if (filters.hasFollowup === 'no' && lead.followupDate) return false;
 
+    // 9. Department Filter
+    if (filters.department && lead.department !== filters.department) return false;
+
+    // 10. Data Era Filter (New vs Old)
+    if (filters.era === 'new' && lead.isOldData) return false;
+    if (filters.era === 'old' && !lead.isOldData) return false;
+
     return true;
   });
 
@@ -206,7 +215,7 @@ function LeadsList() {
           </h4>
           {activeFilterCount > 0 && (
             <button 
-              onClick={() => setFilters({ status: '', type: '', businessType: '', city: '', source: '', hasLogs: '', hasFollowup: '' })}
+              onClick={() => setFilters({ status: '', type: '', businessType: '', city: '', source: '', hasLogs: '', hasFollowup: '', department: '', era: '' })}
               className="text-xs font-bold text-rose-500 bg-rose-50 px-2.5 py-1 rounded-md hover:bg-rose-100 transition-colors"
             >
               Reset All
@@ -215,6 +224,26 @@ function LeadsList() {
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5">
+          <select 
+            className="w-full text-xs font-bold bg-amber-50/70 border border-amber-200 text-amber-900 rounded-lg px-2.5 py-2 outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500"
+            value={filters.era}
+            onChange={(e) => setFilters({ ...filters, era: e.target.value })}
+          >
+            <option value="">Data: All Eras</option>
+            <option value="new">✨ New Data</option>
+            <option value="old">📦 Old Data</option>
+          </select>
+
+          <select 
+            className="w-full text-xs font-bold bg-indigo-50/70 border border-indigo-200 text-indigo-900 rounded-lg px-2.5 py-2 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+            value={filters.department}
+            onChange={(e) => setFilters({ ...filters, department: e.target.value })}
+          >
+            <option value="">Dept: All</option>
+            <option value="tech">💻 Tech Dept</option>
+            <option value="marketing">📢 Marketing Dept</option>
+          </select>
+
           <select 
             className="w-full text-xs font-semibold bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-2 outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 text-slate-700"
             value={filters.status}
@@ -316,9 +345,25 @@ function LeadsList() {
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
                           <div className="flex flex-col min-w-0">
-                            <Link to={`/leads/${leadId}`} className="font-semibold text-slate-900 truncate hover:text-indigo-600 transition-colors">
-                              {lead.name}
-                            </Link>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <Link to={`/leads/${leadId}`} className="font-semibold text-slate-900 truncate hover:text-indigo-600 transition-colors">
+                                {lead.name}
+                              </Link>
+                              <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded border ${
+                                lead.isOldData
+                                  ? 'bg-amber-50 text-amber-700 border-amber-200'
+                                  : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                              }`}>
+                                {lead.isOldData ? '📦 Old Data' : '✨ New Data'}
+                              </span>
+                              <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded border ${
+                                lead.department === 'marketing'
+                                  ? 'bg-purple-50 text-purple-700 border-purple-200'
+                                  : 'bg-blue-50 text-blue-700 border-blue-200'
+                              }`}>
+                                {lead.department === 'marketing' ? '📢 Marketing' : '💻 Tech'}
+                              </span>
+                            </div>
                           <span className="text-xs text-slate-500 truncate flex items-center gap-1 mt-0.5">
                             {lead.source}
                             {lead.followupDate && (
@@ -469,7 +514,23 @@ function LeadsList() {
                     <Link to={`/leads/${leadId}`} className="font-bold text-slate-900 truncate hover:text-indigo-600 transition-colors">
                       {lead.name}
                     </Link>
-                  <div className="text-xs text-slate-500 mt-0.5 flex flex-wrap items-center gap-1.5">
+                    <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                      <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded border ${
+                        lead.isOldData
+                          ? 'bg-amber-50 text-amber-700 border-amber-200'
+                          : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                      }`}>
+                        {lead.isOldData ? '📦 Old' : '✨ New'}
+                      </span>
+                      <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded border ${
+                        lead.department === 'marketing'
+                          ? 'bg-purple-50 text-purple-700 border-purple-200'
+                          : 'bg-blue-50 text-blue-700 border-blue-200'
+                      }`}>
+                        {lead.department === 'marketing' ? '📢 Marketing' : '💻 Tech'}
+                      </span>
+                    </div>
+                  <div className="text-xs text-slate-500 mt-1 flex flex-wrap items-center gap-1.5">
                     <span className="font-medium text-slate-700">{lead.mobile}</span>
                     <span className="text-slate-300">•</span>
                     <span className="truncate">{lead.city || 'No City'}</span>
@@ -599,6 +660,7 @@ function LeadsList() {
 function AddLeadModal({ onClose, onSuccess }) {
   const [formData, setFormData] = useState({
     name: '', ownerName: '', mobile: '', address: '', mapsUrl: '', website: '', city: '', businessType: '', source: 'Website', type: 'Cold', status: 'Pending',
+    department: 'tech', isOldData: false,
     socials: { instagram: '', facebook: '', youtube: '', linkedin: '' }
   });
   const [loading, setLoading] = useState(false);
@@ -843,6 +905,23 @@ function AddLeadModal({ onClose, onSuccess }) {
                 <option value="CRM">CRM</option>
                 <option value="Website+CRM">Website+CRM</option>
                 <option value="Other">Other</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4 bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+            <div>
+              <label className="block text-xs uppercase tracking-wider text-slate-700 font-bold mb-1.5">Department</label>
+              <select className="input-field bg-white font-semibold" value={formData.department} onChange={e => setFormData({...formData, department: e.target.value})}>
+                <option value="tech">💻 Tech Dept</option>
+                <option value="marketing">📢 Marketing Dept</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs uppercase tracking-wider text-slate-700 font-bold mb-1.5">Data Era</label>
+              <select className="input-field bg-white font-semibold" value={formData.isOldData ? 'old' : 'new'} onChange={e => setFormData({...formData, isOldData: e.target.value === 'old'})}>
+                <option value="new">✨ New Data</option>
+                <option value="old">📦 Old Data</option>
               </select>
             </div>
           </div>

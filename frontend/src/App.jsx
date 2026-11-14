@@ -35,12 +35,12 @@ function Layout({ children }) {
     }
   }, [location.pathname]);
 
-  const isMarketing = user?.role === 'marketing';
+  const canAccessNetwork = user?.role === 'linkedin' || user?.role === 'admin';
 
   const navItems = [
     { path: '/', label: 'Dashboard', icon: LayoutDashboard },
-    ...(!isMarketing ? [
-      { path: '/linkedin', label: 'Network', icon: FaLinkedin, isNetwork: true, badge: 'Tech' }
+    ...(canAccessNetwork ? [
+      { path: '/linkedin', label: 'Network', icon: FaLinkedin, isNetwork: true, badge: 'LinkedIn' }
     ] : []),
     { path: '/leads', label: 'Leads', icon: List, badge: 'Sales' },
     { path: '/pipeline', label: 'Pipeline', icon: LayoutGrid },
@@ -158,9 +158,13 @@ function Layout({ children }) {
                       ? 'bg-blue-500/20 text-blue-300 border-blue-400/40'
                       : user?.role === 'marketing'
                       ? 'bg-purple-500/20 text-purple-300 border-purple-400/40'
+                      : user?.role === 'oldata'
+                      ? 'bg-amber-500/20 text-amber-300 border-amber-400/40'
+                      : user?.role === 'linkedin'
+                      ? 'bg-sky-500/20 text-sky-300 border-sky-400/40'
                       : 'bg-emerald-500/20 text-emerald-300 border-emerald-400/40'
                   }`}>
-                    {user?.role === 'tech' ? '💻 Tech Dept' : user?.role === 'marketing' ? '📢 Marketing Dept' : '👑 Master Admin'}
+                    {user?.role === 'tech' ? '💻 Tech Dept' : user?.role === 'marketing' ? '📢 Marketing Dept' : user?.role === 'oldata' ? '📦 Old Data' : user?.role === 'linkedin' ? '🔗 LinkedIn Dept' : '👑 Master Admin'}
                   </span>
                 </div>
               </div>
@@ -198,9 +202,9 @@ function Layout({ children }) {
   );
 }
 
-function TechRoute({ children }) {
+function LinkedInRoute({ children }) {
   const { user } = useContext(AuthContext);
-  if (user && user.role === 'marketing') {
+  if (user && user.role !== 'linkedin' && user.role !== 'admin') {
     return <Navigate to="/" replace />;
   }
   return children;
@@ -218,7 +222,7 @@ function App() {
               <Layout>
                 <Routes>
                   <Route path="/" element={<Dashboard />} />
-                  <Route path="/linkedin" element={<TechRoute><LinkedIn /></TechRoute>} />
+                  <Route path="/linkedin" element={<LinkedInRoute><LinkedIn /></LinkedInRoute>} />
                   <Route path="/leads" element={<LeadsList />} />
                   <Route path="/pipeline" element={<Pipeline />} />
                   <Route path="/leads/:id" element={<LeadDetail />} />

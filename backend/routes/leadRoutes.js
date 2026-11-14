@@ -179,12 +179,20 @@ router.post('/', async (req, res) => {
 
     // Determine assigned department based on RBAC
     const assignedDepartment =
-      req.user.role === 'admin' && validData.department ? validData.department : req.user.role || 'tech';
+      req.user.role === 'admin' && validData.department
+        ? validData.department
+        : (req.user.role === 'marketing' ? 'marketing' : 'tech');
+
+    const isOldData =
+      req.user.role === 'admin' && req.body.isOldData !== undefined
+        ? Boolean(req.body.isOldData)
+        : false;
 
     const lead = new Lead({
       ...validData,
       mobile: mobileClean,
       department: assignedDepartment,
+      isOldData,
     });
 
     const newLead = await lead.save();
@@ -263,9 +271,14 @@ router.patch('/:id', async (req, res) => {
       }
     });
 
-    // Admins can reassign departments
-    if (req.user.role === 'admin' && updates.department) {
-      lead.department = updates.department;
+    // Admins can reassign departments and data era
+    if (req.user.role === 'admin') {
+      if (updates.department) {
+        lead.department = updates.department;
+      }
+      if (updates.isOldData !== undefined) {
+        lead.isOldData = Boolean(updates.isOldData);
+      }
     }
 
     const updatedLead = await lead.save();
@@ -290,7 +303,7 @@ router.patch('/:id', async (req, res) => {
  * Delete a lead
  * Strict RBAC: Only 'admin' or department managers can permanently delete leads.
  */
-router.delete('/:id', authorizeRoles('admin', 'tech', 'marketing'), async (req, res) => {
+router.delete('/:id', authorizeRoles('admin', 'tech', 'marketing', 'oldata'), async (req, res) => {
   try {
     const departmentFilter = getDepartmentFilter(req);
     const lead = await Lead.findOneAndDelete({ _id: req.params.id, ...departmentFilter });

@@ -340,7 +340,23 @@ function LeadDetail() {
               {(lead?.name || 'Lead').charAt(0).toUpperCase()}
             </div>
             <div className="flex flex-col min-w-0">
-              <h1 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight truncate">{lead?.name || 'Untitled Lead'}</h1>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight truncate">{lead?.name || 'Untitled Lead'}</h1>
+                <span className={`text-xs font-bold px-2 py-0.5 rounded-md border ${
+                  lead.isOldData
+                    ? 'bg-amber-50 text-amber-700 border-amber-200'
+                    : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                }`}>
+                  {lead.isOldData ? '📦 Old Data' : '✨ New Data'}
+                </span>
+                <span className={`text-xs font-bold px-2 py-0.5 rounded-md border ${
+                  lead.department === 'marketing'
+                    ? 'bg-purple-50 text-purple-700 border-purple-200'
+                    : 'bg-blue-50 text-blue-700 border-blue-200'
+                }`}>
+                  {lead.department === 'marketing' ? '📢 Marketing Dept' : '💻 Tech Dept'}
+                </span>
+              </div>
               <div className="flex items-center gap-2 md:gap-3 mt-1 text-xs md:text-sm font-medium text-slate-500 flex-wrap">
                 {lead.businessType && (
                   <>

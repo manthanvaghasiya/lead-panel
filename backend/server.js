@@ -89,7 +89,7 @@ const linkedinRoutes = require('./routes/linkedinRoutes');
 app.use(['/_/backend/api/auth', '/api/auth'], authRoutes);
 app.use(['/_/backend/api/leads', '/api/leads'], protect, leadRoutes);
 app.use(['/_/backend/api/settings', '/api/settings'], protect, settingsRoutes);
-app.use(['/_/backend/api/linkedin', '/api/linkedin'], protect, authorizeRoles('admin', 'tech'), linkedinRoutes);
+app.use(['/_/backend/api/linkedin', '/api/linkedin'], protect, authorizeRoles('admin', 'linkedin'), linkedinRoutes);
 
 // 8. Fail-Secure Global Error Handler (CWE-209: Never leak stack traces to client in production)
 app.use((err, req, res, next) => {

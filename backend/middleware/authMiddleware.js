@@ -154,8 +154,35 @@ const authorizeRoles = (...allowedRoles) => {
  */
 const getDepartmentFilter = (req) => {
   if (!req.user || req.user.role === 'admin') {
-    return {}; // Full access for Admin across all departments
+    return {}; // Full access for Admin across all departments and eras
   }
+
+  // The 'oldata' account sees all old/archived data
+  if (req.user.role === 'oldata') {
+    return {
+      $or: [
+        { isOldData: true },
+        { department: 'oldata' },
+      ],
+    };
+  }
+
+  // Redesigned Tech account: only sees newly created Tech leads
+  if (req.user.role === 'tech') {
+    return {
+      department: 'tech',
+      isOldData: { $ne: true },
+    };
+  }
+
+  // Redesigned Marketing account: only sees newly created Marketing leads
+  if (req.user.role === 'marketing') {
+    return {
+      department: 'marketing',
+      isOldData: { $ne: true },
+    };
+  }
+
   return {
     $or: [
       { department: req.user.role },

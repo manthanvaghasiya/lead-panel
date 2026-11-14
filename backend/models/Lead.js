@@ -35,7 +35,8 @@ const leadSchema = new mongoose.Schema({
   mapsUrl: { type: String, trim: true, maxlength: 500 },
   website: { type: String, trim: true, maxlength: 300 },
   source: { type: String, default: 'Website', maxlength: 60 },
-  department: { type: String, default: 'marketing', index: true },
+  department: { type: String, default: 'tech', index: true },
+  isOldData: { type: Boolean, default: false, index: true },
   type: { type: String, default: 'Cold', index: true },
   status: { type: String, default: 'Pending', index: true, maxlength: 100 },
   followupDate: { type: Date, index: true },
@@ -136,6 +137,9 @@ leadSchema.methods.formatForRole = function (userRole) {
 
   // Never expose internal cryptographic search hash to the client
   delete leadObj.mobileBlindIndex;
+
+  leadObj.isOldData = Boolean(this.isOldData);
+  leadObj.department = this.department || 'tech';
 
   return leadObj;
 };

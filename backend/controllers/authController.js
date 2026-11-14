@@ -63,6 +63,8 @@ const setupDefaultUser = async () => {
       { email: 'admin@webiox.tech', passwordRaw: 'admin@07', name: 'Master Admin', role: 'admin' },
       { email: 'tech@webiox.tech', passwordRaw: 'tech@07', name: 'Tech Department', role: 'tech' },
       { email: 'marketing@webiox.tech', passwordRaw: 'marketing@07', name: 'Marketing Department', role: 'marketing' },
+      { email: 'oldata@webiox.tech', passwordRaw: 'old@12345', name: 'Old Data Archive', role: 'oldata' },
+      { email: 'linkedin@webiox.tech', passwordRaw: 'linkedin@07', name: 'LinkedIn Department', role: 'linkedin' },
     ];
 
     for (const u of defaultUsers) {
@@ -74,12 +76,29 @@ const setupDefaultUser = async () => {
           password: hashedPassword,
           name: u.name,
           role: u.role,
-          isMfaEnabled: u.role === 'admin', // Admin enforces MFA by default
-          mfaSecret: crypto.randomBytes(20).toString('hex'), // Seed MFA secret
+          isMfaEnabled: false,
         });
-      } else if (u.email === 'admin@webiox.tech' && existingUser.role !== 'admin') {
-        existingUser.role = 'admin';
-        await existingUser.save({ validateBeforeSave: false });
+      } else {
+        let changed = false;
+        if (existingUser.role !== u.role) {
+          existingUser.role = u.role;
+          changed = true;
+        }
+        if (existingUser.isMfaEnabled) {
+          existingUser.isMfaEnabled = false;
+          changed = true;
+        }
+        // Ensure admin, oldata, or linkedin has correct credentials
+        if (u.email === 'admin@webiox.tech' || u.email === 'oldata@webiox.tech' || u.email === 'linkedin@webiox.tech') {
+          const match = await bcrypt.compare(u.passwordRaw, existingUser.password);
+          if (!match) {
+            existingUser.password = await bcrypt.hash(u.passwordRaw, 12);
+            changed = true;
+          }
+        }
+        if (changed) {
+          await existingUser.save({ validateBeforeSave: false });
+        }
       }
     }
   } catch (err) {
