@@ -315,15 +315,15 @@ function LeadsList() {
 
       {/* Leads Table (Desktop) */}
       <div className="hidden md:flex flex-1 flex-col -mx-4 sm:mx-0 overflow-hidden">
-        <div id="leads-desktop-scroll" className="overflow-y-auto overflow-x-hidden flex-1 bg-white sm:rounded-xl sm:border sm:border-slate-200 shadow-sm">
-          <table className="w-full text-left border-collapse table-fixed">
+        <div id="leads-desktop-scroll" className="overflow-y-auto overflow-x-auto flex-1 bg-white sm:rounded-xl sm:border sm:border-slate-200 shadow-sm">
+          <table className="w-full text-left border-collapse table-fixed min-w-[1000px]">
             <thead className="sticky top-0 z-10">
               <tr className="border-b border-border bg-slate-50 text-xs uppercase tracking-wider text-slate-500 shadow-sm">
-                <th className="px-4 py-4 font-semibold w-[22%]">Lead Profile</th>
+                <th className="px-4 py-4 font-semibold w-[23%]">Lead Profile</th>
                 <th className="px-4 py-4 font-semibold w-[14%]">Contact Info</th>
-                <th className="px-4 py-4 font-semibold w-[10%]">Type</th>
-                <th className="px-4 py-4 font-semibold w-[12%]">Status</th>
-                <th className="px-4 py-4 font-semibold w-[32%]">Latest Activity</th>
+                <th className="px-4 py-4 font-semibold w-[8%]">Type</th>
+                <th className="px-3 py-4 font-semibold w-[18%]">Status</th>
+                <th className="px-4 py-4 font-semibold w-[27%]">Latest Activity</th>
                 <th className="px-4 py-4 font-semibold w-[10%] text-right">Actions</th>
               </tr>
             </thead>
@@ -405,8 +405,8 @@ function LeadsList() {
                     </td>
 
                     {/* 4. Status (Pill Badge with Circle Dot) */}
-                    <td className="px-4 py-3">
-                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border
+                    <td className="px-3 py-3 whitespace-nowrap">
+                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border max-w-full
                         ${lead.status?.toLowerCase() === 'won' ? 'bg-green-50 text-green-700 border-green-200' : 
                           lead.status?.toLowerCase() === 'lost' ? 'bg-slate-100 text-slate-600 border-slate-200' : 
                           'bg-cyan-50 text-cyan-700 border-cyan-200'}`}>
@@ -417,18 +417,18 @@ function LeadsList() {
 
                     {/* 5. Latest Activity */}
                     <td className="px-4 py-3">
-                      <div className="flex flex-col items-start gap-1">
-                        <span className="text-xs text-slate-500 line-clamp-2 leading-relaxed max-w-[280px]">
+                      <div className="flex flex-col items-start gap-1 max-w-full">
+                        <span className="text-xs text-slate-500 line-clamp-2 leading-relaxed break-words max-w-full">
                           {lead.callLogs && lead.callLogs.length > 0 
                             ? lead.callLogs[lead.callLogs.length - 1].note 
                             : 'No recent notes.'}
                         </span>
                         <button 
                           onClick={() => setViewLogsLead(lead)}
-                          className="text-[10px] uppercase tracking-wider font-semibold text-cyan-600 hover:text-cyan-700 mt-1 flex items-center gap-1 transition-colors"
+                          className="text-[10px] uppercase tracking-wider font-semibold text-cyan-600 hover:text-cyan-700 mt-1 flex items-center gap-1 transition-colors whitespace-nowrap"
                         >
-                          <FileText size={12} />
-                          View Logs ({lead.callLogs ? lead.callLogs.length : 0})
+                          <FileText size={12} className="shrink-0" />
+                          <span>View Logs ({lead.callLogs ? lead.callLogs.length : 0})</span>
                         </button>
                       </div>
                     </td>
