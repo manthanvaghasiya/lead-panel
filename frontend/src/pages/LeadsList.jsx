@@ -125,10 +125,12 @@ function LeadsList() {
     if (!matchesSearch) return false;
 
     // 2. Status Filter
-    if (!filters.status) {
-      if (lead.status === 'Lost' || lead.status === 'Permanently Lost' || lead.status === 'Won') return false;
-    } else {
-      if (lead.status !== filters.status) return false;
+    if (filters.status) {
+      if (filters.status === 'active_only') {
+        if (lead.status === 'Lost' || lead.status === 'Permanently Lost' || lead.status === 'Won') return false;
+      } else if (lead.status !== filters.status) {
+        return false;
+      }
     }
 
     // 3. Lead Type Filter
@@ -249,7 +251,8 @@ function LeadsList() {
             value={filters.status}
             onChange={(e) => setFilters({ ...filters, status: e.target.value })}
           >
-            <option value="">Status: All</option>
+            <option value="">Status: All (Show Everything)</option>
+            <option value="active_only">⚡ Active Only (Hide Lost/Won)</option>
             {uniqueStatuses.map(status => <option key={status} value={status}>{status}</option>)}
           </select>
           

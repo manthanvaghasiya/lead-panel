@@ -81,9 +81,6 @@ function Pipeline() {
     // Era Filter (New vs Old)
     if (eraFilter === 'new' && (lead.isOldData || lead.status?.trim().toLowerCase() !== 'new')) return false;
     if (eraFilter === 'old' && !lead.isOldData) return false;
-    
-    // EXCLUDE Permanently Lost
-    if (lead.status === 'Permanently Lost') return false;
 
     return true;
   });
@@ -174,7 +171,13 @@ function Pipeline() {
         ) : (
           <div className="flex gap-4 h-full min-w-max pb-2">
             {boardStatuses.map(status => {
-              const columnLeads = filteredLeads.filter(l => (l.status || 'Pending') === status);
+              const columnLeads = filteredLeads.filter(l => {
+                const s = l.status || 'Pending';
+                if (status === 'Lost') {
+                  return s === 'Lost' || s === 'Permanently Lost';
+                }
+                return s === status;
+              });
               
               return (
                 <div 
