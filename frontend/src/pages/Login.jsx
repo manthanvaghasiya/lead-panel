@@ -17,9 +17,13 @@ function Login() {
     setLoading(true);
 
     try {
-      const success = await login(email, password);
-      if (success) {
-        navigate('/');
+      const loggedUser = await login(email, password);
+      if (loggedUser) {
+        if (loggedUser.role === 'linkedin') {
+          navigate('/linkedin');
+        } else {
+          navigate('/');
+        }
       } else {
         setError('Invalid email or password');
       }

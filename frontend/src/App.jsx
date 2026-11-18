@@ -35,20 +35,26 @@ function Layout({ children }) {
     }
   }, [location.pathname]);
 
-  const canAccessNetwork = user?.role === 'linkedin' || user?.role === 'admin';
+  const isLinkedInUser = user?.role === 'linkedin';
+  const isAdmin = user?.role === 'admin';
+  const canAccessNetwork = isLinkedInUser || isAdmin;
 
-  const navItems = [
-    { path: '/', label: 'Dashboard', icon: LayoutDashboard },
-    ...(canAccessNetwork ? [
-      { path: '/linkedin', label: 'Network', icon: FaLinkedin, isNetwork: true, badge: 'LinkedIn' }
-    ] : []),
-    { path: '/leads', label: 'Leads', icon: List, badge: 'Sales' },
-    { path: '/pipeline', label: 'Pipeline', icon: LayoutGrid },
-    { path: '/follow-ups', label: 'Follow-ups', icon: Calendar },
-    { path: '/analytics', label: 'Analytics', icon: PieChart },
-    { path: '/import-export', label: 'Import / Export', icon: FileDown },
-    { path: '/settings', label: 'Settings', icon: SettingsIcon },
-  ];
+  const navItems = isLinkedInUser
+    ? [
+        { path: '/linkedin', label: 'Network', icon: FaLinkedin, isNetwork: true, badge: 'LinkedIn' }
+      ]
+    : [
+        { path: '/', label: 'Dashboard', icon: LayoutDashboard },
+        ...(isAdmin ? [
+          { path: '/linkedin', label: 'Network', icon: FaLinkedin, isNetwork: true, badge: 'LinkedIn' }
+        ] : []),
+        { path: '/leads', label: 'Leads', icon: List, badge: 'Sales' },
+        { path: '/pipeline', label: 'Pipeline', icon: LayoutGrid },
+        { path: '/follow-ups', label: 'Follow-ups', icon: Calendar },
+        { path: '/analytics', label: 'Analytics', icon: PieChart },
+        { path: '/import-export', label: 'Import / Export', icon: FileDown },
+        { path: '/settings', label: 'Settings', icon: SettingsIcon },
+      ];
 
   return (
     <div className="flex h-screen bg-background font-sans text-slate-800 overflow-hidden flex-col">
@@ -229,6 +235,36 @@ function LinkedInRoute({ children }) {
   return children;
 }
 
+function NonLinkedInRoute({ children }) {
+  const { user, loading } = useContext(AuthContext);
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+  if (user && user.role === 'linkedin') {
+    return <Navigate to="/linkedin" replace />;
+  }
+  return children;
+}
+
+function RootRoute() {
+  const { user, loading } = useContext(AuthContext);
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+  if (user && user.role === 'linkedin') {
+    return <Navigate to="/linkedin" replace />;
+  }
+  return <Dashboard />;
+}
+
 function App() {
   return (
     <AuthProvider>
@@ -240,15 +276,15 @@ function App() {
             <Route path="/*" element={
               <Layout>
                 <Routes>
-                  <Route path="/" element={<Dashboard />} />
+                  <Route path="/" element={<RootRoute />} />
                   <Route path="/linkedin" element={<LinkedInRoute><LinkedIn /></LinkedInRoute>} />
-                  <Route path="/leads" element={<LeadsList />} />
-                  <Route path="/pipeline" element={<Pipeline />} />
-                  <Route path="/leads/:id" element={<LeadDetail />} />
-                  <Route path="/follow-ups" element={<FollowUps />} />
-                  <Route path="/analytics" element={<Analytics />} />
-                  <Route path="/import-export" element={<ImportExport />} />
-                  <Route path="/settings" element={<Settings />} />
+                  <Route path="/leads" element={<NonLinkedInRoute><LeadsList /></NonLinkedInRoute>} />
+                  <Route path="/pipeline" element={<NonLinkedInRoute><Pipeline /></NonLinkedInRoute>} />
+                  <Route path="/leads/:id" element={<NonLinkedInRoute><LeadDetail /></NonLinkedInRoute>} />
+                  <Route path="/follow-ups" element={<NonLinkedInRoute><FollowUps /></NonLinkedInRoute>} />
+                  <Route path="/analytics" element={<NonLinkedInRoute><Analytics /></NonLinkedInRoute>} />
+                  <Route path="/import-export" element={<NonLinkedInRoute><ImportExport /></NonLinkedInRoute>} />
+                  <Route path="/settings" element={<NonLinkedInRoute><Settings /></NonLinkedInRoute>} />
                 </Routes>
               </Layout>
             } />

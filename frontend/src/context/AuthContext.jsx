@@ -32,9 +32,9 @@ export const AuthProvider = ({ children }) => {
       setToken(res.data.token);
       setUser(res.data.user);
       localStorage.setItem('token', res.data.token);
-      return true;
+      return res.data.user;
     }
-    return false;
+    return null;
   };
 
   const logout = () => {
