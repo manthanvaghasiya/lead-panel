@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { AuthContext } from '../context/AuthContext';
 import { getLeads, createLead, extractLeadFromText, addCallLog, extractLogFromText, deleteLead } from '../api/apiClient';
 import { useScrollRestore } from '../hooks/useScrollRestore';
 import { extractMobileNumbers, defaultWhatsappMessage } from '../utils/contactUtils';
@@ -31,6 +32,7 @@ const extractCity = (address) => {
 };
 
 function LeadsList() {
+  const { user } = useContext(AuthContext);
   const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -125,12 +127,15 @@ function LeadsList() {
     if (!matchesSearch) return false;
 
     // 2. Status Filter
-    if (filters.status) {
-      if (filters.status === 'active_only') {
+    const isOldDataAccount = user?.role === 'oldata' || (user?.role === 'admin' && filters.era === 'old');
+    if (!filters.status) {
+      // In Old Data account (oldata@webiox.tech) or Admin viewing Old Data: show ALL leads including Lost and Won.
+      // In other accounts (tech, marketing, etc.): default Status: All shows active leads (hides Lost and Won).
+      if (!isOldDataAccount) {
         if (lead.status === 'Lost' || lead.status === 'Permanently Lost' || lead.status === 'Won') return false;
-      } else if (lead.status !== filters.status) {
-        return false;
       }
+    } else {
+      if (lead.status !== filters.status) return false;
     }
 
     // 3. Lead Type Filter
@@ -251,8 +256,7 @@ function LeadsList() {
             value={filters.status}
             onChange={(e) => setFilters({ ...filters, status: e.target.value })}
           >
-            <option value="">Status: All (Show Everything)</option>
-            <option value="active_only">⚡ Active Only (Hide Lost/Won)</option>
+            <option value="">{user?.role === 'oldata' ? 'Status: All (Show Everything)' : 'Status: All (Active Leads)'}</option>
             {uniqueStatuses.map(status => <option key={status} value={status}>{status}</option>)}
           </select>
           
