@@ -155,7 +155,7 @@ function LeadsList() {
     if (filters.department && lead.department !== filters.department) return false;
 
     // 10. Data Era Filter (New vs Old)
-    if (filters.era === 'new' && lead.isOldData) return false;
+    if (filters.era === 'new' && (lead.isOldData || lead.status?.trim().toLowerCase() !== 'new')) return false;
     if (filters.era === 'old' && !lead.isOldData) return false;
 
     return true;
@@ -230,7 +230,7 @@ function LeadsList() {
             onChange={(e) => setFilters({ ...filters, era: e.target.value })}
           >
             <option value="">Data: All Eras</option>
-            <option value="new">✨ New Data</option>
+            <option value="new">✨ New Leads</option>
             <option value="old">📦 Old Data</option>
           </select>
 
@@ -349,13 +349,15 @@ function LeadsList() {
                               <Link to={`/leads/${leadId}`} className="font-semibold text-slate-900 truncate hover:text-indigo-600 transition-colors">
                                 {lead.name}
                               </Link>
-                              <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded border ${
-                                lead.isOldData
-                                  ? 'bg-amber-50 text-amber-700 border-amber-200'
-                                  : 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                              }`}>
-                                {lead.isOldData ? '📦 Old Data' : '✨ New Data'}
-                              </span>
+                              {lead.isOldData ? (
+                                <span className="text-[10px] font-bold px-1.5 py-0.2 rounded border bg-amber-50 text-amber-700 border-amber-200">
+                                  📦 Old Data
+                                </span>
+                              ) : lead.status?.trim().toLowerCase() === 'new' ? (
+                                <span className="text-[10px] font-bold px-1.5 py-0.2 rounded border bg-emerald-50 text-emerald-700 border-emerald-200">
+                                  ✨ New Data
+                                </span>
+                              ) : null}
                               <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded border ${
                                 lead.department === 'marketing'
                                   ? 'bg-purple-50 text-purple-700 border-purple-200'
@@ -515,13 +517,15 @@ function LeadsList() {
                       {lead.name}
                     </Link>
                     <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                      <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded border ${
-                        lead.isOldData
-                          ? 'bg-amber-50 text-amber-700 border-amber-200'
-                          : 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                      }`}>
-                        {lead.isOldData ? '📦 Old' : '✨ New'}
-                      </span>
+                      {lead.isOldData ? (
+                        <span className="text-[9px] font-bold px-1.5 py-0.2 rounded border bg-amber-50 text-amber-700 border-amber-200">
+                          📦 Old
+                        </span>
+                      ) : lead.status?.trim().toLowerCase() === 'new' ? (
+                        <span className="text-[9px] font-bold px-1.5 py-0.2 rounded border bg-emerald-50 text-emerald-700 border-emerald-200">
+                          ✨ New Data
+                        </span>
+                      ) : null}
                       <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded border ${
                         lead.department === 'marketing'
                           ? 'bg-purple-50 text-purple-700 border-purple-200'
@@ -920,8 +924,8 @@ function AddLeadModal({ onClose, onSuccess }) {
             <div>
               <label className="block text-xs uppercase tracking-wider text-slate-700 font-bold mb-1.5">Data Era</label>
               <select className="input-field bg-white font-semibold" value={formData.isOldData ? 'old' : 'new'} onChange={e => setFormData({...formData, isOldData: e.target.value === 'old'})}>
-                <option value="new">✨ New Data</option>
-                <option value="old">📦 Old Data</option>
+                <option value="new">✨ Active (New System)</option>
+                <option value="old">📦 Old Data Archive</option>
               </select>
             </div>
           </div>

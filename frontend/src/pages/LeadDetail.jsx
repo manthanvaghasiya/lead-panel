@@ -342,13 +342,15 @@ function LeadDetail() {
             <div className="flex flex-col min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <h1 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight truncate">{lead?.name || 'Untitled Lead'}</h1>
-                <span className={`text-xs font-bold px-2 py-0.5 rounded-md border ${
-                  lead.isOldData
-                    ? 'bg-amber-50 text-amber-700 border-amber-200'
-                    : 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                }`}>
-                  {lead.isOldData ? '📦 Old Data' : '✨ New Data'}
-                </span>
+                {lead.isOldData ? (
+                  <span className="text-xs font-bold px-2 py-0.5 rounded-md border bg-amber-50 text-amber-700 border-amber-200">
+                    📦 Old Data
+                  </span>
+                ) : lead.status?.trim().toLowerCase() === 'new' ? (
+                  <span className="text-xs font-bold px-2 py-0.5 rounded-md border bg-emerald-50 text-emerald-700 border-emerald-200">
+                    ✨ New Data
+                  </span>
+                ) : null}
                 <span className={`text-xs font-bold px-2 py-0.5 rounded-md border ${
                   lead.department === 'marketing'
                     ? 'bg-purple-50 text-purple-700 border-purple-200'

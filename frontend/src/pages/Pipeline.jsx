@@ -79,7 +79,7 @@ function Pipeline() {
     if (deptFilter && lead.department !== deptFilter) return false;
 
     // Era Filter (New vs Old)
-    if (eraFilter === 'new' && lead.isOldData) return false;
+    if (eraFilter === 'new' && (lead.isOldData || lead.status?.trim().toLowerCase() !== 'new')) return false;
     if (eraFilter === 'old' && !lead.isOldData) return false;
     
     // EXCLUDE Permanently Lost
@@ -153,7 +153,7 @@ function Pipeline() {
           onChange={(e) => setEraFilter(e.target.value)}
         >
           <option value="">Data: All Eras</option>
-          <option value="new">✨ New Data</option>
+          <option value="new">✨ New Leads</option>
           <option value="old">📦 Old Data</option>
         </select>
 
@@ -213,13 +213,15 @@ function Pipeline() {
                               {lead.name}
                             </Link>
                             <div className="flex items-center gap-1 mt-1 flex-wrap">
-                              <span className={`text-[8px] font-bold px-1 py-0.2 rounded border ${
-                                lead.isOldData
-                                  ? 'bg-amber-50 text-amber-700 border-amber-200'
-                                  : 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                              }`}>
-                                {lead.isOldData ? '📦 Old' : '✨ New'}
-                              </span>
+                              {lead.isOldData ? (
+                                <span className="text-[8px] font-bold px-1 py-0.2 rounded border bg-amber-50 text-amber-700 border-amber-200">
+                                  📦 Old
+                                </span>
+                              ) : lead.status?.trim().toLowerCase() === 'new' ? (
+                                <span className="text-[8px] font-bold px-1 py-0.2 rounded border bg-emerald-50 text-emerald-700 border-emerald-200">
+                                  ✨ New
+                                </span>
+                              ) : null}
                               <span className={`text-[8px] font-bold px-1 py-0.2 rounded border ${
                                 lead.department === 'marketing'
                                   ? 'bg-purple-50 text-purple-700 border-purple-200'

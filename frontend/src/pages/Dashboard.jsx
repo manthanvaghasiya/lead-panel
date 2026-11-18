@@ -65,11 +65,11 @@ function Dashboard() {
     const recentLeads = [...safeLeads].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 6);
 
     const oldDataCount = safeLeads.filter(l => l.isOldData).length;
-    const newDataCount = safeLeads.filter(l => !l.isOldData).length;
+    const newLeadsCount = safeLeads.filter(l => !l.isOldData && l.status?.trim().toLowerCase() === 'new').length;
     const techCount = safeLeads.filter(l => l.department === 'tech').length;
     const mktCount = safeLeads.filter(l => l.department === 'marketing').length;
 
-    return { total, hot, warm, cold, won, winRate, overdue, todayList, trendData, pipelineData, recentLeads, oldDataCount, newDataCount, techCount, mktCount };
+    return { total, hot, warm, cold, won, winRate, overdue, todayList, trendData, pipelineData, recentLeads, oldDataCount, newLeadsCount, techCount, mktCount };
   }, [leads]);
 
   if (loading) {
@@ -83,7 +83,7 @@ function Dashboard() {
     );
   }
 
-  const { total, hot, warm, cold, won, winRate, overdue, todayList, trendData, pipelineData, recentLeads, oldDataCount, newDataCount, techCount, mktCount } = stats;
+  const { total, hot, warm, cold, won, winRate, overdue, todayList, trendData, pipelineData, recentLeads, oldDataCount, newLeadsCount, techCount, mktCount } = stats;
 
   return (
     <div className="max-w-7xl mx-auto flex flex-col gap-6 pb-12">
@@ -106,12 +106,12 @@ function Dashboard() {
 
       {/* 1.5 CLASSIFICATION OVERVIEW (New vs Old & Tech vs Marketing) */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <Link to="/leads" className="bg-emerald-50/70 hover:bg-emerald-100/70 border border-emerald-200 rounded-xl p-3 flex items-center justify-between transition-colors shadow-sm">
+        <Link to="/leads?status=New" className="bg-emerald-50/70 hover:bg-emerald-100/70 border border-emerald-200 rounded-xl p-3 flex items-center justify-between transition-colors shadow-sm">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-700">✨ New Data</p>
-            <h4 className="text-xl font-black text-emerald-950 mt-0.5">{newDataCount}</h4>
+            <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-700">✨ New Leads</p>
+            <h4 className="text-xl font-black text-emerald-950 mt-0.5">{newLeadsCount}</h4>
           </div>
-          <span className="text-xs font-semibold text-emerald-600 bg-white/80 px-2 py-1 rounded-md border border-emerald-100">Live</span>
+          <span className="text-xs font-semibold text-emerald-600 bg-white/80 px-2 py-1 rounded-md border border-emerald-100">Stage: New</span>
         </Link>
 
         <Link to="/leads" className="bg-amber-50/70 hover:bg-amber-100/70 border border-amber-200 rounded-xl p-3 flex items-center justify-between transition-colors shadow-sm">
@@ -369,13 +369,15 @@ function Dashboard() {
                     </p>
                     
                     <div className="mt-2 flex flex-wrap gap-1.5">
-                      <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold border ${
-                        lead.isOldData
-                          ? 'bg-amber-50 text-amber-700 border-amber-200'
-                          : 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                      }`}>
-                        {lead.isOldData ? '📦 Old' : '✨ New'}
-                      </span>
+                      {lead.isOldData ? (
+                        <span className="px-1.5 py-0.5 rounded text-[9px] font-bold border bg-amber-50 text-amber-700 border-amber-200">
+                          📦 Old
+                        </span>
+                      ) : lead.status?.trim().toLowerCase() === 'new' ? (
+                        <span className="px-1.5 py-0.5 rounded text-[9px] font-bold border bg-emerald-50 text-emerald-700 border-emerald-200">
+                          ✨ New
+                        </span>
+                      ) : null}
                       <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold border ${
                         lead.department === 'marketing'
                           ? 'bg-purple-50 text-purple-700 border-purple-200'

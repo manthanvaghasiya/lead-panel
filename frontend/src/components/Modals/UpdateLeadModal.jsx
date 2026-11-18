@@ -424,8 +424,8 @@ export default function UpdateLeadModal({ lead, onClose, onSuccess }) {
                   value={formData.isOldData ? 'old' : 'new'}
                   onChange={e => setFormData({ ...formData, isOldData: e.target.value === 'old' })}
                 >
-                  <option value="new">✨ New Data</option>
-                  <option value="old">📦 Old Data</option>
+                  <option value="new">✨ Active (New System)</option>
+                  <option value="old">📦 Old Data Archive</option>
                 </select>
               </div>
             </div>
