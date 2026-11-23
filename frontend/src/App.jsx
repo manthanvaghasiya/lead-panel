@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
 import { LayoutDashboard, List, Calendar, FileDown, PieChart, LogOut, Settings as SettingsIcon, Images, LayoutGrid } from 'lucide-react';
-import { FaLinkedin } from 'react-icons/fa';
+import { FaLinkedin, FaGoogle } from 'react-icons/fa';
 import LeadsList from './pages/LeadsList';
 import Pipeline from './pages/Pipeline';
 import LeadDetail from './pages/LeadDetail';
@@ -11,6 +11,7 @@ import Analytics from './pages/Analytics';
 import ImportExport from './pages/ImportExport';
 import Settings from './pages/Settings';
 import LinkedIn from './pages/LinkedIn';
+import GoogleLeads from './pages/GoogleLeads';
 import UpdatePrompt from './components/PWA/UpdatePrompt';
 import InstallButton from './components/PWA/InstallButton';
 import OfflineBadge from './components/PWA/OfflineBadge';
@@ -36,8 +37,10 @@ function Layout({ children }) {
   }, [location.pathname]);
 
   const isLinkedInUser = user?.role === 'linkedin';
+  const isGoogleUser = user?.role === 'google';
   const isAdmin = user?.role === 'admin';
   const canAccessNetwork = isLinkedInUser || isAdmin;
+  const canAccessGoogle = isGoogleUser || isAdmin;
 
   const navItems = isLinkedInUser
     ? [
@@ -47,6 +50,9 @@ function Layout({ children }) {
         { path: '/', label: 'Dashboard', icon: LayoutDashboard },
         ...(isAdmin ? [
           { path: '/linkedin', label: 'Network', icon: FaLinkedin, isNetwork: true, badge: 'LinkedIn' }
+        ] : []),
+        ...(canAccessGoogle ? [
+          { path: '/google-leads', label: 'Google Maps', icon: FaGoogle, isGoogle: true, badge: 'Maps' }
         ] : []),
         { path: '/leads', label: 'Leads', icon: List, badge: 'Sales' },
         { path: '/pipeline', label: 'Pipeline', icon: LayoutGrid },
@@ -101,9 +107,13 @@ function Layout({ children }) {
                   className={`relative flex items-center justify-between px-3 py-3 rounded-xl transition-all duration-300 group overflow-hidden ${isActive
                     ? item.isNetwork
                       ? 'bg-blue-600/20 text-blue-300 border border-blue-500/30'
+                      : item.isGoogle
+                      ? 'bg-rose-600/20 text-rose-300 border border-rose-500/30'
                       : 'bg-primary/10 text-primary'
                     : item.isNetwork
                     ? 'text-slate-400 hover:bg-slate-800/50 hover:text-blue-200'
+                    : item.isGoogle
+                    ? 'text-slate-400 hover:bg-slate-800/50 hover:text-rose-200'
                     : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'
                     }`}
                 >
@@ -112,6 +122,8 @@ function Layout({ children }) {
                     <div className={`absolute left-0 top-0 bottom-0 w-1 rounded-r-md ${
                       item.isNetwork
                         ? 'bg-blue-400 shadow-[0_0_10px_rgba(96,165,250,0.8)]'
+                        : item.isGoogle
+                        ? 'bg-rose-400 shadow-[0_0_10px_rgba(244,63,94,0.8)]'
                         : 'bg-primary shadow-[0_0_10px_rgba(6,182,212,0.8)]'
                     }`} />
                   )}
@@ -119,8 +131,8 @@ function Layout({ children }) {
                   <div className="flex items-center gap-3 min-w-0">
                     <div className={`flex items-center justify-center shrink-0 ${
                       isActive 
-                        ? item.isNetwork ? 'text-blue-400' : 'text-primary' 
-                        : item.isNetwork ? 'text-blue-400/80 group-hover:text-blue-300' : 'text-slate-400 group-hover:text-slate-300'
+                        ? item.isNetwork ? 'text-blue-400' : item.isGoogle ? 'text-rose-400' : 'text-primary' 
+                        : item.isNetwork ? 'text-blue-400/80 group-hover:text-blue-300' : item.isGoogle ? 'text-rose-400/80 group-hover:text-rose-300' : 'text-slate-400 group-hover:text-slate-300'
                     }`}>
                       <Icon size={20} strokeWidth={isActive ? 2.5 : 2} />
                     </div>
@@ -134,6 +146,8 @@ function Layout({ children }) {
                     <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider ${
                       item.isNetwork
                         ? 'bg-blue-500/20 text-blue-300 border border-blue-400/30'
+                        : item.isGoogle
+                        ? 'bg-rose-500/20 text-rose-300 border border-rose-400/30'
                         : 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/25'
                     }`}>
                       {item.badge}
@@ -168,6 +182,8 @@ function Layout({ children }) {
                       ? 'bg-amber-500/20 text-amber-300 border-amber-400/40'
                       : user?.role === 'linkedin'
                       ? 'bg-sky-500/20 text-sky-300 border-sky-400/40'
+                      : user?.role === 'google'
+                      ? 'bg-rose-500/20 text-rose-300 border-rose-400/40'
                       : user?.role === 'admin'
                       ? 'bg-emerald-500/20 text-emerald-300 border-emerald-400/40'
                       : 'bg-slate-700/40 text-slate-300 border-slate-600/40'
@@ -180,6 +196,8 @@ function Layout({ children }) {
                       ? '📦 Old Data'
                       : user?.role === 'linkedin'
                       ? '🔗 LinkedIn Dept'
+                      : user?.role === 'google'
+                      ? '📍 Google Dept'
                       : user?.role === 'admin'
                       ? '👑 Master Admin'
                       : '👤 User'}
@@ -278,6 +296,7 @@ function App() {
                 <Routes>
                   <Route path="/" element={<RootRoute />} />
                   <Route path="/linkedin" element={<LinkedInRoute><LinkedIn /></LinkedInRoute>} />
+                  <Route path="/google-leads" element={<NonLinkedInRoute><GoogleLeads /></NonLinkedInRoute>} />
                   <Route path="/leads" element={<NonLinkedInRoute><LeadsList /></NonLinkedInRoute>} />
                   <Route path="/pipeline" element={<NonLinkedInRoute><Pipeline /></NonLinkedInRoute>} />
                   <Route path="/leads/:id" element={<NonLinkedInRoute><LeadDetail /></NonLinkedInRoute>} />

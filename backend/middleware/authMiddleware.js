@@ -183,6 +183,16 @@ const getDepartmentFilter = (req) => {
     };
   }
 
+  // Google Department account: sees leads assigned to google department or sourced from Google/Maps
+  if (req.user.role === 'google') {
+    return {
+      $or: [
+        { department: 'google' },
+        { source: { $regex: /google/i } }
+      ]
+    };
+  }
+
   return {
     $or: [
       { department: req.user.role },

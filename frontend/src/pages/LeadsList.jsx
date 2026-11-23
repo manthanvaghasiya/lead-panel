@@ -249,6 +249,7 @@ function LeadsList() {
             <option value="">Dept: All</option>
             <option value="tech">💻 Tech Dept</option>
             <option value="marketing">📢 Marketing Dept</option>
+            <option value="google">📍 Google Dept</option>
           </select>
 
           <select 
@@ -368,9 +369,11 @@ function LeadsList() {
                               <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded border ${
                                 lead.department === 'marketing'
                                   ? 'bg-purple-50 text-purple-700 border-purple-200'
+                                  : lead.department === 'google'
+                                  ? 'bg-rose-50 text-rose-700 border-rose-200'
                                   : 'bg-blue-50 text-blue-700 border-blue-200'
                               }`}>
-                                {lead.department === 'marketing' ? '📢 Marketing' : '💻 Tech'}
+                                {lead.department === 'marketing' ? '📢 Marketing' : lead.department === 'google' ? '📍 Google' : '💻 Tech'}
                               </span>
                             </div>
                           <span className="text-xs text-slate-500 truncate flex items-center gap-1 mt-0.5">
@@ -536,9 +539,11 @@ function LeadsList() {
                       <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded border ${
                         lead.department === 'marketing'
                           ? 'bg-purple-50 text-purple-700 border-purple-200'
+                          : lead.department === 'google'
+                          ? 'bg-rose-50 text-rose-700 border-rose-200'
                           : 'bg-blue-50 text-blue-700 border-blue-200'
                       }`}>
-                        {lead.department === 'marketing' ? '📢 Marketing' : '💻 Tech'}
+                        {lead.department === 'marketing' ? '📢 Marketing' : lead.department === 'google' ? '📍 Google' : '💻 Tech'}
                       </span>
                     </div>
                   <div className="text-xs text-slate-500 mt-1 flex flex-wrap items-center gap-1.5">
@@ -926,6 +931,7 @@ function AddLeadModal({ onClose, onSuccess }) {
               <select className="input-field bg-white font-semibold" value={formData.department} onChange={e => setFormData({...formData, department: e.target.value})}>
                 <option value="tech">💻 Tech Dept</option>
                 <option value="marketing">📢 Marketing Dept</option>
+                <option value="google">📍 Google Dept</option>
               </select>
             </div>
             <div>

@@ -303,7 +303,7 @@ router.patch('/:id', async (req, res) => {
  * Delete a lead
  * Strict RBAC: Only 'admin' or department managers can permanently delete leads.
  */
-router.delete('/:id', authorizeRoles('admin', 'tech', 'marketing', 'oldata'), async (req, res) => {
+router.delete('/:id', authorizeRoles('admin', 'tech', 'marketing', 'oldata', 'google'), async (req, res) => {
   try {
     const departmentFilter = getDepartmentFilter(req);
     const lead = await Lead.findOneAndDelete({ _id: req.params.id, ...departmentFilter });
@@ -366,6 +366,12 @@ router.post('/bulk-import', async (req, res) => {
         city: lead.city ? String(lead.city).substring(0, 100) : '',
         address: lead.address ? String(lead.address).substring(0, 300) : '',
         mapsUrl: lead.mapsUrl ? String(lead.mapsUrl).substring(0, 500) : '',
+        website: lead.website ? String(lead.website).substring(0, 300) : '',
+        socials: {
+          rating: lead.rating ? String(lead.rating).substring(0, 20) : '',
+          reviews: lead.reviews ? String(lead.reviews).substring(0, 20) : '',
+          emails: lead.emails ? String(lead.emails).substring(0, 500) : (lead.email ? String(lead.email).substring(0, 500) : ''),
+        }
       });
     }
 

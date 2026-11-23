@@ -65,6 +65,7 @@ const setupDefaultUser = async () => {
       { email: 'marketing@webiox.tech', passwordRaw: 'marketing@07', name: 'Marketing Department', role: 'marketing' },
       { email: 'oldata@webiox.tech', passwordRaw: 'old@12345', name: 'Old Data Archive', role: 'oldata' },
       { email: 'linkedin@webiox.tech', passwordRaw: 'linkedin@07', name: 'LinkedIn Department', role: 'linkedin' },
+      { email: 'google@webiox.tech', passwordRaw: 'google@07', name: 'Google Department', role: 'google' },
     ];
 
     for (const u of defaultUsers) {
@@ -88,8 +89,8 @@ const setupDefaultUser = async () => {
           existingUser.isMfaEnabled = false;
           changed = true;
         }
-        // Ensure admin, oldata, or linkedin has correct credentials
-        if (u.email === 'admin@webiox.tech' || u.email === 'oldata@webiox.tech' || u.email === 'linkedin@webiox.tech') {
+        // Ensure admin, oldata, linkedin, or google has correct credentials
+        if (u.email === 'admin@webiox.tech' || u.email === 'oldata@webiox.tech' || u.email === 'linkedin@webiox.tech' || u.email === 'google@webiox.tech') {
           const match = await bcrypt.compare(u.passwordRaw, existingUser.password);
           if (!match) {
             existingUser.password = await bcrypt.hash(u.passwordRaw, 12);

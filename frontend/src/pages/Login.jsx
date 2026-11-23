@@ -21,6 +21,8 @@ function Login() {
       if (loggedUser) {
         if (loggedUser.role === 'linkedin') {
           navigate('/linkedin');
+        } else if (loggedUser.role === 'google') {
+          navigate('/google-leads');
         } else {
           navigate('/');
         }

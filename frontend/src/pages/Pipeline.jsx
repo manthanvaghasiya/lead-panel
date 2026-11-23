@@ -162,6 +162,7 @@ function Pipeline() {
           <option value="">Dept: All</option>
           <option value="tech">💻 Tech Dept</option>
           <option value="marketing">📢 Marketing Dept</option>
+          <option value="google">📍 Google Dept</option>
         </select>
       </div>
 
@@ -228,9 +229,11 @@ function Pipeline() {
                               <span className={`text-[8px] font-bold px-1 py-0.2 rounded border ${
                                 lead.department === 'marketing'
                                   ? 'bg-purple-50 text-purple-700 border-purple-200'
+                                  : lead.department === 'google'
+                                  ? 'bg-rose-50 text-rose-700 border-rose-200'
                                   : 'bg-blue-50 text-blue-700 border-blue-200'
                               }`}>
-                                {lead.department === 'marketing' ? '📢 Mkt' : '💻 Tech'}
+                                {lead.department === 'marketing' ? '📢 Mkt' : lead.department === 'google' ? '📍 Google' : '💻 Tech'}
                               </span>
                             </div>
                             <span className="text-xs font-medium text-slate-500 mt-1">{lead.mobile}</span>
