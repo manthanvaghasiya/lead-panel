@@ -1,48 +1,109 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useMemo } from 'react';
 import { 
   MapPin, Download, Upload, Copy, Check, Search, ExternalLink, 
   Phone, Mail, Globe, Star, MessageSquare, ArrowRight, RefreshCw, 
-  Trash2, ShieldCheck, Zap, Sparkles, Filter, Building2, CheckCircle2, AlertCircle
+  Trash2, ShieldCheck, Zap, Sparkles, Filter, Building2, CheckCircle2, 
+  AlertCircle, LayoutGrid, List, Sliders, ChevronDown, ChevronUp, Share2, 
+  Send, Database, Award, TrendingUp, BarChart3, HelpCircle, Layers, FileSpreadsheet
 } from 'lucide-react';
 import { FaGoogle, FaWhatsapp } from 'react-icons/fa';
 import Papa from 'papaparse';
 import { AuthContext } from '../context/AuthContext';
 import { getLeads, bulkImportLeads, updateLead, deleteLead } from '../api/apiClient';
 
+const INDUSTRY_CHIPS = [
+  'Jewellers & Diamond Merchants',
+  'Dentists & Dental Clinics',
+  'Hospitals & Healthcare',
+  'IT & Software Companies',
+  'Real Estate & Builders',
+  'Textile & Fashion Boutiques',
+  'Restaurants & Cafes',
+  'Interior Designers & Architects',
+  'Automobile Dealers & Garages',
+  'Chartered Accountants & Legal',
+  'Gyms & Fitness Centers',
+  'Manufacturing & Industrial Units'
+];
+
 const CITY_PRESETS = [
-  { name: 'Surat, Gujarat', geo: '21.1702,72.8311' },
-  { name: 'Ahmedabad, Gujarat', geo: '23.0225,72.5714' },
-  { name: 'Mumbai, Maharashtra', geo: '19.0760,72.8777' },
-  { name: 'Pune, Maharashtra', geo: '18.5204,73.8567' },
-  { name: 'Delhi NCR', geo: '28.6139,77.2090' },
-  { name: 'Bengaluru, Karnataka', geo: '12.9716,77.5946' },
-  { name: 'Hyderabad, Telangana', geo: '17.3850,78.4867' },
-  { name: 'Jaipur, Rajasthan', geo: '26.9124,75.7873' },
+  { name: 'Surat, Gujarat', geo: '21.1702,72.8311', bbox: '21.1000,72.7500,21.2500,72.9000' },
+  { name: 'Ahmedabad, Gujarat', geo: '23.0225,72.5714', bbox: '22.9500,72.4800,23.1000,72.6500' },
+  { name: 'Vadodara, Gujarat', geo: '22.3072,73.1812', bbox: '22.2500,73.1200,22.3600,73.2400' },
+  { name: 'Rajkot, Gujarat', geo: '22.3039,70.8022', bbox: '22.2500,70.7500,22.3500,70.8500' },
+  { name: 'Mumbai, Maharashtra', geo: '19.0760,72.8777', bbox: '18.9000,72.7800,19.2500,72.9800' },
+  { name: 'Pune, Maharashtra', geo: '18.5204,73.8567', bbox: '18.4500,73.7800,18.6000,73.9500' },
+  { name: 'Delhi NCR', geo: '28.6139,77.2090', bbox: '28.4500,77.0500,28.8000,77.3500' },
+  { name: 'Bengaluru, Karnataka', geo: '12.9716,77.5946', bbox: '12.8500,77.4800,13.1000,77.7200' },
+  { name: 'Hyderabad, Telangana', geo: '17.3850,78.4867', bbox: '17.3000,78.3500,17.5000,78.5800' },
+  { name: 'Jaipur, Rajasthan', geo: '26.9124,75.7873', bbox: '26.8500,75.7200,26.9800,75.8600' },
+];
+
+const OUTREACH_TEMPLATES = [
+  {
+    id: 'web-modern',
+    name: 'Website & Digital Presence Upgrade',
+    target: 'Businesses with slow, outdated, or no mobile website',
+    subject: 'Enhancing Digital Presence for {businessName}',
+    body: `Hi {businessName} Team,\n\nI came across your Google listing in {city} and was really impressed by your customer reviews ({rating}★).\n\nWe specialize in high-converting modern websites and customized digital solutions for businesses in {city}. We can help double your direct client inquiries from Google search.\n\nWould you be open to a quick 5-minute call or WhatsApp chat this week?\n\nBest regards,\nWebiox Digital Solution\n+91 8347448241`
+  },
+  {
+    id: 'google-reviews',
+    name: 'Google Maps SEO & Review Booster',
+    target: 'Businesses with 3.5★ to 4.5★ ratings looking to rank #1 locally',
+    subject: 'Local Google Maps Ranking for {businessName}',
+    body: `Hello {businessName},\n\nDid you know that over 70% of local customers in {city} choose the top 3 Google Maps listings with the highest reviews?\n\nWe noticed your profile currently has {reviews} reviews with a {rating}★ rating. Our local SEO automation can help your business rank at the very top of Google Maps for high-intent customers in your area.\n\nLet us know if you'd like a free local SEO audit of your profile!\n\nBest regards,\nWebiox Digital Solution`
+  },
+  {
+    id: 'custom-software',
+    name: 'Custom CRM & Business Automation',
+    target: 'Growing businesses needing inventory, booking, or billing tech',
+    subject: 'Automating Sales & Client Management for {businessName}',
+    body: `Hi {businessName},\n\nWe build streamlined, custom CRM panels and operational software for fast-growing businesses across Gujarat.\n\nWe help automate client follow-ups, WhatsApp invoicing, and sales pipelines so no customer inquiry ever slips through the cracks.\n\nWould love to show you a quick 2-minute demo if you're interested.\n\nBest regards,\nManthan Vaghasiya\nWebiox Digital Solution`
+  }
 ];
 
 export default function GoogleLeads() {
   const { user } = useContext(AuthContext);
-  const [activeTab, setActiveTab] = useState('import'); // 'import', 'generator', 'leads'
+  const [activeTab, setActiveTab] = useState('studio'); // 'studio', 'ingestion', 'directory', 'templates', 'insights'
+  const [viewMode, setViewMode] = useState('cards'); // 'cards' | 'table'
 
-  // Generator states
+  // Generator & Studio states
   const [searchQuery, setSearchQuery] = useState('Jewellers in Surat');
   const [selectedCity, setSelectedCity] = useState(CITY_PRESETS[0]);
-  const [scrapeMode, setScrapeMode] = useState('fast'); // 'fast' or 'deep'
+  const [scrapeMode, setScrapeMode] = useState('fast'); // 'fast', 'deep', 'grid'
   const [depth, setDepth] = useState(3);
+  const [concurrency, setConcurrency] = useState(4);
+  const [radius, setRadius] = useState(10000);
+  const [includeEmail, setIncludeEmail] = useState(true);
+  const [extraReviews, setExtraReviews] = useState(false);
+  const [proxyList, setProxyList] = useState('');
+  const [showAdvancedStudio, setShowAdvancedStudio] = useState(false);
   const [copiedCmd, setCopiedCmd] = useState(false);
+  const [copiedType, setCopiedType] = useState('ps'); // 'ps', 'bash', 'docker'
 
-  // Import states
+  // Ingestion states
   const [importFile, setImportFile] = useState(null);
-  const [parsedLeads, setParsedLeads] = useState([]);
+  const [rawParsedRows, setRawParsedRows] = useState([]);
+  const [filteredParsedLeads, setFilteredParsedLeads] = useState([]);
+  const [filterOnlyWithPhone, setFilterOnlyWithPhone] = useState(true);
+  const [minRatingFilter, setMinRatingFilter] = useState('0');
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState(null);
   const [isDragActive, setIsDragActive] = useState(false);
 
-  // Leads list states
+  // Directory states
   const [leads, setLeads] = useState([]);
   const [loadingLeads, setLoadingLeads] = useState(false);
   const [leadSearch, setLeadSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [filterCategory, setFilterCategory] = useState('all');
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [filterRatingTier, setFilterRatingTier] = useState('all');
+
+  // Pitch / Outreach state
+  const [selectedPitchLead, setSelectedPitchLead] = useState(null);
+  const [selectedTemplateId, setSelectedTemplateId] = useState(OUTREACH_TEMPLATES[0].id);
+  const [copiedPitch, setCopiedPitch] = useState(false);
 
   useEffect(() => {
     fetchGoogleLeads();
@@ -53,7 +114,6 @@ export default function GoogleLeads() {
     try {
       const res = await getLeads();
       const all = res.data?.leads || res.data || [];
-      // Filter leads belonging to google dept or sourced from Google/Maps
       const gLeads = all.filter(l => 
         l.department === 'google' || 
         (l.source && l.source.toLowerCase().includes('google')) ||
@@ -67,22 +127,54 @@ export default function GoogleLeads() {
     }
   };
 
-  // Generate CLI Command based on user parameters
-  const generateCommand = () => {
+  // KPI Metrics Calculation
+  const metrics = useMemo(() => {
+    const total = leads.length;
+    const withPhone = leads.filter(l => l.mobile && l.mobile !== '0000000000' && l.mobile.length >= 10).length;
+    const withEmail = leads.filter(l => l.socials?.emails && l.socials.emails.includes('@')).length;
+    const highRated = leads.filter(l => {
+      const r = parseFloat(l.socials?.rating);
+      return !isNaN(r) && r >= 4.5;
+    }).length;
+    const handedOff = leads.filter(l => l.department === 'tech' || l.department === 'marketing').length;
+
+    return { total, withPhone, withEmail, highRated, handedOff };
+  }, [leads]);
+
+  // Command Generator for all OS options
+  const generateCommand = (type = 'ps') => {
     const qEscaped = searchQuery.replace(/"/g, '\"');
-    if (scrapeMode === 'fast') {
-      return `'${qEscaped}' | Set-Content queries.txt; .\\google-maps-scraper.exe -input queries.txt -results google-leads.csv -fast-mode -depth ${depth} -geo "${selectedCity.geo}" -radius 10000`;
+    const proxyFlag = proxyList.trim() ? ` -proxies "${proxyList.trim()}"` : '';
+
+    if (type === 'ps') {
+      if (scrapeMode === 'fast') {
+        return `'${qEscaped}' | Set-Content queries.txt; .\\google-maps-scraper.exe -input queries.txt -results google-leads.csv -fast-mode -depth ${depth} -geo "${selectedCity.geo}" -radius ${radius}${proxyFlag}`;
+      }
+      if (scrapeMode === 'grid') {
+        return `'${qEscaped}' | Set-Content queries.txt; .\\google-maps-scraper.exe -input queries.txt -results google-leads-grid.csv -grid-bbox "${selectedCity.bbox}" -grid-cell 0.5 -depth 1 -c ${concurrency}${includeEmail ? ' -email' : ''}${proxyFlag}`;
+      }
+      return `'${qEscaped}' | Set-Content queries.txt; .\\google-maps-scraper.exe -input queries.txt -results google-leads.csv -depth ${depth} -c ${concurrency}${includeEmail ? ' -email' : ''}${extraReviews ? ' -extra-reviews' : ''} -exit-on-inactivity 3m${proxyFlag}`;
     }
-    return `'${qEscaped}' | Set-Content queries.txt; .\\google-maps-scraper.exe -input queries.txt -results google-leads.csv -depth ${depth} -email -exit-on-inactivity 3m`;
+
+    if (type === 'docker') {
+      if (scrapeMode === 'fast') {
+        return `docker run --rm -v "\$PWD/out:/out" gosom/google-maps-scraper -input "${qEscaped}" -results /out/leads.csv -fast-mode -depth ${depth} -geo "${selectedCity.geo}"`;
+      }
+      return `docker run --rm -v gmaps-playwright-cache:/opt -v "\$PWD/out:/out" gosom/google-maps-scraper -input "${qEscaped}" -results /out/leads.csv -depth ${depth} ${includeEmail ? '-email' : ''}`;
+    }
+
+    // Bash Linux/macOS
+    return `printf '%s\\n' '${qEscaped}' > queries.txt && ./google-maps-scraper -input queries.txt -results google-leads.csv -fast-mode -depth ${depth} -geo "${selectedCity.geo}"`;
   };
 
-  const copyCommandToClipboard = () => {
-    navigator.clipboard.writeText(generateCommand());
+  const copyCommand = (type) => {
+    navigator.clipboard.writeText(generateCommand(type));
+    setCopiedType(type);
     setCopiedCmd(true);
     setTimeout(() => setCopiedCmd(false), 2500);
   };
 
-  // CSV Drag and Drop / Upload Handling
+  // CSV Drag and Drop / Ingestion Handling
   const handleFileUpload = (file) => {
     if (!file) return;
     setImportFile(file);
@@ -93,32 +185,8 @@ export default function GoogleLeads() {
       skipEmptyLines: true,
       complete: (results) => {
         const rows = results.data || [];
-        // Map gosom/google-maps-scraper columns to lead fields
-        const mapped = rows.map((r) => {
-          const rawMobile = r.phone || r.mobile || r.phones || '';
-          let cleanMobile = String(rawMobile).replace(/\D/g, '');
-          if (cleanMobile.startsWith('91') && cleanMobile.length === 12) cleanMobile = cleanMobile.substring(2);
-          if (cleanMobile.startsWith('0')) cleanMobile = cleanMobile.substring(1);
-
-          return {
-            name: r.title || r.name || 'Unnamed Business',
-            mobile: cleanMobile || '0000000000',
-            businessType: r.category || r.businessType || 'Local Business',
-            city: r.city || (r.complete_address ? r.complete_address.split(',')[1]?.trim() : '') || selectedCity.name.split(',')[0],
-            address: r.address || r.complete_address || '',
-            mapsUrl: r.link || r.mapsUrl || r.reviews_link || '',
-            website: r.website || r.web_site || '',
-            rating: r.review_rating || r.rating || '',
-            reviews: r.review_count || r.reviews || '',
-            emails: r.emails || r.email || '',
-            source: 'Google Maps',
-            department: 'google',
-            type: 'Cold',
-            status: 'New',
-          };
-        }).filter(l => l.name && l.name !== 'Unnamed Business');
-
-        setParsedLeads(mapped);
+        setRawParsedRows(rows);
+        applyIngestionFilters(rows, filterOnlyWithPhone, minRatingFilter);
       },
       error: (err) => {
         alert('Failed to parse CSV file: ' + err.message);
@@ -126,21 +194,59 @@ export default function GoogleLeads() {
     });
   };
 
+  const applyIngestionFilters = (rows, onlyPhone, minRate) => {
+    const mapped = rows.map((r) => {
+      const rawMobile = r.phone || r.mobile || r.phones || '';
+      let cleanMobile = String(rawMobile).replace(/\D/g, '');
+      if (cleanMobile.startsWith('91') && cleanMobile.length === 12) cleanMobile = cleanMobile.substring(2);
+      if (cleanMobile.startsWith('0')) cleanMobile = cleanMobile.substring(1);
+
+      return {
+        name: r.title || r.name || 'Unnamed Business',
+        mobile: cleanMobile || '0000000000',
+        businessType: r.category || r.businessType || 'Local Business',
+        city: r.city || (r.complete_address ? r.complete_address.split(',')[1]?.trim() : '') || selectedCity.name.split(',')[0],
+        address: r.address || r.complete_address || '',
+        mapsUrl: r.link || r.mapsUrl || r.reviews_link || '',
+        website: r.website || r.web_site || '',
+        rating: r.review_rating || r.rating || '',
+        reviews: r.review_count || r.reviews || '',
+        emails: r.emails || r.email || '',
+        hours: r.open_hours || '',
+        source: 'Google Maps',
+        department: 'google',
+        type: 'Cold',
+        status: 'New',
+      };
+    }).filter(l => {
+      if (!l.name || l.name === 'Unnamed Business') return false;
+      if (onlyPhone && (!l.mobile || l.mobile === '0000000000' || l.mobile.length < 10)) return false;
+      if (minRate !== '0') {
+        const rFloat = parseFloat(l.rating);
+        if (isNaN(rFloat) || rFloat < parseFloat(minRate)) return false;
+      }
+      return true;
+    });
+
+    setFilteredParsedLeads(mapped);
+  };
+
   const handleExecuteImport = async () => {
-    if (parsedLeads.length === 0) return;
+    if (filteredParsedLeads.length === 0) return;
     setImporting(true);
     setImportResult(null);
 
     try {
-      const res = await bulkImportLeads(parsedLeads);
+      const res = await bulkImportLeads(filteredParsedLeads);
       setImportResult({
         success: true,
-        importedCount: res.data?.importedCount ?? parsedLeads.length,
+        importedCount: res.data?.importedCount ?? filteredParsedLeads.length,
         skippedDuplicates: res.data?.duplicatesSkipped ?? 0,
-        message: res.data?.message || `Successfully imported leads into Google Department!`
+        message: `Successfully ingested ${res.data?.importedCount ?? filteredParsedLeads.length} leads into Google Department database!`
       });
       fetchGoogleLeads();
-      setParsedLeads([]);
+      setRawParsedRows([]);
+      setFilteredParsedLeads([]);
       setImportFile(null);
     } catch (err) {
       setImportResult({
@@ -156,14 +262,14 @@ export default function GoogleLeads() {
     try {
       await updateLead(leadId, { department: targetDept });
       setLeads(prev => prev.map(l => l._id === leadId ? { ...l, department: targetDept } : l));
-      alert(`Lead moved to ${targetDept.toUpperCase()} Department pipeline!`);
+      alert(`Lead successfully routed to ${targetDept.toUpperCase()} Department pipeline!`);
     } catch (err) {
-      alert('Error updating lead: ' + err.message);
+      alert('Error transferring lead: ' + err.message);
     }
   };
 
   const handleDeleteLead = async (leadId) => {
-    if (!window.confirm('Are you sure you want to delete this lead?')) return;
+    if (!window.confirm('Are you sure you want to delete this Google Maps lead?')) return;
     try {
       await deleteLead(leadId);
       setLeads(prev => prev.filter(l => l._id !== leadId));
@@ -172,110 +278,513 @@ export default function GoogleLeads() {
     }
   };
 
-  const filteredLeads = leads.filter(l => {
-    const matchesSearch = !leadSearch || 
-      (l.name && l.name.toLowerCase().includes(leadSearch.toLowerCase())) ||
-      (l.city && l.city.toLowerCase().includes(leadSearch.toLowerCase())) ||
-      (l.businessType && l.businessType.toLowerCase().includes(leadSearch.toLowerCase()));
-    const matchesStatus = statusFilter === 'all' || l.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+  // Outreach message generator
+  const getRenderedPitch = (lead, template) => {
+    if (!lead || !template) return { subject: '', body: '', whatsappUrl: '#' };
+    const bName = lead.name || 'Business Owner';
+    const bCity = lead.city || 'your area';
+    const bRating = lead.socials?.rating || '4.5';
+    const bReviews = lead.socials?.reviews || 'several';
+
+    const subject = template.subject.replace('{businessName}', bName);
+    const body = template.body
+      .replace(/{businessName}/g, bName)
+      .replace(/{city}/g, bCity)
+      .replace(/{rating}/g, bRating)
+      .replace(/{reviews}/g, bReviews);
+
+    const cleanPhone = lead.mobile?.replace(/\D/g, '').slice(-10);
+    const whatsappUrl = cleanPhone ? `https://wa.me/91${cleanPhone}?text=${encodeURIComponent(body)}` : '#';
+
+    return { subject, body, whatsappUrl };
+  };
+
+  // Filtered Leads in Directory
+  const filteredDirectoryLeads = useMemo(() => {
+    return leads.filter(l => {
+      const q = leadSearch.toLowerCase().trim();
+      const matchesSearch = !q || 
+        (l.name && l.name.toLowerCase().includes(q)) ||
+        (l.city && l.city.toLowerCase().includes(q)) ||
+        (l.businessType && l.businessType.toLowerCase().includes(q)) ||
+        (l.mobile && l.mobile.includes(q));
+
+      const matchesCat = filterCategory === 'all' || (l.businessType && l.businessType.toLowerCase().includes(filterCategory.toLowerCase()));
+      const matchesStatus = filterStatus === 'all' || l.status === filterStatus;
+      
+      let matchesRating = true;
+      if (filterRatingTier === '4.5+') {
+        const r = parseFloat(l.socials?.rating);
+        matchesRating = !isNaN(r) && r >= 4.5;
+      } else if (filterRatingTier === '4.0+') {
+        const r = parseFloat(l.socials?.rating);
+        matchesRating = !isNaN(r) && r >= 4.0;
+      }
+
+      return matchesSearch && matchesCat && matchesStatus && matchesRating;
+    });
+  }, [leads, leadSearch, filterCategory, filterStatus, filterRatingTier]);
 
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6">
-      {/* Top Header Card */}
-      <div className="bg-gradient-to-r from-rose-900/90 via-slate-900 to-slate-900 border border-rose-500/30 rounded-3xl p-6 md:p-8 shadow-2xl relative overflow-hidden">
+      {/* Top Hero Command Center Header */}
+      <div className="bg-gradient-to-r from-slate-900 via-rose-950 to-slate-900 border border-rose-500/30 rounded-3xl p-6 md:p-8 shadow-2xl relative overflow-hidden">
         <div className="absolute top-0 right-0 w-96 h-96 bg-rose-500/10 rounded-full blur-3xl pointer-events-none" />
-        
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+        <div className="absolute bottom-0 left-1/3 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
           <div>
-            <div className="flex items-center gap-3 mb-2">
-              <span className="p-2.5 bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-2xl flex items-center justify-center">
-                <FaGoogle size={22} />
+            <div className="flex flex-wrap items-center gap-2.5 mb-3">
+              <span className="p-2.5 bg-gradient-to-br from-rose-500 to-amber-500 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-rose-500/20">
+                <FaGoogle size={20} />
               </span>
-              <span className="text-xs font-bold uppercase tracking-wider text-rose-400 bg-rose-500/10 border border-rose-500/20 px-3 py-1 rounded-full">
+              <span className="text-xs font-black uppercase tracking-wider text-rose-300 bg-rose-500/20 border border-rose-400/40 px-3 py-1 rounded-full">
                 Google Maps Department
               </span>
-              <span className="text-xs font-medium text-slate-400 bg-slate-800/80 px-2.5 py-0.5 rounded-full border border-slate-700">
+              <span className="text-xs font-mono text-slate-300 bg-slate-800/90 px-3 py-1 rounded-full border border-slate-700">
                 google@webiox.tech
               </span>
+              <span className="text-[11px] font-semibold text-emerald-300 bg-emerald-500/20 border border-emerald-400/30 px-2.5 py-0.5 rounded-full flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                Playwright & Fast-HTTP Ready
+              </span>
             </div>
+
             <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight">
-              Google Maps Lead Discovery & Pipeline
+              Google Maps Scraper Command Center
             </h1>
-            <p className="text-slate-300 text-sm mt-1 max-w-2xl">
-              Extract high-intent local B2B business leads with direct phone numbers, Google ratings, verified websites, and email addresses.
+            <p className="text-slate-300 text-xs md:text-sm mt-1 max-w-2xl leading-relaxed">
+              Generate targeted local B2B lead batches without API limits. Extract verified mobile numbers, business emails, ratings, and Google Maps listings with 1-click sales pipeline handoffs.
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <a
               href="https://github.com/gosom/google-maps-scraper/releases/latest"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-slate-700 hover:border-slate-600 transition-all shadow-md"
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-rose-600/25 border border-rose-400/30"
             >
-              <Download size={14} className="text-rose-400" />
-              Download Scraper Binary (Win x64)
+              <Download size={15} />
+              Download Scraper Binary (Windows x64)
             </a>
           </div>
         </div>
 
+        {/* Real-Time Metrics Strip */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mt-8 pt-6 border-t border-slate-800/80">
+          <div className="bg-slate-900/60 backdrop-blur-md border border-slate-800 p-3.5 rounded-2xl">
+            <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Total Scraped</div>
+            <div className="text-2xl font-black text-white mt-1">{metrics.total}</div>
+            <div className="text-[10px] text-slate-500 mt-0.5">Google Maps Listings</div>
+          </div>
+
+          <div className="bg-slate-900/60 backdrop-blur-md border border-slate-800 p-3.5 rounded-2xl">
+            <div className="text-[11px] font-bold uppercase tracking-wider text-emerald-400">Direct Phone</div>
+            <div className="text-2xl font-black text-emerald-400 mt-1">{metrics.withPhone}</div>
+            <div className="text-[10px] text-slate-500 mt-0.5">WhatsApp / Call Ready</div>
+          </div>
+
+          <div className="bg-slate-900/60 backdrop-blur-md border border-slate-800 p-3.5 rounded-2xl">
+            <div className="text-[11px] font-bold uppercase tracking-wider text-blue-400">Verified Email</div>
+            <div className="text-2xl font-black text-blue-400 mt-1">{metrics.withEmail}</div>
+            <div className="text-[10px] text-slate-500 mt-0.5">Scraped via -email</div>
+          </div>
+
+          <div className="bg-slate-900/60 backdrop-blur-md border border-slate-800 p-3.5 rounded-2xl">
+            <div className="text-[11px] font-bold uppercase tracking-wider text-amber-400">Top Rated (4.5★+)</div>
+            <div className="text-2xl font-black text-amber-400 mt-1">{metrics.highRated}</div>
+            <div className="text-[10px] text-slate-500 mt-0.5">High Reputation</div>
+          </div>
+
+          <div className="bg-slate-900/60 backdrop-blur-md border border-slate-800 p-3.5 rounded-2xl col-span-2 sm:col-span-1">
+            <div className="text-[11px] font-bold uppercase tracking-wider text-purple-400">Pipeline Handoff</div>
+            <div className="text-2xl font-black text-purple-400 mt-1">{metrics.handedOff}</div>
+            <div className="text-[10px] text-slate-500 mt-0.5">Tech & Marketing Deals</div>
+          </div>
+        </div>
+
         {/* Navigation Tabs */}
-        <div className="flex items-center gap-2 mt-8 border-t border-slate-800/80 pt-4">
+        <div className="flex flex-wrap items-center gap-2 mt-6 pt-4 border-t border-slate-800/80">
           <button
-            onClick={() => setActiveTab('import')}
-            className={`px-4 py-2.5 rounded-xl text-xs md:text-sm font-semibold transition-all flex items-center gap-2 ${
-              activeTab === 'import'
-                ? 'bg-rose-500 text-white shadow-lg shadow-rose-500/25'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+            onClick={() => setActiveTab('studio')}
+            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+              activeTab === 'studio'
+                ? 'bg-rose-600 text-white shadow-lg shadow-rose-600/30'
+                : 'text-slate-400 hover:text-white hover:bg-slate-800/70'
             }`}
           >
-            <Upload size={16} />
-            1-Click Scraper Ingestion
+            <Zap size={15} />
+            1. Scraper Studio & Query Builder
           </button>
 
           <button
-            onClick={() => setActiveTab('generator')}
-            className={`px-4 py-2.5 rounded-xl text-xs md:text-sm font-semibold transition-all flex items-center gap-2 ${
-              activeTab === 'generator'
-                ? 'bg-rose-500 text-white shadow-lg shadow-rose-500/25'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+            onClick={() => setActiveTab('ingestion')}
+            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+              activeTab === 'ingestion'
+                ? 'bg-rose-600 text-white shadow-lg shadow-rose-600/30'
+                : 'text-slate-400 hover:text-white hover:bg-slate-800/70'
             }`}
           >
-            <Zap size={16} />
-            CLI Command Generator
+            <Upload size={15} />
+            2. Smart CSV Ingestion
+            {filteredParsedLeads.length > 0 && (
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+            )}
           </button>
 
           <button
-            onClick={() => { setActiveTab('leads'); fetchGoogleLeads(); }}
-            className={`px-4 py-2.5 rounded-xl text-xs md:text-sm font-semibold transition-all flex items-center gap-2 ${
-              activeTab === 'leads'
-                ? 'bg-rose-500 text-white shadow-lg shadow-rose-500/25'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+            onClick={() => { setActiveTab('directory'); fetchGoogleLeads(); }}
+            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+              activeTab === 'directory'
+                ? 'bg-rose-600 text-white shadow-lg shadow-rose-600/30'
+                : 'text-slate-400 hover:text-white hover:bg-slate-800/70'
             }`}
           >
-            <Building2 size={16} />
-            Google Leads Database ({leads.length})
+            <Building2 size={15} />
+            3. Google Prospects Directory ({leads.length})
+          </button>
+
+          <button
+            onClick={() => setActiveTab('templates')}
+            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+              activeTab === 'templates'
+                ? 'bg-rose-600 text-white shadow-lg shadow-rose-600/30'
+                : 'text-slate-400 hover:text-white hover:bg-slate-800/70'
+            }`}
+          >
+            <MessageSquare size={15} />
+            4. B2B Outreach Templates
           </button>
         </div>
       </div>
 
-      {/* TAB 1: 1-CLICK SCRAPER INGESTION */}
-      {activeTab === 'import' && (
+      {/* =========================================================================
+          TAB 1: SCRAPER STUDIO & QUERY BUILDER
+      ========================================================================= */}
+      {activeTab === 'studio' && (
         <div className="space-y-6">
-          <div className="bg-white rounded-3xl border border-slate-200 p-6 md:p-8 shadow-sm">
-            <div className="max-w-2xl mb-6">
-              <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+          <div className="bg-white rounded-3xl border border-slate-200 p-6 md:p-8 shadow-sm space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h2 className="text-lg font-black text-slate-900 flex items-center gap-2">
+                  <Zap className="text-rose-600" size={20} />
+                  Visual Scraper Query Generator
+                </h2>
+                <p className="text-slate-500 text-xs md:text-sm mt-0.5">
+                  Craft precision commands for <code className="bg-slate-100 px-1 py-0.5 rounded text-rose-600 font-semibold font-mono">gosom/google-maps-scraper</code> with tuned parameters for maximum throughput and zero bans.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowAdvancedStudio(!showAdvancedStudio)}
+                  className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5"
+                >
+                  <Sliders size={13} />
+                  {showAdvancedStudio ? 'Hide Advanced' : 'Show Advanced Flags'}
+                  {showAdvancedStudio ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                </button>
+              </div>
+            </div>
+
+            {/* Quick Industry Niche Chips */}
+            <div className="space-y-2">
+              <label className="text-xs font-bold uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
+                <Sparkles size={13} className="text-amber-500" />
+                Quick Target Industries & Niches
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {INDUSTRY_CHIPS.map((chip) => (
+                  <button
+                    key={chip}
+                    type="button"
+                    onClick={() => setSearchQuery(`${chip} in ${selectedCity.name.split(',')[0]}`)}
+                    className="text-xs px-3 py-1.5 rounded-xl border border-slate-200 hover:border-rose-400 hover:bg-rose-50 text-slate-700 font-medium transition-all"
+                  >
+                    + {chip}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Primary Inputs Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                  Target Search Query
+                </label>
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="e.g. Dentists in Ahmedabad"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 font-medium focus:outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                  Location & GPS Preset
+                </label>
+                <select
+                  value={selectedCity.name}
+                  onChange={(e) => {
+                    const found = CITY_PRESETS.find(c => c.name === e.target.value);
+                    if (found) {
+                      setSelectedCity(found);
+                      setSearchQuery(prev => {
+                        const parts = prev.split(' in ');
+                        return parts.length > 1 ? `${parts[0]} in ${found.name.split(',')[0]}` : prev;
+                      });
+                    }
+                  }}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 font-medium focus:outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20"
+                >
+                  {CITY_PRESETS.map((city) => (
+                    <option key={city.name} value={city.name}>
+                      {city.name} ({city.geo})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                  Extraction Mode
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setScrapeMode('fast')}
+                    className={`p-2.5 rounded-xl border text-center transition-all ${
+                      scrapeMode === 'fast'
+                        ? 'border-rose-500 bg-rose-50 text-rose-900 font-bold'
+                        : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
+                    }`}
+                  >
+                    <div className="text-xs font-bold">⚡ Fast HTTP</div>
+                    <div className="text-[10px] text-slate-400 mt-0.5">~5s (No Browser)</div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setScrapeMode('deep')}
+                    className={`p-2.5 rounded-xl border text-center transition-all ${
+                      scrapeMode === 'deep'
+                        ? 'border-rose-500 bg-rose-50 text-rose-900 font-bold'
+                        : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
+                    }`}
+                  >
+                    <div className="text-xs font-bold">🌐 Deep + Email</div>
+                    <div className="text-[10px] text-slate-400 mt-0.5">Visits Websites</div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setScrapeMode('grid')}
+                    className={`p-2.5 rounded-xl border text-center transition-all ${
+                      scrapeMode === 'grid'
+                        ? 'border-rose-500 bg-rose-50 text-rose-900 font-bold'
+                        : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
+                    }`}
+                  >
+                    <div className="text-xs font-bold">📦 Grid BBox</div>
+                    <div className="text-[10px] text-slate-400 mt-0.5">Deep Area Tile</div>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Depth & Radius Sliders */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+              <div className="space-y-2 bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-700">
+                    Scroll Depth: {depth} Batches (~{depth * 20} places)
+                  </label>
+                  <span className="text-xs font-mono font-bold text-rose-600 bg-rose-100 px-2 py-0.5 rounded">
+                    -depth {depth}
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min="1"
+                  max="10"
+                  value={depth}
+                  onChange={(e) => setDepth(Number(e.target.value))}
+                  className="w-full accent-rose-600"
+                />
+              </div>
+
+              <div className="space-y-2 bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-700">
+                    Search Radius: {(radius / 1000).toFixed(0)} km
+                  </label>
+                  <span className="text-xs font-mono font-bold text-rose-600 bg-rose-100 px-2 py-0.5 rounded">
+                    -radius {radius}
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min="2000"
+                  max="25000"
+                  step="1000"
+                  value={radius}
+                  onChange={(e) => setRadius(Number(e.target.value))}
+                  className="w-full accent-rose-600"
+                />
+              </div>
+            </div>
+
+            {/* Advanced Drawer */}
+            {showAdvancedStudio && (
+              <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-4 animate-fade-in">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-2">
+                  <Sliders size={14} className="text-rose-600" />
+                  Advanced Runtime Parameters & Proxy Settings
+                </h4>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-slate-600">Concurrency Level (-c)</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="16"
+                      value={concurrency}
+                      onChange={(e) => setConcurrency(Number(e.target.value))}
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs"
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-2 pt-5">
+                    <input
+                      type="checkbox"
+                      id="incEmail"
+                      checked={includeEmail}
+                      onChange={(e) => setIncludeEmail(e.target.checked)}
+                      className="w-4 h-4 rounded text-rose-600 accent-rose-600"
+                    />
+                    <label htmlFor="incEmail" className="text-xs font-medium text-slate-700 cursor-pointer">
+                      Extract Business Website Emails (-email)
+                    </label>
+                  </div>
+
+                  <div className="flex items-center gap-2 pt-5">
+                    <input
+                      type="checkbox"
+                      id="extReviews"
+                      checked={extraReviews}
+                      onChange={(e) => setExtraReviews(e.target.checked)}
+                      className="w-4 h-4 rounded text-rose-600 accent-rose-600"
+                    />
+                    <label htmlFor="extReviews" className="text-xs font-medium text-slate-700 cursor-pointer">
+                      Collect Extended Reviews (-extra-reviews)
+                    </label>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5 pt-2">
+                  <label className="text-xs font-medium text-slate-600">
+                    Proxies (Optional - e.g. Webshare / SOCKS5 / HTTP)
+                  </label>
+                  <input
+                    type="text"
+                    value={proxyList}
+                    onChange={(e) => setProxyList(e.target.value)}
+                    placeholder="protocol://user:pass@host:port,http://host2:port2"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-mono"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Ready-to-Execute Code Terminal Box */}
+            <div className="space-y-3 pt-4 border-t border-slate-200">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping" />
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-800">
+                    Generated Terminal Execution Command:
+                  </span>
+                </div>
+
+                {/* OS Switcher */}
+                <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl">
+                  <button
+                    type="button"
+                    onClick={() => copyCommand('ps')}
+                    className="px-3 py-1.5 bg-white shadow-sm text-slate-800 rounded-lg text-xs font-bold flex items-center gap-1.5"
+                  >
+                    {copiedCmd && copiedType === 'ps' ? <Check size={12} className="text-emerald-600" /> : <Copy size={12} />}
+                    Windows PowerShell
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => copyCommand('docker')}
+                    className="px-3 py-1.5 text-slate-600 hover:text-slate-900 rounded-lg text-xs font-medium flex items-center gap-1.5"
+                  >
+                    {copiedCmd && copiedType === 'docker' ? <Check size={12} className="text-emerald-600" /> : <Copy size={12} />}
+                    Docker
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => copyCommand('bash')}
+                    className="px-3 py-1.5 text-slate-600 hover:text-slate-900 rounded-lg text-xs font-medium flex items-center gap-1.5"
+                  >
+                    {copiedCmd && copiedType === 'bash' ? <Check size={12} className="text-emerald-600" /> : <Copy size={12} />}
+                    Linux / Mac
+                  </button>
+                </div>
+              </div>
+
+              <div className="relative">
+                <pre className="p-4 bg-slate-950 text-rose-400 rounded-2xl text-xs font-mono overflow-x-auto border border-slate-800 shadow-2xl leading-relaxed">
+                  {generateCommand('ps')}
+                </pre>
+              </div>
+
+              {/* Instructions Callout */}
+              <div className="bg-gradient-to-r from-rose-50 to-amber-50 border border-rose-200 p-4 rounded-2xl flex items-start gap-3.5">
+                <div className="p-2 bg-rose-500 text-white rounded-xl shrink-0 mt-0.5 shadow-md">
+                  <Zap size={16} />
+                </div>
+                <div className="text-xs text-slate-700">
+                  <div className="font-bold text-slate-900 text-sm mb-1">
+                    How to Scrape in 3 Steps:
+                  </div>
+                  <ol className="list-decimal ml-4 space-y-1 text-slate-600">
+                    <li>Download <code className="bg-white px-1.5 py-0.5 rounded border border-rose-200 font-mono text-rose-700 font-bold">google-maps-scraper.exe</code> into any folder.</li>
+                    <li>Open PowerShell in that folder and paste the command above. (Takes ~5-15 seconds).</li>
+                    <li>Head over to the <strong>"2. Smart CSV Ingestion"</strong> tab and drop the resulting <code className="bg-white px-1.5 py-0.5 rounded border border-rose-200 font-mono text-rose-700 font-bold">google-leads.csv</code>!</li>
+                  </ol>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================================
+          TAB 2: SMART CSV INGESTION
+      ========================================================================= */}
+      {activeTab === 'ingestion' && (
+        <div className="space-y-6">
+          <div className="bg-white rounded-3xl border border-slate-200 p-6 md:p-8 shadow-sm space-y-6">
+            <div>
+              <h2 className="text-lg font-black text-slate-900 flex items-center gap-2">
                 <Upload className="text-rose-600" size={20} />
-                Drop Your Scraped CSV File
+                Smart Google Maps Scraper Ingestion Studio
               </h2>
-              <p className="text-slate-500 text-xs md:text-sm mt-1">
-                Directly drop the output CSV from <code className="bg-slate-100 px-1.5 py-0.5 rounded text-rose-600 font-semibold">google-maps-scraper</code>. All 37 fields (business title, phone number, rating, reviews, website, email, and Google Maps URL) are automatically mapped with zero manual configuration.
+              <p className="text-slate-500 text-xs md:text-sm mt-0.5">
+                Drop your <code className="bg-slate-100 px-1 py-0.5 rounded text-rose-600 font-semibold font-mono">google-leads.csv</code> file. All 37 fields from gosom/google-maps-scraper are automatically parsed and formatted.
               </p>
             </div>
 
-            {/* Drop Zone */}
+            {/* Dropzone */}
             <div
               onDragOver={(e) => { e.preventDefault(); setIsDragActive(true); }}
               onDragLeave={() => setIsDragActive(false)}
@@ -286,17 +795,17 @@ export default function GoogleLeads() {
                   handleFileUpload(e.dataTransfer.files[0]);
                 }
               }}
-              className={`border-2 border-dashed rounded-3xl p-8 md:p-12 text-center transition-all cursor-pointer ${
+              className={`border-2 border-dashed rounded-3xl p-10 text-center transition-all cursor-pointer ${
                 isDragActive
-                  ? 'border-rose-500 bg-rose-50/50 scale-[0.99]'
-                  : 'border-slate-300 hover:border-rose-400 hover:bg-slate-50/50'
+                  ? 'border-rose-500 bg-rose-50/70 scale-[0.99]'
+                  : 'border-slate-300 hover:border-rose-400 hover:bg-slate-50/70'
               }`}
-              onClick={() => document.getElementById('csvFileInput')?.click()}
+              onClick={() => document.getElementById('csvDropInput')?.click()}
             >
               <input
-                id="csvFileInput"
+                id="csvDropInput"
                 type="file"
-                accept=".csv"
+                accept=".csv,.jsonl"
                 className="hidden"
                 onChange={(e) => {
                   if (e.target.files && e.target.files[0]) {
@@ -304,116 +813,153 @@ export default function GoogleLeads() {
                   }
                 }}
               />
-              <div className="w-16 h-16 bg-rose-100 text-rose-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-inner">
-                <Upload size={28} />
+              <div className="w-16 h-16 bg-gradient-to-tr from-rose-500 to-amber-500 text-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-rose-500/25">
+                <FileSpreadsheet size={28} />
               </div>
               <p className="text-base font-bold text-slate-800">
-                {importFile ? importFile.name : 'Click to upload or drag & drop google-leads.csv'}
+                {importFile ? importFile.name : 'Click to Browse or Drag & Drop google-leads.csv'}
               </p>
               <p className="text-xs text-slate-400 mt-1">
-                Accepts standard CSV output from gosom/google-maps-scraper
+                Supports standard CSV and JSON Lines generated by gosom/google-maps-scraper
               </p>
             </div>
 
-            {/* Import Status Alert */}
+            {/* Ingestion Filters */}
+            {rawParsedRows.length > 0 && (
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex flex-wrap items-center justify-between gap-4">
+                <div className="flex items-center gap-6">
+                  <label className="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={filterOnlyWithPhone}
+                      onChange={(e) => {
+                        setFilterOnlyWithPhone(e.target.checked);
+                        applyIngestionFilters(rawParsedRows, e.target.checked, minRatingFilter);
+                      }}
+                      className="w-4 h-4 rounded text-rose-600 accent-rose-600"
+                    />
+                    Only Ingest Places with Phone Number
+                  </label>
+
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-slate-700">Minimum Rating:</span>
+                    <select
+                      value={minRatingFilter}
+                      onChange={(e) => {
+                        setMinRatingFilter(e.target.value);
+                        applyIngestionFilters(rawParsedRows, filterOnlyWithPhone, e.target.value);
+                      }}
+                      className="bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-xs font-semibold"
+                    >
+                      <option value="0">All Ratings</option>
+                      <option value="3.5">3.5★ and Above</option>
+                      <option value="4.0">4.0★ and Above</option>
+                      <option value="4.5">4.5★ and Above</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="text-xs text-slate-500">
+                  Qualifying: <strong className="text-rose-600 font-bold">{filteredParsedLeads.length}</strong> of {rawParsedRows.length} raw rows
+                </div>
+              </div>
+            )}
+
+            {/* Import Alert Status */}
             {importResult && (
-              <div className={`mt-6 p-4 rounded-2xl flex items-center gap-3 border ${
+              <div className={`p-4 rounded-2xl flex items-center gap-3 border ${
                 importResult.success
                   ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
                   : 'bg-rose-50 text-rose-800 border-rose-200'
               }`}>
                 {importResult.success ? <CheckCircle2 className="text-emerald-600 shrink-0" /> : <AlertCircle className="text-rose-600 shrink-0" />}
                 <div className="text-sm">
-                  <strong>{importResult.success ? 'Import Completed!' : 'Import Failed:'}</strong> {importResult.message}
+                  <strong>{importResult.success ? 'Ingestion Success!' : 'Ingestion Error:'}</strong> {importResult.message}
                   {importResult.success && importResult.skippedDuplicates > 0 && (
                     <span className="block text-xs text-emerald-700 mt-0.5">
-                      (Skipped {importResult.skippedDuplicates} duplicate mobile numbers)
+                      (Skipped {importResult.skippedDuplicates} duplicates already existing in database)
                     </span>
                   )}
                 </div>
               </div>
             )}
 
-            {/* Parsed Leads Preview */}
-            {parsedLeads.length > 0 && (
-              <div className="mt-8 space-y-4">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-200">
-                  <div className="flex items-center gap-3">
-                    <span className="w-3 h-3 bg-emerald-500 rounded-full animate-ping" />
-                    <div>
-                      <h4 className="text-sm font-bold text-slate-800">
-                        {parsedLeads.length} Leads Detected & Ready to Ingest
-                      </h4>
-                      <p className="text-xs text-slate-500">
-                        Target Department: <strong className="text-rose-600">Google Department</strong> • Source: <strong className="text-slate-700">Google Maps</strong>
-                      </p>
-                    </div>
+            {/* Ingestion Action and Preview */}
+            {filteredParsedLeads.length > 0 && (
+              <div className="space-y-4 pt-4 border-t border-slate-200">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-rose-50 to-pink-50 p-5 rounded-2xl border border-rose-200">
+                  <div>
+                    <h4 className="text-base font-black text-slate-900">
+                      {filteredParsedLeads.length} Leads Validated & Ready for Ingestion
+                    </h4>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      Target Dept: <strong className="text-rose-600">Google Department</strong> • Initial Status: <strong className="text-emerald-600">New Data</strong>
+                    </p>
                   </div>
 
                   <button
                     onClick={handleExecuteImport}
                     disabled={importing}
-                    className="px-6 py-3 bg-rose-600 hover:bg-rose-500 text-white text-sm font-bold rounded-xl shadow-lg shadow-rose-600/30 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                    className="px-6 py-3 bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white text-sm font-bold rounded-xl shadow-lg shadow-rose-600/30 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                   >
                     {importing ? (
                       <>
                         <RefreshCw size={16} className="animate-spin" />
-                        Ingesting to Database...
+                        Writing to MongoDB Atlas...
                       </>
                     ) : (
                       <>
                         <Sparkles size={16} />
-                        Import {parsedLeads.length} Leads to Google Dept
+                        Ingest {filteredParsedLeads.length} Leads into Database
                       </>
                     )}
                   </button>
                 </div>
 
-                {/* Table Preview */}
                 <div className="overflow-x-auto rounded-2xl border border-slate-200 max-h-96">
                   <table className="w-full text-left text-xs">
                     <thead className="bg-slate-100 text-slate-700 font-bold uppercase tracking-wider sticky top-0">
                       <tr>
                         <th className="p-3">Business Name</th>
-                        <th className="p-3">Phone</th>
-                        <th className="p-3">Rating</th>
+                        <th className="p-3">Calling Phone</th>
+                        <th className="p-3">Google Rating</th>
                         <th className="p-3">Category</th>
-                        <th className="p-3">City / Address</th>
+                        <th className="p-3">City & Address</th>
+                        <th className="p-3">Website</th>
                         <th className="p-3">Email</th>
-                        <th className="p-3">Maps Link</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 text-slate-600">
-                      {parsedLeads.slice(0, 15).map((lead, idx) => (
+                      {filteredParsedLeads.slice(0, 10).map((l, idx) => (
                         <tr key={idx} className="hover:bg-slate-50">
-                          <td className="p-3 font-semibold text-slate-900">{lead.name}</td>
-                          <td className="p-3 font-mono text-emerald-600 font-bold">{lead.mobile}</td>
+                          <td className="p-3 font-bold text-slate-900">{l.name}</td>
+                          <td className="p-3 font-mono font-bold text-emerald-600">{l.mobile}</td>
                           <td className="p-3">
-                            {lead.rating ? (
+                            {l.rating ? (
                               <span className="inline-flex items-center gap-1 bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded-full font-bold">
                                 <Star size={10} className="fill-amber-400 text-amber-500" />
-                                {lead.rating} {lead.reviews ? `(${lead.reviews})` : ''}
+                                {l.rating} {l.reviews ? `(${l.reviews})` : ''}
                               </span>
                             ) : '-'}
                           </td>
-                          <td className="p-3 text-slate-500">{lead.businessType}</td>
-                          <td className="p-3 max-w-[200px] truncate">{lead.address || lead.city}</td>
-                          <td className="p-3 text-blue-600">{lead.emails || '-'}</td>
+                          <td className="p-3 text-slate-500">{l.businessType}</td>
+                          <td className="p-3 max-w-[200px] truncate">{l.address || l.city}</td>
                           <td className="p-3">
-                            {lead.mapsUrl ? (
-                              <a href={lead.mapsUrl} target="_blank" rel="noreferrer" className="text-rose-600 hover:underline flex items-center gap-1 font-medium">
-                                Maps <ExternalLink size={11} />
+                            {l.website ? (
+                              <a href={l.website} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline flex items-center gap-1">
+                                Site <ExternalLink size={10} />
                               </a>
                             ) : '-'}
                           </td>
+                          <td className="p-3 text-slate-600">{l.emails || '-'}</td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
-                {parsedLeads.length > 15 && (
+                {filteredParsedLeads.length > 10 && (
                   <p className="text-xs text-slate-400 text-center italic">
-                    Showing first 15 rows of {parsedLeads.length} total detected records.
+                    Previewing 10 of {filteredParsedLeads.length} total prepared leads.
                   </p>
                 )}
               </div>
@@ -422,181 +968,20 @@ export default function GoogleLeads() {
         </div>
       )}
 
-      {/* TAB 2: CLI COMMAND GENERATOR */}
-      {activeTab === 'generator' && (
-        <div className="space-y-6">
-          <div className="bg-white rounded-3xl border border-slate-200 p-6 md:p-8 shadow-sm space-y-6">
-            <div>
-              <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                <Zap className="text-rose-600" size={20} />
-                Google Maps Scraper Command Builder
-              </h2>
-              <p className="text-slate-500 text-xs md:text-sm mt-1">
-                Select your industry query and city to generate the optimized scraping command for Windows PowerShell.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Query Input */}
-              <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
-                  Search Query (Business Type & City)
-                </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="e.g. Jewellers in Surat"
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 focus:outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20"
-                  />
-                </div>
-                <p className="text-[11px] text-slate-400">
-                  Examples: <em>"Dentists in Ahmedabad"</em>, <em>"Diamond Merchants in Surat"</em>, <em>"IT Companies in Mumbai"</em>
-                </p>
-              </div>
-
-              {/* City Presets */}
-              <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
-                  Location Preset (For GPS Coordinates)
-                </label>
-                <select
-                  value={selectedCity.name}
-                  onChange={(e) => {
-                    const found = CITY_PRESETS.find(c => c.name === e.target.value);
-                    if (found) setSelectedCity(found);
-                  }}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 focus:outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20"
-                >
-                  {CITY_PRESETS.map((city) => (
-                    <option key={city.name} value={city.name}>
-                      {city.name} ({city.geo})
-                    </option>
-                  ))}
-                </select>
-                <p className="text-[11px] text-slate-400">
-                  Coordinates ensure Google Maps focuses tightly on your chosen city.
-                </p>
-              </div>
-
-              {/* Scrape Mode */}
-              <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
-                  Extraction Mode
-                </label>
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setScrapeMode('fast')}
-                    className={`p-3 rounded-xl border text-left transition-all ${
-                      scrapeMode === 'fast'
-                        ? 'border-rose-500 bg-rose-50/50 text-rose-900 font-bold'
-                        : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
-                    }`}
-                  >
-                    <div className="flex items-center gap-1.5 text-xs font-bold">
-                      <Zap size={14} className="text-rose-600" />
-                      ⚡ Fast Mode (5 Seconds)
-                    </div>
-                    <div className="text-[11px] font-normal text-slate-500 mt-1">
-                      Direct HTTP requests, instant phone & address extraction.
-                    </div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setScrapeMode('deep')}
-                    className={`p-3 rounded-xl border text-left transition-all ${
-                      scrapeMode === 'deep'
-                        ? 'border-rose-500 bg-rose-50/50 text-rose-900 font-bold'
-                        : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
-                    }`}
-                  >
-                    <div className="flex items-center gap-1.5 text-xs font-bold">
-                      <Mail size={14} className="text-rose-600" />
-                      🌐 Deep Mode + Emails
-                    </div>
-                    <div className="text-[11px] font-normal text-slate-500 mt-1">
-                      Visits company websites to extract official contact emails.
-                    </div>
-                  </button>
-                </div>
-              </div>
-
-              {/* Depth / Batches */}
-              <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
-                  Result Depth: {depth * 20} Businesses (~{depth} Batches)
-                </label>
-                <input
-                  type="range"
-                  min="1"
-                  max="10"
-                  value={depth}
-                  onChange={(e) => setDepth(Number(e.target.value))}
-                  className="w-full accent-rose-600"
-                />
-                <div className="flex justify-between text-[11px] text-slate-400">
-                  <span>1 (~20 leads)</span>
-                  <span>3 (~60 leads)</span>
-                  <span>5 (~100 leads)</span>
-                  <span>10 (~200 leads)</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Generated Command Box */}
-            <div className="space-y-3 pt-4 border-t border-slate-200">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-rose-500" />
-                  Generated Windows PowerShell Command:
-                </span>
-                <button
-                  onClick={copyCommandToClipboard}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-xs font-bold transition-all"
-                >
-                  {copiedCmd ? <Check size={14} className="text-emerald-600" /> : <Copy size={14} />}
-                  {copiedCmd ? 'Copied to Clipboard!' : 'Copy Command'}
-                </button>
-              </div>
-
-              <div className="relative">
-                <pre className="p-4 bg-slate-900 text-slate-100 rounded-2xl text-xs font-mono overflow-x-auto border border-slate-800 shadow-inner">
-                  {generateCommand()}
-                </pre>
-              </div>
-
-              <div className="bg-slate-50 border border-slate-200 p-4 rounded-2xl flex items-start gap-3 text-xs text-slate-600">
-                <div className="p-1.5 bg-rose-100 text-rose-600 rounded-lg shrink-0 mt-0.5">
-                  <MapPin size={16} />
-                </div>
-                <div>
-                  <strong>How to run:</strong>
-                  <ol className="list-decimal ml-4 mt-1 space-y-1 text-slate-500">
-                    <li>Download the <code className="bg-slate-200 px-1 py-0.2 rounded font-mono">google-maps-scraper.exe</code> executable.</li>
-                    <li>Open PowerShell in that folder and paste the copied command above.</li>
-                    <li>When done, drag the resulting <code className="bg-slate-200 px-1 py-0.2 rounded font-mono">google-leads.csv</code> into the <strong>"1-Click Scraper Ingestion"</strong> tab!</li>
-                  </ol>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* TAB 3: GOOGLE LEADS DATABASE */}
-      {activeTab === 'leads' && (
+      {/* =========================================================================
+          TAB 3: GOOGLE PROSPECTS DIRECTORY (CRM VIEW)
+      ========================================================================= */}
+      {activeTab === 'directory' && (
         <div className="space-y-6">
           <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div className="relative flex-1 sm:w-80">
+            {/* Search and Filters Bar */}
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+              <div className="flex flex-wrap items-center gap-3 flex-1">
+                <div className="relative w-full sm:w-72">
                   <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                   <input
                     type="text"
-                    placeholder="Search Google leads by name, city, category..."
+                    placeholder="Search name, phone, city, category..."
                     value={leadSearch}
                     onChange={(e) => setLeadSearch(e.target.value)}
                     className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500/20"
@@ -604,63 +989,236 @@ export default function GoogleLeads() {
                 </div>
 
                 <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 focus:outline-none focus:border-rose-500"
+                  value={filterRatingTier}
+                  onChange={(e) => setFilterRatingTier(e.target.value)}
+                  className="px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700"
+                >
+                  <option value="all">All Ratings</option>
+                  <option value="4.5+">⭐ 4.5+ Top Rated</option>
+                  <option value="4.0+">⭐ 4.0+ Good Rating</option>
+                </select>
+
+                <select
+                  value={filterStatus}
+                  onChange={(e) => setFilterStatus(e.target.value)}
+                  className="px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700"
                 >
                   <option value="all">All Statuses</option>
-                  <option value="New">New</option>
+                  <option value="New">✨ New Data</option>
                   <option value="Contacted">Contacted</option>
                   <option value="In Process">In Process</option>
-                  <option value="Follow-up Letter">Follow-up Letter</option>
-                  <option value="Won">Won</option>
+                  <option value="Won">Won Deal</option>
                   <option value="Lost">Lost</option>
                 </select>
               </div>
 
-              <button
-                onClick={fetchGoogleLeads}
-                className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5"
-              >
-                <RefreshCw size={14} className={loadingLeads ? 'animate-spin' : ''} />
-                Refresh
-              </button>
+              <div className="flex items-center gap-2">
+                <div className="flex items-center bg-slate-100 p-1 rounded-xl">
+                  <button
+                    onClick={() => setViewMode('cards')}
+                    className={`p-1.5 rounded-lg text-xs transition-all ${
+                      viewMode === 'cards' ? 'bg-white shadow text-slate-900 font-bold' : 'text-slate-500'
+                    }`}
+                  >
+                    <LayoutGrid size={15} />
+                  </button>
+                  <button
+                    onClick={() => setViewMode('table')}
+                    className={`p-1.5 rounded-lg text-xs transition-all ${
+                      viewMode === 'table' ? 'bg-white shadow text-slate-900 font-bold' : 'text-slate-500'
+                    }`}
+                  >
+                    <List size={15} />
+                  </button>
+                </div>
+
+                <button
+                  onClick={fetchGoogleLeads}
+                  className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5"
+                >
+                  <RefreshCw size={13} className={loadingLeads ? 'animate-spin' : ''} />
+                  Refresh
+                </button>
+              </div>
             </div>
 
-            {/* Leads Table */}
+            {/* List / Cards Container */}
             {loadingLeads ? (
-              <div className="py-16 text-center text-slate-400 text-sm">
+              <div className="py-20 text-center text-slate-400 text-sm">
                 <RefreshCw size={24} className="animate-spin mx-auto mb-2 text-rose-500" />
-                Loading Google Maps leads...
+                Loading Google Maps database...
               </div>
-            ) : filteredLeads.length === 0 ? (
-              <div className="py-16 text-center text-slate-400 text-sm border-2 border-dashed border-slate-200 rounded-2xl">
-                <MapPin size={32} className="mx-auto mb-2 text-slate-300" />
-                <p className="font-semibold text-slate-700">No Google Maps leads found</p>
-                <p className="text-xs mt-1">Use the "1-Click Scraper Ingestion" tab to upload your first batch of Google leads.</p>
+            ) : filteredDirectoryLeads.length === 0 ? (
+              <div className="py-20 text-center text-slate-400 text-sm border-2 border-dashed border-slate-200 rounded-3xl">
+                <MapPin size={36} className="mx-auto mb-3 text-rose-300" />
+                <p className="font-bold text-slate-800 text-base">No Google Maps leads found</p>
+                <p className="text-xs mt-1 text-slate-500">
+                  Run a search in the "Scraper Studio" tab and drop the CSV in the "Smart Ingestion" tab!
+                </p>
+              </div>
+            ) : viewMode === 'cards' ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-2">
+                {filteredDirectoryLeads.map((lead) => (
+                  <div
+                    key={lead._id}
+                    className="bg-white border border-slate-200 hover:border-rose-400/60 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-3 relative group"
+                  >
+                    <div>
+                      {/* Top Badges */}
+                      <div className="flex items-center justify-between gap-2 mb-2">
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-rose-50 text-rose-700 border-rose-200">
+                          {lead.businessType || 'Business'}
+                        </span>
+
+                        {lead.socials?.rating && (
+                          <div className="inline-flex items-center gap-1 bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded-full text-xs font-black">
+                            <Star size={11} className="fill-amber-400 text-amber-500" />
+                            {lead.socials.rating}
+                            {lead.socials.reviews && (
+                              <span className="text-[10px] text-slate-500 font-normal">({lead.socials.reviews})</span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Business Title */}
+                      <h3 className="font-bold text-slate-900 text-sm line-clamp-1 group-hover:text-rose-600 transition-colors">
+                        {lead.name}
+                      </h3>
+
+                      {/* Location */}
+                      <p className="text-xs text-slate-500 mt-1 line-clamp-1 flex items-center gap-1">
+                        <MapPin size={12} className="text-rose-500 shrink-0" />
+                        {lead.address || lead.city || 'Surat, Gujarat'}
+                      </p>
+
+                      {/* Contact Info Strip */}
+                      <div className="mt-3 pt-3 border-t border-slate-100 space-y-1.5 text-xs text-slate-600">
+                        <div className="flex items-center justify-between">
+                          <span className="font-mono font-bold text-slate-800">{lead.mobile}</span>
+                          <div className="flex items-center gap-1">
+                            {lead.mobile && lead.mobile !== '0000000000' && (
+                              <>
+                                <a
+                                  href={`https://wa.me/91${lead.mobile}`}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="p-1.5 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 rounded-lg transition-colors"
+                                  title="WhatsApp"
+                                >
+                                  <FaWhatsapp size={13} />
+                                </a>
+                                <a
+                                  href={`tel:${lead.mobile}`}
+                                  className="p-1.5 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg transition-colors"
+                                  title="Call"
+                                >
+                                  <Phone size={13} />
+                                </a>
+                              </>
+                            )}
+                          </div>
+                        </div>
+
+                        {lead.socials?.emails && (
+                          <div className="text-[11px] text-blue-600 truncate flex items-center gap-1">
+                            <Mail size={11} className="text-slate-400 shrink-0" />
+                            <a href={`mailto:${lead.socials.emails}`} className="hover:underline truncate">
+                              {lead.socials.emails}
+                            </a>
+                          </div>
+                        )}
+
+                        <div className="flex items-center gap-3 pt-1 text-[11px]">
+                          {lead.mapsUrl && (
+                            <a
+                              href={lead.mapsUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-rose-600 hover:underline flex items-center gap-1 font-semibold"
+                            >
+                              Google Maps <ExternalLink size={10} />
+                            </a>
+                          )}
+                          {lead.website && (
+                            <a
+                              href={lead.website}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-slate-600 hover:underline flex items-center gap-1"
+                            >
+                              Website <ExternalLink size={10} />
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Bottom Pipeline Handoff Actions */}
+                    <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => handleTransferDepartment(lead._id, 'tech')}
+                          className="px-2 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded text-[10px] font-bold transition-all"
+                          title="Handoff to Tech Department"
+                        >
+                          → Tech Pipeline
+                        </button>
+                        <button
+                          onClick={() => handleTransferDepartment(lead._id, 'marketing')}
+                          className="px-2 py-1 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded text-[10px] font-bold transition-all"
+                          title="Handoff to Marketing Department"
+                        >
+                          → Mktg Pipeline
+                        </button>
+                      </div>
+
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => {
+                            setSelectedPitchLead(lead);
+                            setActiveTab('templates');
+                          }}
+                          className="p-1 hover:bg-amber-50 text-slate-400 hover:text-amber-600 rounded transition-colors"
+                          title="Generate Outreach Pitch"
+                        >
+                          <MessageSquare size={13} />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteLead(lead._id)}
+                          className="p-1 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded transition-colors"
+                          title="Delete Lead"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : (
+              /* Table View */
               <div className="overflow-x-auto rounded-2xl border border-slate-200">
                 <table className="w-full text-left text-xs">
                   <thead className="bg-slate-100 text-slate-700 font-bold uppercase tracking-wider">
                     <tr>
                       <th className="p-3">Business</th>
-                      <th className="p-3">Contact</th>
+                      <th className="p-3">Direct Phone</th>
                       <th className="p-3">Rating / Reviews</th>
                       <th className="p-3">Location</th>
-                      <th className="p-3">Department</th>
-                      <th className="p-3">Pipeline Actions</th>
+                      <th className="p-3">Verified Email</th>
+                      <th className="p-3">Pipeline Routing</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 text-slate-700">
-                    {filteredLeads.map((l) => (
+                    {filteredDirectoryLeads.map((l) => (
                       <tr key={l._id} className="hover:bg-slate-50/80 transition-colors">
                         <td className="p-3 font-medium">
                           <div className="font-bold text-slate-900 text-sm">{l.name}</div>
-                          <div className="text-[11px] text-slate-400 mt-0.5">{l.businessType || 'Local Business'}</div>
+                          <div className="text-[11px] text-slate-400">{l.businessType}</div>
                           {l.website && (
                             <a href={l.website} target="_blank" rel="noreferrer" className="text-[11px] text-blue-600 hover:underline flex items-center gap-1 mt-0.5">
-                              <Globe size={10} /> Website
+                              <Globe size={10} /> Visit Website
                             </a>
                           )}
                         </td>
@@ -673,69 +1231,43 @@ export default function GoogleLeads() {
                                 href={`https://wa.me/91${l.mobile}`}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="p-1.5 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 rounded-lg transition-colors"
-                                title="Send WhatsApp"
+                                className="p-1 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 rounded-lg"
+                                title="WhatsApp"
                               >
                                 <FaWhatsapp size={12} />
                               </a>
                             )}
-                            {l.mobile && (
-                              <a
-                                href={`tel:${l.mobile}`}
-                                className="p-1.5 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg transition-colors"
-                                title="Call"
-                              >
-                                <Phone size={12} />
-                              </a>
-                            )}
                           </div>
-                          {l.socials?.emails && (
-                            <div className="text-[11px] text-slate-500 mt-1 flex items-center gap-1">
-                              <Mail size={11} className="text-slate-400" />
-                              <span className="truncate max-w-[150px]">{l.socials.emails}</span>
-                            </div>
-                          )}
                         </td>
 
                         <td className="p-3">
                           {l.socials?.rating ? (
-                            <div className="inline-flex items-center gap-1.5 bg-amber-50 text-amber-700 border border-amber-200 px-2.5 py-1 rounded-full font-bold">
-                              <Star size={12} className="fill-amber-400 text-amber-500" />
+                            <div className="inline-flex items-center gap-1 bg-amber-50 text-amber-700 border border-amber-200 px-2.5 py-1 rounded-full font-bold">
+                              <Star size={11} className="fill-amber-400 text-amber-500" />
                               {l.socials.rating}
                               {l.socials.reviews && (
                                 <span className="text-slate-500 font-normal">({l.socials.reviews})</span>
                               )}
                             </div>
-                          ) : (
-                            <span className="text-slate-400">-</span>
-                          )}
+                          ) : '-'}
                         </td>
 
                         <td className="p-3 max-w-[200px]">
-                          <div className="font-medium text-slate-800">{l.city || 'Surat'}</div>
+                          <div className="font-medium text-slate-800">{l.city}</div>
                           <div className="text-[11px] text-slate-400 truncate">{l.address}</div>
                           {l.mapsUrl && (
-                            <a
-                              href={l.mapsUrl}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="text-[11px] text-rose-600 hover:underline flex items-center gap-1 mt-0.5"
-                            >
-                              <MapPin size={10} /> View on Maps <ExternalLink size={9} />
+                            <a href={l.mapsUrl} target="_blank" rel="noreferrer" className="text-[11px] text-rose-600 hover:underline flex items-center gap-1 mt-0.5">
+                              <MapPin size={10} /> Maps Link <ExternalLink size={9} />
                             </a>
                           )}
                         </td>
 
-                        <td className="p-3">
-                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
-                            l.department === 'google'
-                              ? 'bg-rose-50 text-rose-700 border-rose-200'
-                              : l.department === 'tech'
-                              ? 'bg-blue-50 text-blue-700 border-blue-200'
-                              : 'bg-purple-50 text-purple-700 border-purple-200'
-                          }`}>
-                            {l.department?.toUpperCase() || 'GOOGLE'}
-                          </span>
+                        <td className="p-3 text-slate-600">
+                          {l.socials?.emails ? (
+                            <a href={`mailto:${l.socials.emails}`} className="text-blue-600 hover:underline truncate max-w-[150px] block">
+                              {l.socials.emails}
+                            </a>
+                          ) : '-'}
                         </td>
 
                         <td className="p-3">
@@ -743,21 +1275,18 @@ export default function GoogleLeads() {
                             <button
                               onClick={() => handleTransferDepartment(l._id, 'tech')}
                               className="px-2 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded text-[10px] font-bold transition-all"
-                              title="Push to Tech Dept Sales Pipeline"
                             >
                               → Tech
                             </button>
                             <button
                               onClick={() => handleTransferDepartment(l._id, 'marketing')}
                               className="px-2 py-1 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded text-[10px] font-bold transition-all"
-                              title="Push to Marketing Dept Sales Pipeline"
                             >
                               → Mktg
                             </button>
                             <button
                               onClick={() => handleDeleteLead(l._id)}
                               className="p-1 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded transition-colors"
-                              title="Delete"
                             >
                               <Trash2 size={13} />
                             </button>
@@ -769,6 +1298,143 @@ export default function GoogleLeads() {
                 </table>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================================
+          TAB 4: B2B OUTREACH TEMPLATES & PITCH GENERATOR
+      ========================================================================= */}
+      {activeTab === 'templates' && (
+        <div className="space-y-6">
+          <div className="bg-white rounded-3xl border border-slate-200 p-6 md:p-8 shadow-sm space-y-6">
+            <div>
+              <h2 className="text-lg font-black text-slate-900 flex items-center gap-2">
+                <MessageSquare className="text-rose-600" size={20} />
+                High-Converting B2B WhatsApp & Email Pitch Generator
+              </h2>
+              <p className="text-slate-500 text-xs md:text-sm mt-0.5">
+                Automatically generate personalized pitches using real Google Maps review metrics and business names.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Left Column: Choose Lead and Template */}
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                    1. Select Google Lead
+                  </label>
+                  <select
+                    value={selectedPitchLead?._id || ''}
+                    onChange={(e) => {
+                      const found = leads.find(l => l._id === e.target.value);
+                      setSelectedPitchLead(found || null);
+                    }}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 font-medium"
+                  >
+                    <option value="">-- Choose a Lead from Database --</option>
+                    {leads.map((l) => (
+                      <option key={l._id} value={l._id}>
+                        {l.name} ({l.city || 'Surat'}) - {l.mobile}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                    2. Choose Pitch Angle
+                  </label>
+                  <div className="space-y-2">
+                    {OUTREACH_TEMPLATES.map((tmpl) => (
+                      <button
+                        key={tmpl.id}
+                        type="button"
+                        onClick={() => setSelectedTemplateId(tmpl.id)}
+                        className={`w-full text-left p-3.5 rounded-2xl border transition-all ${
+                          selectedTemplateId === tmpl.id
+                            ? 'border-rose-500 bg-rose-50 text-rose-900 font-bold shadow-sm'
+                            : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'
+                        }`}
+                      >
+                        <div className="text-xs font-bold">{tmpl.name}</div>
+                        <div className="text-[11px] font-normal text-slate-500 mt-0.5">{tmpl.target}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Column: Live Message Preview and 1-Click Send */}
+              <div className="lg:col-span-2 space-y-4">
+                {selectedPitchLead ? (
+                  (() => {
+                    const tmpl = OUTREACH_TEMPLATES.find(t => t.id === selectedTemplateId) || OUTREACH_TEMPLATES[0];
+                    const pitch = getRenderedPitch(selectedPitchLead, tmpl);
+
+                    return (
+                      <div className="bg-slate-50 p-6 rounded-3xl border border-slate-200 space-y-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                              Personalized Pitch For:
+                            </span>
+                            <h3 className="text-base font-black text-slate-900">{selectedPitchLead.name}</h3>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => {
+                                navigator.clipboard.writeText(pitch.body);
+                                setCopiedPitch(true);
+                                setTimeout(() => setCopiedPitch(false), 2000);
+                              }}
+                              className="px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
+                            >
+                              {copiedPitch ? <Check size={13} className="text-emerald-600" /> : <Copy size={13} />}
+                              {copiedPitch ? 'Copied' : 'Copy Pitch'}
+                            </button>
+
+                            {pitch.whatsappUrl !== '#' && (
+                              <a
+                                href={pitch.whatsappUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-md shadow-emerald-600/20"
+                              >
+                                <FaWhatsapp size={15} />
+                                Send on WhatsApp
+                              </a>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="space-y-1">
+                          <span className="text-[11px] font-bold text-slate-500 uppercase">Subject:</span>
+                          <div className="p-3 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-800">
+                            {pitch.subject}
+                          </div>
+                        </div>
+
+                        <div className="space-y-1">
+                          <span className="text-[11px] font-bold text-slate-500 uppercase">Message Body:</span>
+                          <div className="p-4 bg-white border border-slate-200 rounded-xl text-xs font-mono text-slate-700 whitespace-pre-wrap leading-relaxed">
+                            {pitch.body}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()
+                ) : (
+                  <div className="h-full min-h-[300px] flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-3xl p-8 text-center text-slate-400">
+                    <MessageSquare size={36} className="text-slate-300 mb-2" />
+                    <p className="font-bold text-slate-700 text-sm">No Lead Selected</p>
+                    <p className="text-xs mt-1">Select a business from step 1 to see the live personalized outreach pitch.</p>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       )}

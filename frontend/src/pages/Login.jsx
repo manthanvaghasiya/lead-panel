@@ -103,6 +103,56 @@ function Login() {
               </>
             )}
           </button>
+
+          <div className="mt-4 pt-4 border-t border-white/10 text-center">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-2">
+              Quick Department Access
+            </span>
+            <div className="flex flex-wrap justify-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => { setEmail('google@webiox.tech'); setPassword('google@07'); }}
+                className="px-2.5 py-1 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 rounded-lg text-[10px] font-bold transition-all"
+              >
+                📍 Google Dept
+              </button>
+              <button
+                type="button"
+                onClick={() => { setEmail('linkedin@webiox.tech'); setPassword('linkedin@07'); }}
+                className="px-2.5 py-1 bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/30 rounded-lg text-[10px] font-bold transition-all"
+              >
+                🔗 LinkedIn Dept
+              </button>
+              <button
+                type="button"
+                onClick={() => { setEmail('admin@webiox.tech'); setPassword('admin@07'); }}
+                className="px-2.5 py-1 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 rounded-lg text-[10px] font-bold transition-all"
+              >
+                👑 Master Admin
+              </button>
+              <button
+                type="button"
+                onClick={() => { setEmail('tech@webiox.tech'); setPassword('tech@07'); }}
+                className="px-2.5 py-1 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 border border-blue-500/30 rounded-lg text-[10px] font-bold transition-all"
+              >
+                💻 Tech Dept
+              </button>
+              <button
+                type="button"
+                onClick={() => { setEmail('marketing@webiox.tech'); setPassword('marketing@07'); }}
+                className="px-2.5 py-1 bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-500/30 rounded-lg text-[10px] font-bold transition-all"
+              >
+                📢 Marketing Dept
+              </button>
+              <button
+                type="button"
+                onClick={() => { setEmail('oldata@webiox.tech'); setPassword('old@12345'); }}
+                className="px-2.5 py-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 rounded-lg text-[10px] font-bold transition-all"
+              >
+                📦 Old Data
+              </button>
+            </div>
+          </div>
         </form>
       </div>
     </div>

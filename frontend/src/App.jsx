@@ -46,13 +46,17 @@ function Layout({ children }) {
     ? [
         { path: '/linkedin', label: 'Network', icon: FaLinkedin, isNetwork: true, badge: 'LinkedIn' }
       ]
+    : isGoogleUser
+    ? [
+        { path: '/google-leads', label: 'Google Maps Hub', icon: FaGoogle, isGoogle: true, badge: 'Scraper' }
+      ]
     : [
         { path: '/', label: 'Dashboard', icon: LayoutDashboard },
         ...(isAdmin ? [
           { path: '/linkedin', label: 'Network', icon: FaLinkedin, isNetwork: true, badge: 'LinkedIn' }
         ] : []),
         ...(canAccessGoogle ? [
-          { path: '/google-leads', label: 'Google Maps', icon: FaGoogle, isGoogle: true, badge: 'Maps' }
+          { path: '/google-leads', label: 'Google Maps Hub', icon: FaGoogle, isGoogle: true, badge: 'Maps' }
         ] : []),
         { path: '/leads', label: 'Leads', icon: List, badge: 'Sales' },
         { path: '/pipeline', label: 'Pipeline', icon: LayoutGrid },
@@ -253,7 +257,22 @@ function LinkedInRoute({ children }) {
   return children;
 }
 
-function NonLinkedInRoute({ children }) {
+function GoogleRoute({ children }) {
+  const { user, loading } = useContext(AuthContext);
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <div className="w-8 h-8 border-4 border-rose-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+  if (!user || (user.role !== 'google' && user.role !== 'admin')) {
+    return <Navigate to="/" replace />;
+  }
+  return children;
+}
+
+function NonSpecialDeptRoute({ children }) {
   const { user, loading } = useContext(AuthContext);
   if (loading) {
     return (
@@ -264,6 +283,9 @@ function NonLinkedInRoute({ children }) {
   }
   if (user && user.role === 'linkedin') {
     return <Navigate to="/linkedin" replace />;
+  }
+  if (user && user.role === 'google') {
+    return <Navigate to="/google-leads" replace />;
   }
   return children;
 }
@@ -279,6 +301,9 @@ function RootRoute() {
   }
   if (user && user.role === 'linkedin') {
     return <Navigate to="/linkedin" replace />;
+  }
+  if (user && user.role === 'google') {
+    return <Navigate to="/google-leads" replace />;
   }
   return <Dashboard />;
 }
@@ -296,14 +321,14 @@ function App() {
                 <Routes>
                   <Route path="/" element={<RootRoute />} />
                   <Route path="/linkedin" element={<LinkedInRoute><LinkedIn /></LinkedInRoute>} />
-                  <Route path="/google-leads" element={<NonLinkedInRoute><GoogleLeads /></NonLinkedInRoute>} />
-                  <Route path="/leads" element={<NonLinkedInRoute><LeadsList /></NonLinkedInRoute>} />
-                  <Route path="/pipeline" element={<NonLinkedInRoute><Pipeline /></NonLinkedInRoute>} />
-                  <Route path="/leads/:id" element={<NonLinkedInRoute><LeadDetail /></NonLinkedInRoute>} />
-                  <Route path="/follow-ups" element={<NonLinkedInRoute><FollowUps /></NonLinkedInRoute>} />
-                  <Route path="/analytics" element={<NonLinkedInRoute><Analytics /></NonLinkedInRoute>} />
-                  <Route path="/import-export" element={<NonLinkedInRoute><ImportExport /></NonLinkedInRoute>} />
-                  <Route path="/settings" element={<NonLinkedInRoute><Settings /></NonLinkedInRoute>} />
+                  <Route path="/google-leads" element={<GoogleRoute><GoogleLeads /></GoogleRoute>} />
+                  <Route path="/leads" element={<NonSpecialDeptRoute><LeadsList /></NonSpecialDeptRoute>} />
+                  <Route path="/pipeline" element={<NonSpecialDeptRoute><Pipeline /></NonSpecialDeptRoute>} />
+                  <Route path="/leads/:id" element={<NonSpecialDeptRoute><LeadDetail /></NonSpecialDeptRoute>} />
+                  <Route path="/follow-ups" element={<NonSpecialDeptRoute><FollowUps /></NonSpecialDeptRoute>} />
+                  <Route path="/analytics" element={<NonSpecialDeptRoute><Analytics /></NonSpecialDeptRoute>} />
+                  <Route path="/import-export" element={<NonSpecialDeptRoute><ImportExport /></NonSpecialDeptRoute>} />
+                  <Route path="/settings" element={<NonSpecialDeptRoute><Settings /></NonSpecialDeptRoute>} />
                 </Routes>
               </Layout>
             } />
