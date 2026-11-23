@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
-import { LayoutDashboard, List, Calendar, FileDown, PieChart, LogOut, Settings as SettingsIcon, Images, LayoutGrid } from 'lucide-react';
+import { LayoutDashboard, List, Calendar, FileDown, PieChart, LogOut, Settings as SettingsIcon, Images, LayoutGrid, Zap, Building2, MessageSquare, Upload, Sliders } from 'lucide-react';
 import { FaLinkedin, FaGoogle } from 'react-icons/fa';
 import LeadsList from './pages/LeadsList';
 import Pipeline from './pages/Pipeline';
@@ -12,6 +12,10 @@ import ImportExport from './pages/ImportExport';
 import Settings from './pages/Settings';
 import LinkedIn from './pages/LinkedIn';
 import GoogleLeads from './pages/GoogleLeads';
+import GoogleFinder from './pages/GoogleFinder';
+import GoogleOutreach from './pages/GoogleOutreach';
+import GoogleImport from './pages/GoogleImport';
+import GoogleStudio from './pages/GoogleStudio';
 import UpdatePrompt from './components/PWA/UpdatePrompt';
 import InstallButton from './components/PWA/InstallButton';
 import OfflineBadge from './components/PWA/OfflineBadge';
@@ -48,15 +52,19 @@ function Layout({ children }) {
       ]
     : isGoogleUser
     ? [
-        { path: '/google-leads', label: 'Google Maps Hub', icon: FaGoogle, isGoogle: true, badge: 'Scraper' }
+        { path: '/google-finder', label: 'Lead Finder', icon: Zap, isGoogle: true, badge: 'Live' },
+        { path: '/google-leads', label: 'Prospects', icon: Building2, isGoogle: true, badge: 'CRM' },
+        { path: '/google-outreach', label: 'Outreach', icon: MessageSquare, isGoogle: true, badge: 'Pitch' },
+        { path: '/google-import', label: 'CSV Ingestion', icon: Upload, isGoogle: true, badge: 'Import' },
+        { path: '/google-studio', label: 'Scraper CLI', icon: Sliders, isGoogle: true, badge: 'Fast' },
       ]
     : [
         { path: '/', label: 'Dashboard', icon: LayoutDashboard },
         ...(isAdmin ? [
-          { path: '/linkedin', label: 'Network', icon: FaLinkedin, isNetwork: true, badge: 'LinkedIn' }
-        ] : []),
-        ...(canAccessGoogle ? [
-          { path: '/google-leads', label: 'Google Maps Hub', icon: FaGoogle, isGoogle: true, badge: 'Maps' }
+          { path: '/linkedin', label: 'Network', icon: FaLinkedin, isNetwork: true, badge: 'LinkedIn' },
+          { path: '/google-finder', label: 'Google Finder', icon: Zap, isGoogle: true, badge: 'Live' },
+          { path: '/google-leads', label: 'Google Leads', icon: Building2, isGoogle: true, badge: 'Maps' },
+          { path: '/google-outreach', label: 'Outreach', icon: MessageSquare, isGoogle: true, badge: 'B2B' },
         ] : []),
         { path: '/leads', label: 'Leads', icon: List, badge: 'Sales' },
         { path: '/pipeline', label: 'Pipeline', icon: LayoutGrid },
@@ -285,7 +293,7 @@ function NonSpecialDeptRoute({ children }) {
     return <Navigate to="/linkedin" replace />;
   }
   if (user && user.role === 'google') {
-    return <Navigate to="/google-leads" replace />;
+    return <Navigate to="/google-finder" replace />;
   }
   return children;
 }
@@ -303,7 +311,7 @@ function RootRoute() {
     return <Navigate to="/linkedin" replace />;
   }
   if (user && user.role === 'google') {
-    return <Navigate to="/google-leads" replace />;
+    return <Navigate to="/google-finder" replace />;
   }
   return <Dashboard />;
 }
@@ -321,7 +329,11 @@ function App() {
                 <Routes>
                   <Route path="/" element={<RootRoute />} />
                   <Route path="/linkedin" element={<LinkedInRoute><LinkedIn /></LinkedInRoute>} />
+                  <Route path="/google-finder" element={<GoogleRoute><GoogleFinder /></GoogleRoute>} />
                   <Route path="/google-leads" element={<GoogleRoute><GoogleLeads /></GoogleRoute>} />
+                  <Route path="/google-outreach" element={<GoogleRoute><GoogleOutreach /></GoogleRoute>} />
+                  <Route path="/google-import" element={<GoogleRoute><GoogleImport /></GoogleRoute>} />
+                  <Route path="/google-studio" element={<GoogleRoute><GoogleStudio /></GoogleRoute>} />
                   <Route path="/leads" element={<NonSpecialDeptRoute><LeadsList /></NonSpecialDeptRoute>} />
                   <Route path="/pipeline" element={<NonSpecialDeptRoute><Pipeline /></NonSpecialDeptRoute>} />
                   <Route path="/leads/:id" element={<NonSpecialDeptRoute><LeadDetail /></NonSpecialDeptRoute>} />
