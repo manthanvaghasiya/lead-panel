@@ -85,11 +85,13 @@ const leadRoutes = require('./routes/leadRoutes');
 const settingsRoutes = require('./routes/settingsRoutes');
 const authRoutes = require('./routes/authRoutes');
 const linkedinRoutes = require('./routes/linkedinRoutes');
+const googleLeadRoutes = require('./routes/googleLeadRoutes');
 
 app.use(['/_/backend/api/auth', '/api/auth'], authRoutes);
 app.use(['/_/backend/api/leads', '/api/leads'], protect, leadRoutes);
 app.use(['/_/backend/api/settings', '/api/settings'], protect, settingsRoutes);
 app.use(['/_/backend/api/linkedin', '/api/linkedin'], protect, authorizeRoles('admin', 'linkedin'), linkedinRoutes);
+app.use(['/_/backend/api/google-leads', '/api/google-leads'], protect, googleLeadRoutes);
 
 // 8. Fail-Secure Global Error Handler (CWE-209: Never leak stack traces to client in production)
 app.use((err, req, res, next) => {

@@ -82,4 +82,8 @@ export const smartUpdateLinkedInContact = (id, prompt) => apiClient.post(`/linke
 export const getLinkedInBackup = () => apiClient.get('/linkedin/backup');
 export const restoreLinkedInBackup = (data) => apiClient.post('/linkedin/restore', data);
 
+// Google Leads Direct Search Endpoints
+export const liveSearchGoogleLeads = (data) => apiClient.post('/google-leads/live-search', data);
+export const saveDirectGoogleLeads = (leads) => apiClient.post('/google-leads/save-direct', { leads });
+
 export default apiClient;
