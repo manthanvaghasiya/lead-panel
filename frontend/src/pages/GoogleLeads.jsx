@@ -188,6 +188,7 @@ export default function GoogleLeads() {
   const [rawParsedRows, setRawParsedRows] = useState([]);
   const [filteredParsedLeads, setFilteredParsedLeads] = useState([]);
   const [filterOnlyWithPhone, setFilterOnlyWithPhone] = useState(true);
+  const [filterOnlyWithoutWebsite, setFilterOnlyWithoutWebsite] = useState(false);
   const [minRatingFilter, setMinRatingFilter] = useState('0');
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState(null);
@@ -202,6 +203,7 @@ export default function GoogleLeads() {
   const [filterCategory, setFilterCategory] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterRatingTier, setFilterRatingTier] = useState('all');
+  const [filterWebsite, setFilterWebsite] = useState('all'); // 'all', 'no-website', 'has-website'
 
   // =========================================================================
   // 5. Outreach Pitch states
@@ -493,7 +495,7 @@ export default function GoogleLeads() {
     });
   };
 
-  const applyIngestionFilters = (rows, onlyPhone, minRate) => {
+  const applyIngestionFilters = (rows, onlyPhone, minRate, onlyWithoutWeb = filterOnlyWithoutWebsite) => {
     const mapped = rows.map((r) => {
       const rawMobile = r.phone || r.mobile || r.phones || '';
       let cleanMobile = String(rawMobile).replace(/\D/g, '');
@@ -520,6 +522,7 @@ export default function GoogleLeads() {
     }).filter(l => {
       if (!l.name || l.name === 'Unnamed Business') return false;
       if (onlyPhone && (!l.mobile || l.mobile === '0000000000' || l.mobile.length < 10)) return false;
+      if (onlyWithoutWeb && l.website && l.website.trim().length > 3 && l.website !== 'No Website') return false;
       if (minRate !== '0') {
         const rFloat = parseFloat(l.rating);
         if (isNaN(rFloat) || rFloat < parseFloat(minRate)) return false;
@@ -630,9 +633,17 @@ export default function GoogleLeads() {
         matchesRating = !isNaN(r) && r >= 4.0;
       }
 
-      return matchesSearch && matchesCat && matchesStatus && matchesRating;
+      let matchesWebsite = true;
+      const hasSite = Boolean(l.website && l.website.trim().length > 3 && l.website !== 'No Website');
+      if (filterWebsite === 'no-website') {
+        matchesWebsite = !hasSite;
+      } else if (filterWebsite === 'has-website') {
+        matchesWebsite = hasSite;
+      }
+
+      return matchesSearch && matchesCat && matchesStatus && matchesRating && matchesWebsite;
     });
-  }, [leads, leadSearch, filterCategory, filterStatus, filterRatingTier]);
+  }, [leads, leadSearch, filterCategory, filterStatus, filterRatingTier, filterWebsite]);
 
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6">
@@ -938,6 +949,72 @@ export default function GoogleLeads() {
                     </>
                   )}
                 </button>
+              </div>
+
+              {/* Website Presence Filter Buttons inside Search Form */}
+              <div className="md:col-span-12 pt-3 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5 mr-1">
+                    <Globe size={14} className="text-rose-600" />
+                    Website Status:
+                  </span>
+                  
+                  <button
+                    type="button"
+                    onClick={() => setResultFilterTab('all')}
+                    className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                      resultFilterTab === 'all'
+                        ? 'bg-slate-900 text-white shadow-sm'
+                        : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'
+                    }`}
+                  >
+                    All Businesses
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setResultFilterTab('no-site')}
+                    className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                      resultFilterTab === 'no-site'
+                        ? 'bg-rose-600 text-white shadow-md shadow-rose-600/20 ring-2 ring-rose-400'
+                        : 'bg-rose-50 border border-rose-200 text-rose-800 hover:bg-rose-100'
+                    }`}
+                  >
+                    <span>❌ Without Website Only</span>
+                    <span className="text-[10px] bg-rose-700/80 text-white px-1.5 py-0.2 rounded font-black">
+                      Hot Pitch!
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setResultFilterTab('has-site')}
+                    className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                      resultFilterTab === 'has-site'
+                        ? 'bg-blue-600 text-white shadow-sm ring-2 ring-blue-400'
+                        : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'
+                    }`}
+                  >
+                    <Globe size={12} />
+                    With Website Only
+                  </button>
+                </div>
+
+                <div className="text-xs">
+                  {resultFilterTab === 'no-site' ? (
+                    <span className="text-rose-600 font-bold bg-rose-50 border border-rose-200 px-2.5 py-1 rounded-lg">
+                      🔥 Target Mode: Only finding businesses WITHOUT a website (Sell Web Development)
+                    </span>
+                  ) : resultFilterTab === 'has-site' ? (
+                    <span className="text-blue-600 font-bold bg-blue-50 border border-blue-200 px-2.5 py-1 rounded-lg">
+                      🌐 Showing only businesses that already have an active website
+                    </span>
+                  ) : (
+                    <span className="text-slate-500 font-medium">
+                      Showing both businesses with and without websites
+                    </span>
+                  )}
+                </div>
               </div>
             </form>
 
@@ -1432,6 +1509,49 @@ export default function GoogleLeads() {
                   <option value="Won">Won Deal</option>
                   <option value="Lost">Lost</option>
                 </select>
+
+                {/* Dedicated Website Status Selector Buttons */}
+                <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
+                  <button
+                    onClick={() => setFilterWebsite('all')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                      filterWebsite === 'all'
+                        ? 'bg-white shadow-sm text-slate-900'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    All ({leads.length})
+                  </button>
+
+                  <button
+                    onClick={() => setFilterWebsite('no-website')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                      filterWebsite === 'no-website'
+                        ? 'bg-rose-600 text-white shadow-sm'
+                        : 'text-rose-700 hover:bg-white/60'
+                    }`}
+                  >
+                    <span>❌ No Website</span>
+                    <span className="text-[10px] bg-white/20 px-1.5 py-0.2 rounded-full font-black">
+                      {leads.filter(l => !l.website || l.website.trim().length <= 3 || l.website === 'No Website').length}
+                    </span>
+                  </button>
+
+                  <button
+                    onClick={() => setFilterWebsite('has-website')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                      filterWebsite === 'has-website'
+                        ? 'bg-blue-600 text-white shadow-sm'
+                        : 'text-blue-700 hover:bg-white/60'
+                    }`}
+                  >
+                    <Globe size={12} />
+                    <span>With Website</span>
+                    <span className="text-[10px] bg-white/20 px-1.5 py-0.2 rounded-full font-black">
+                      {leads.filter(l => l.website && l.website.trim().length > 3 && l.website !== 'No Website').length}
+                    </span>
+                  </button>
+                </div>
               </div>
 
               <div className="flex items-center gap-2">
@@ -1586,17 +1706,28 @@ export default function GoogleLeads() {
                               Google Maps <ExternalLink size={10} />
                             </a>
                           )}
-                          {lead.website ? (
+                          {lead.website && lead.website.trim().length > 3 && lead.website !== 'No Website' ? (
                             <a
                               href={lead.website}
                               target="_blank"
                               rel="noreferrer"
-                              className="text-blue-600 hover:underline flex items-center gap-1"
+                              className="text-blue-600 hover:underline flex items-center gap-1 font-semibold"
                             >
-                              Website <ExternalLink size={10} />
+                              <Globe size={11} /> Website <ExternalLink size={10} />
                             </a>
                           ) : (
-                            <span className="text-slate-400">No Website</span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedPitchLead(lead);
+                                setActiveTab('templates');
+                              }}
+                              className="text-[10px] text-rose-700 font-bold bg-rose-50 hover:bg-rose-100 border border-rose-200 px-2 py-0.5 rounded-full flex items-center gap-1 transition-colors"
+                              title="No Website - Click to generate website pitch"
+                            >
+                              <span>❌ No Website</span>
+                              <span className="underline font-black">Pitch Web Dev</span>
+                            </button>
                           )}
                         </div>
                       </div>
@@ -1665,10 +1796,23 @@ export default function GoogleLeads() {
                         <td className="p-3 font-medium">
                           <div className="font-bold text-slate-900 text-sm">{l.name}</div>
                           <div className="text-[11px] text-slate-400">{l.businessType}</div>
-                          {l.website && (
-                            <a href={l.website} target="_blank" rel="noreferrer" className="text-[11px] text-blue-600 hover:underline flex items-center gap-1 mt-0.5">
+                          {l.website && l.website.trim().length > 3 && l.website !== 'No Website' ? (
+                            <a href={l.website} target="_blank" rel="noreferrer" className="text-[11px] text-blue-600 hover:underline flex items-center gap-1 mt-0.5 font-semibold">
                               <Globe size={10} /> Visit Website
                             </a>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedPitchLead(l);
+                                setActiveTab('templates');
+                              }}
+                              className="text-[10px] text-rose-700 font-bold bg-rose-50 hover:bg-rose-100 border border-rose-200 px-2 py-0.5 rounded-md inline-flex items-center gap-1 mt-0.5 transition-colors"
+                              title="No Website - Click to pitch website"
+                            >
+                              <span>❌ No Website</span>
+                              <span className="underline font-bold">Pitch</span>
+                            </button>
                           )}
                         </td>
 
@@ -1831,11 +1975,24 @@ export default function GoogleLeads() {
                       checked={filterOnlyWithPhone}
                       onChange={(e) => {
                         setFilterOnlyWithPhone(e.target.checked);
-                        applyIngestionFilters(rawParsedRows, e.target.checked, minRatingFilter);
+                        applyIngestionFilters(rawParsedRows, e.target.checked, minRatingFilter, filterOnlyWithoutWebsite);
                       }}
                       className="w-4 h-4 rounded text-rose-600 accent-rose-600"
                     />
                     Only Ingest Places with Phone Number
+                  </label>
+
+                  <label className="flex items-center gap-2 text-xs font-bold text-rose-700 cursor-pointer bg-rose-50 px-2 py-1 rounded-lg border border-rose-200">
+                    <input
+                      type="checkbox"
+                      checked={filterOnlyWithoutWebsite}
+                      onChange={(e) => {
+                        setFilterOnlyWithoutWebsite(e.target.checked);
+                        applyIngestionFilters(rawParsedRows, filterOnlyWithPhone, minRatingFilter, e.target.checked);
+                      }}
+                      className="w-4 h-4 rounded text-rose-600 accent-rose-600"
+                    />
+                    Only Ingest Without Website (Web Dev Leads)
                   </label>
 
                   <div className="flex items-center gap-2">
