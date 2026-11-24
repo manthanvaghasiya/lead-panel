@@ -16,8 +16,72 @@ const OUTREACH_TEMPLATES = [
     body: `Hi {businessName} Team,\n\nI came across your Google listing in {city} and was really impressed by your customer reviews ({rating}★).\n\nWe specialize in high-converting modern websites and customized digital solutions for businesses in {city}. We can help double your direct client inquiries from Google search.\n\nWould you be open to a quick 5-minute call or WhatsApp chat this week?\n\nBest regards,\nWebiox Digital Solution\n+91 8347448241`
   },
   {
+    id: 'real-estate-pitch',
+    name: '🏢 Real Estate: Investor & Buyer Funnel',
+    badge: 'Real Estate',
+    target: 'Developers, commercial brokers, and luxury property consultants',
+    subject: 'Direct Buyer & Investor Inquiries for {businessName}',
+    body: `Hello {businessName} Team,\n\nI came across your real estate projects and property listings in {city}.\n\nHigh-net-worth property buyers and commercial investors in {city} now search Google first before visiting sites. We build dedicated project landing pages, virtual property showcase funnels, and automated CRM lead distribution for top developers.\n\nWe helped local builders capture 40+ verified site visits a month directly through Google search & WhatsApp.\n\nWould you be open to a quick 5-min chat or WhatsApp exchange to share a demo?\n\nBest regards,\nManthan Vaghasiya\nWebiox Digital Solution\n+91 8347448241`
+  },
+  {
+    id: 'interiors-pitch',
+    name: '🏛️ Interiors & Architecture: Design Booking Funnel',
+    badge: 'Interiors',
+    target: 'Interior designers, turnkey architects, and modular kitchen studios',
+    subject: 'High-Ticket Residential & Commercial Inquiries for {businessName}',
+    body: `Hi {businessName} Team,\n\nI reviewed your architectural & interior portfolio in {city}—truly remarkable work and design aesthetics!\n\nFor high-ticket interior designers and turnkey architects, a standard website isn't enough. We build ultra-fast, luxury visual portfolio websites with automated 3D consultation bookings and WhatsApp lead capture.\n\nWould you be open to a quick 3-minute WhatsApp chat this week? I'd love to share our architecture portfolio showcase.\n\nBest regards,\nWebiox Digital Solution\n+91 8347448241`
+  },
+  {
+    id: 'medical-pitch',
+    name: '🩺 Medical & Aesthetics: Patient Booking System',
+    badge: 'Medical',
+    target: 'Dental implant, cosmetic dermatology, hair transplant, and IVF clinics',
+    subject: 'Boosting High-Value Consultation Bookings for {businessName}',
+    body: `Hello Dr. / Team at {businessName},\n\nI noticed your clinic's strong reputation ({rating}★ on Google) in {city}.\n\nFor premium treatments like dental implants, cosmetic dermatology, hair transplants, and IVF, patients demand trusted, seamless online consultation booking.\n\nWe deploy specialized clinic booking funnels with automated WhatsApp appointment reminders, reducing patient no-shows by over 45%.\n\nCan I send over a quick 2-minute overview video on WhatsApp?\n\nBest regards,\nWebiox Digital Solution\n+91 8347448241`
+  },
+  {
+    id: 'textiles-pitch',
+    name: '👗 Textiles & Ethnic: B2B Wholesale Catalog System',
+    badge: 'Textiles',
+    target: 'Textile, saree, lehenga, and B2B garment manufacturers/wholesalers',
+    subject: 'Pan-India B2B Wholesale Buyer Inquiries for {businessName}',
+    body: `Namaste {businessName} Team,\n\nWe specialize in B2B wholesale technology for textile, saree, lehenga, and garment manufacturers in {city}.\n\nInstead of manually sending PDFs and photos on WhatsApp, we build digital B2B wholesale order catalogs where dealers and boutique owners can view collections, place bulk sample requests, and connect directly to your sales team.\n\nWould you like to see how other manufacturers in Gujarat use our B2B catalog platform to add 50+ outstation wholesale buyers every month?\n\nBest regards,\nManthan Vaghasiya\nWebiox Digital Solution\n+91 8347448241`
+  },
+  {
+    id: 'solar-pitch',
+    name: '☀️ Solar Energy: Commercial Rooftop Leads Engine',
+    badge: 'Solar EPC',
+    target: 'Solar EPC installers and commercial rooftop solar companies',
+    subject: 'Commercial & Industrial Solar Inquiries for {businessName}',
+    body: `Hello {businessName} Team,\n\nI noticed your solar energy company on Google Maps in {city}.\n\nFactory owners and commercial buildings in {city} are actively searching for reliable solar EPC contractors to reduce their power bills. We build interactive Solar Savings ROI Calculators that capture verified high-capacity rooftop solar leads directly from Google.\n\nWould you be open to a brief 5-min chat on how we can generate qualified 50kW+ commercial solar inquiries for your sales team?\n\nBest regards,\nWebiox Digital Solution\n+91 8347448241`
+  },
+  {
+    id: 'immigration-pitch',
+    name: '✈️ Overseas Education: Student Visa Lead Funnel',
+    badge: 'Immigration',
+    target: 'Study abroad, IELTS/PTE, and visa immigration consultancies',
+    subject: 'Student Visa & IELTS Admissions Funnel for {businessName}',
+    body: `Hi {businessName} Team,\n\nWith student intake seasons coming up, thousands of students in {city} are actively researching study abroad and visa consultancies on Google.\n\nWe build high-converting country eligibility check quizzes and IELTS trial class booking funnels that filter genuine student applicants before your counselors call them.\n\nWould love to show you a quick demo of how we help consultancies double their walk-ins.\n\nBest regards,\nWebiox Digital Solution\n+91 8347448241`
+  },
+  {
+    id: 'weddings-pitch',
+    name: '💍 Weddings & Events: Luxury Booking Inquiries',
+    badge: 'Weddings',
+    target: 'Luxury wedding planners, banquet halls, and destination event studios',
+    subject: 'Direct Wedding & Banquet Bookings for {businessName}',
+    body: `Hello {businessName} Team,\n\nI was admiring your event productions and banquet venue in {city}!\n\nCouples and corporate clients searching for luxury event planners and venues want to instantly check date availability and view experiential video galleries. We build immersive wedding portfolio websites with instant WhatsApp inquiry widgets.\n\nWould love to share a quick 2-minute demo tailored for luxury wedding and banquet businesses in {city}.\n\nBest regards,\nWebiox Digital Solution\n+91 8347448241`
+  },
+  {
+    id: 'building-materials-pitch',
+    name: '🧱 Building Materials: Dealer & Wholesale Network',
+    badge: 'Building Materials',
+    target: 'Ceramic tiles, sanitaryware, and marble/granite wholesale showrooms',
+    subject: 'Architect & Contractor Trade Inquiries for {businessName}',
+    body: `Hello {businessName} Team,\n\nI saw your premium showroom and wholesale presence for tiles, sanitaryware, and stone in {city}.\n\nWe build digital architectural material catalogs that allow local interior designers, civil contractors, and builders to browse finishes, download specification sheets, and request bulk price quotes directly on WhatsApp.\n\nWould you be open to a quick 5-min demo this week?\n\nBest regards,\nWebiox Digital Solution\n+91 8347448241`
+  },
+  {
     id: 'google-reviews',
-    name: 'Google Maps SEO & Review Booster',
+    name: '⭐ Google Maps SEO & Review Booster',
     badge: 'Local SEO / Maps #1',
     target: 'Businesses with 3.5★ to 4.5★ ratings looking to rank #1 locally',
     subject: 'Local Google Maps Ranking for {businessName}',
@@ -25,7 +89,7 @@ const OUTREACH_TEMPLATES = [
   },
   {
     id: 'custom-software',
-    name: 'Custom CRM & Business Automation',
+    name: '⚡ Custom CRM & Business Automation',
     badge: 'Enterprise Software',
     target: 'Growing businesses needing inventory, booking, or billing tech',
     subject: 'Automating Sales & Client Management for {businessName}',

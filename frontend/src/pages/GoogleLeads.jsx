@@ -278,6 +278,22 @@ export default function GoogleLeads() {
             </div>
 
             <select
+              value={filterCategory}
+              onChange={(e) => setFilterCategory(e.target.value)}
+              className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700"
+            >
+              <option value="all">🏢 All 8 Sectors</option>
+              <option value="Real Estate">🏢 Real Estate</option>
+              <option value="Interior">🏛️ Interiors & Architecture</option>
+              <option value="Dental">🩺 Medical & Aesthetics</option>
+              <option value="Textile">👗 Textiles & Ethnic Wear</option>
+              <option value="Solar">☀️ Solar Energy</option>
+              <option value="Education">✈️ Overseas Education</option>
+              <option value="Wedding">💍 Weddings & Events</option>
+              <option value="Tile">🧱 Building Materials</option>
+            </select>
+
+            <select
               value={filterRatingTier}
               onChange={(e) => setFilterRatingTier(e.target.value)}
               className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700"

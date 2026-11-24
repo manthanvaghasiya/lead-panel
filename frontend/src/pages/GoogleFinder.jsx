@@ -8,19 +8,103 @@ import { FaWhatsapp } from 'react-icons/fa';
 import Papa from 'papaparse';
 import { liveSearchGoogleLeads, saveDirectGoogleLeads } from '../api/apiClient';
 
-const INDUSTRY_CHIPS = [
-  'Jewellers & Diamond Merchants',
-  'Dentists & Dental Clinics',
-  'Hospitals & Healthcare',
-  'IT & Software Companies',
-  'Real Estate & Builders',
-  'Textile & Fashion Boutiques',
-  'Restaurants & Cafes',
-  'Interior Designers & Architects',
-  'Automobile Dealers & Garages',
-  'Chartered Accountants & Legal',
-  'Gyms & Fitness Centers',
-  'Manufacturing & Industrial Units'
+export const HIGH_TICKET_SECTORS = [
+  {
+    id: 'real-estate',
+    name: 'Real Estate',
+    icon: '🏢',
+    desc: 'Developers, commercial brokers, and luxury property consultants',
+    queries: [
+      'Real Estate Developers',
+      'Commercial Property Brokers',
+      'Luxury Property Consultants',
+      'Builders & Project Developers'
+    ]
+  },
+  {
+    id: 'interiors',
+    name: 'Interiors & Architecture',
+    icon: '🏛️',
+    desc: 'Interior designers, turnkey architects, and modular kitchen studios',
+    queries: [
+      'Interior Designers',
+      'Turnkey Architects',
+      'Modular Kitchen Studios',
+      'Architecture & Design Firms'
+    ]
+  },
+  {
+    id: 'medical',
+    name: 'Medical & Aesthetics',
+    icon: '🩺',
+    desc: 'Dental implant, cosmetic dermatology, hair transplant, and IVF clinics',
+    queries: [
+      'Dental Implant Clinics',
+      'Cosmetic Dermatology Clinics',
+      'Hair Transplant Clinics',
+      'IVF & Fertility Centers'
+    ]
+  },
+  {
+    id: 'textiles',
+    name: 'Textiles & Ethnic Wear',
+    icon: '👗',
+    desc: 'Textile, saree, lehenga, and B2B garment manufacturers/wholesalers',
+    queries: [
+      'Textile Manufacturers',
+      'Saree & Lehenga Wholesalers',
+      'B2B Garment Manufacturers',
+      'Wholesale Fabric Mills'
+    ]
+  },
+  {
+    id: 'solar',
+    name: 'Solar Energy',
+    icon: '☀️',
+    desc: 'Solar EPC installers and commercial rooftop solar companies',
+    queries: [
+      'Solar EPC Installers',
+      'Commercial Rooftop Solar Companies',
+      'Industrial Solar Power Installers',
+      'Rooftop Solar Companies'
+    ]
+  },
+  {
+    id: 'immigration',
+    name: 'Overseas Education & Immigration',
+    icon: '✈️',
+    desc: 'Study abroad, IELTS/PTE, and visa immigration consultancies',
+    queries: [
+      'Study Abroad Consultancies',
+      'IELTS & PTE Coaching Centers',
+      'Visa Immigration Consultancies',
+      'Overseas Education Consultants'
+    ]
+  },
+  {
+    id: 'weddings',
+    name: 'Weddings & Events',
+    icon: '💍',
+    desc: 'Luxury wedding planners, banquet halls, and destination event studios',
+    queries: [
+      'Luxury Wedding Planners',
+      'Banquet Halls & Party Lawns',
+      'Destination Event Studios',
+      'Wedding Decorators & Production'
+    ]
+  },
+  {
+    id: 'building-materials',
+    name: 'Building Materials',
+    icon: '🧱',
+    desc: 'Ceramic tiles, sanitaryware, and marble/granite wholesale showrooms',
+    queries: [
+      'Ceramic Tiles & Sanitaryware Showrooms',
+      'Marble & Granite Wholesalers',
+      'Architectural Hardware Showrooms',
+      'Building Material Wholesalers'
+    ]
+  }
 ];
 
 const CITY_PRESETS = [
@@ -97,9 +181,14 @@ const CITY_PRESETS = [
 ];
 
 export default function GoogleFinder() {
-  const [directQuery, setDirectQuery] = useState('Jewellers in Surat');
+  const [directQuery, setDirectQuery] = useState('Real Estate Developers in Surat');
   const [directCity, setDirectCity] = useState(CITY_PRESETS[0]);
   const [selectedLocality, setSelectedLocality] = useState('All Surat');
+  const [activeSectorId, setActiveSectorId] = useState(HIGH_TICKET_SECTORS[0].id);
+
+  const activeSector = useMemo(() => {
+    return HIGH_TICKET_SECTORS.find(s => s.id === activeSectorId) || HIGH_TICKET_SECTORS[0];
+  }, [activeSectorId]);
   const [directBatches, setDirectBatches] = useState(2); // 1 = 20, 2 = 40, 3 = 60
   const [directSearching, setDirectSearching] = useState(false);
   const [directResults, setDirectResults] = useState([]);
@@ -367,29 +456,72 @@ export default function GoogleFinder() {
           </p>
         </div>
 
-        {/* Quick Industry Niche Chips */}
-        <div className="space-y-2">
-          <label className="text-xs font-bold uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
-            <Sparkles size={13} className="text-rose-500" />
-            Select Niche to Auto-Fill
-          </label>
-          <div className="flex flex-wrap gap-2">
-            {INDUSTRY_CHIPS.map((chip) => (
-              <button
-                key={chip}
-                type="button"
-                onClick={() => {
-                  const locSuffix = selectedLocality && !selectedLocality.startsWith('All') 
-                    ? ` in ${selectedLocality}, ${directCity.name.split(',')[0]}` 
-                    : ` in ${directCity.name.split(',')[0]}`;
-                  setDirectQuery(`${chip}${locSuffix}`);
-                }}
-                className="text-xs px-3 py-1.5 rounded-xl border border-slate-200 hover:border-rose-400 hover:bg-rose-50 text-slate-700 font-medium transition-all"
-              >
-                + {chip}
-              </button>
-            ))}
+        {/* 8 Daily High-Ticket Webiox Sectors */}
+        <div className="space-y-3 bg-slate-50 p-4 sm:p-5 rounded-2xl border border-slate-200">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
+            <label className="text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
+              <Sparkles size={14} className="text-amber-500" />
+              Daily High-Ticket Sectors for Webiox Leads (8 Focus Industries)
+            </label>
+            <span className="text-[11px] font-semibold text-slate-500">
+              Click sector or sub-niche to auto-fill search query
+            </span>
           </div>
+
+          {/* 8 Sector Pills Grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2">
+            {HIGH_TICKET_SECTORS.map((sector) => {
+              const isActive = activeSectorId === sector.id;
+              return (
+                <button
+                  key={sector.id}
+                  type="button"
+                  onClick={() => {
+                    setActiveSectorId(sector.id);
+                    const locSuffix = selectedLocality && !selectedLocality.startsWith('All') 
+                      ? ` in ${selectedLocality}, ${directCity.name.split(',')[0]}` 
+                      : ` in ${directCity.name.split(',')[0]}`;
+                    setDirectQuery(`${sector.queries[0]}${locSuffix}`);
+                  }}
+                  className={`p-2.5 rounded-xl border text-left transition-all flex flex-col gap-1 ${
+                    isActive
+                      ? 'bg-rose-600 text-white border-rose-600 shadow-md shadow-rose-600/20'
+                      : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200'
+                  }`}
+                >
+                  <span className="text-lg leading-none">{sector.icon}</span>
+                  <span className="text-[11px] font-bold line-clamp-1">{sector.name}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Active Sector Sub-Niches & Description */}
+          {activeSector && (
+            <div className="mt-2 pt-3 border-t border-slate-200/80 flex flex-col md:flex-row md:items-center justify-between gap-3">
+              <div className="text-xs text-slate-600">
+                <span className="font-bold text-slate-900">{activeSector.name}: </span>
+                <span className="text-slate-500">{activeSector.desc}</span>
+              </div>
+              <div className="flex flex-wrap items-center gap-1.5">
+                {activeSector.queries.map((q) => (
+                  <button
+                    key={q}
+                    type="button"
+                    onClick={() => {
+                      const locSuffix = selectedLocality && !selectedLocality.startsWith('All') 
+                        ? ` in ${selectedLocality}, ${directCity.name.split(',')[0]}` 
+                        : ` in ${directCity.name.split(',')[0]}`;
+                      setDirectQuery(`${q}${locSuffix}`);
+                    }}
+                    className="text-xs px-3 py-1 bg-white hover:bg-rose-50 hover:text-rose-700 hover:border-rose-300 border border-slate-200 text-slate-700 font-semibold rounded-lg transition-all shadow-sm flex items-center gap-1"
+                  >
+                    <span>+</span> {q}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Locality Hub Chips (for active city) */}
