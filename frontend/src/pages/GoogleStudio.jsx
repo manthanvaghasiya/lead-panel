@@ -3,7 +3,6 @@ import {
   Sliders, Copy, Check, ChevronDown, ChevronUp, Sparkles, Terminal, 
   ExternalLink, Layers, Globe, ShieldCheck 
 } from 'lucide-react';
-import GoogleHeader from '../components/GoogleHeader';
 
 const CITY_PRESETS = [
   { name: 'Surat, Gujarat', geo: '21.1702,72.8311', bbox: '21.1000,72.7500,21.2500,72.9000' },
@@ -65,8 +64,6 @@ export default function GoogleStudio() {
 
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6">
-      <GoogleHeader activePage="studio" />
-
       <div className="bg-white rounded-3xl border border-slate-200 p-6 md:p-8 shadow-sm space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>

@@ -4,7 +4,6 @@ import {
   Sparkles, CheckCircle2, AlertCircle, Filter, Database 
 } from 'lucide-react';
 import Papa from 'papaparse';
-import GoogleHeader from '../components/GoogleHeader';
 import { bulkImportLeads } from '../api/apiClient';
 
 export default function GoogleImport() {
@@ -103,8 +102,6 @@ export default function GoogleImport() {
 
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6">
-      <GoogleHeader activePage="import" />
-
       <div className="bg-white rounded-3xl border border-slate-200 p-6 md:p-8 shadow-sm space-y-6">
         <div>
           <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-50 text-amber-800 border border-amber-200 rounded-full text-[11px] font-bold mb-2">

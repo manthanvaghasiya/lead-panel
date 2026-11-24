@@ -7,7 +7,6 @@ import { FaWhatsapp } from 'react-icons/fa';
 import { Link, useNavigate } from 'react-router-dom';
 import Papa from 'papaparse';
 import { AuthContext } from '../context/AuthContext';
-import GoogleHeader from '../components/GoogleHeader';
 import { getLeads, updateLead, deleteLead } from '../api/apiClient';
 
 export default function GoogleLeads() {
@@ -152,7 +151,72 @@ export default function GoogleLeads() {
 
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6">
-      <GoogleHeader activePage="directory" totalLeads={leads.length} metrics={metrics} />
+      {/* Top Header & Actions */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
+        <div>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-rose-50 text-rose-700 border border-rose-200 rounded-full text-[11px] font-bold mb-1.5">
+            <Building2 size={13} className="text-rose-600" />
+            Verified Google Maps Prospects • CRM Directory
+          </div>
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight">
+            Google Maps Prospects Directory
+          </h1>
+          <p className="text-slate-500 text-xs mt-0.5">
+            Manage, qualify, and route scraped businesses directly into Tech or Marketing sales pipelines.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleExportCRMLeadsToCSV}
+            className="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-sm"
+          >
+            <Download size={14} />
+            Export CSV ({filteredDirectoryLeads.length})
+          </button>
+          <button
+            onClick={fetchGoogleCRMLeads}
+            disabled={loadingLeads}
+            className="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-all"
+            title="Refresh Leads"
+          >
+            <RefreshCw size={15} className={loadingLeads ? 'animate-spin' : ''} />
+          </button>
+        </div>
+      </div>
+
+      {/* Real-Time Metrics Strip */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+        <div className="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm">
+          <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Total Scraped</div>
+          <div className="text-2xl font-black text-slate-900 mt-1">{metrics.total}</div>
+          <div className="text-[10px] text-slate-400 mt-0.5">Google Maps Listings</div>
+        </div>
+
+        <div className="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm">
+          <div className="text-[11px] font-bold uppercase tracking-wider text-emerald-600">Direct Phone</div>
+          <div className="text-2xl font-black text-emerald-600 mt-1">{metrics.withPhone}</div>
+          <div className="text-[10px] text-slate-400 mt-0.5">WhatsApp / Call Ready</div>
+        </div>
+
+        <div className="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm">
+          <div className="text-[11px] font-bold uppercase tracking-wider text-rose-600">Without Website</div>
+          <div className="text-2xl font-black text-rose-600 mt-1">{metrics.withoutWebsite}</div>
+          <div className="text-[10px] text-slate-400 mt-0.5">High-Intent Web Leads</div>
+        </div>
+
+        <div className="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm">
+          <div className="text-[11px] font-bold uppercase tracking-wider text-amber-600">Top Rated (4.5★+)</div>
+          <div className="text-2xl font-black text-amber-600 mt-1">{metrics.highRated}</div>
+          <div className="text-[10px] text-slate-400 mt-0.5">High Client Trust</div>
+        </div>
+
+        <div className="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm col-span-2 sm:col-span-1">
+          <div className="text-[11px] font-bold uppercase tracking-wider text-purple-600">Pipeline Hand-offs</div>
+          <div className="text-2xl font-black text-purple-600 mt-1">{metrics.handedOff}</div>
+          <div className="text-[10px] text-slate-400 mt-0.5">Moved to Tech / Mktg</div>
+        </div>
+      </div>
 
       {/* Directory Content Box */}
       <div className="bg-white rounded-3xl border border-slate-200 p-6 md:p-8 shadow-sm space-y-5">

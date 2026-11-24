@@ -6,7 +6,6 @@ import {
 } from 'lucide-react';
 import { FaWhatsapp } from 'react-icons/fa';
 import Papa from 'papaparse';
-import GoogleHeader from '../components/GoogleHeader';
 import { liveSearchGoogleLeads, saveDirectGoogleLeads } from '../api/apiClient';
 
 const INDUSTRY_CHIPS = [
@@ -274,8 +273,6 @@ export default function GoogleFinder() {
 
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6">
-      <GoogleHeader activePage="finder" />
-
       {/* Main Finder Box */}
       <div className="bg-white rounded-3xl border border-slate-200 p-6 md:p-8 shadow-sm space-y-6">
         <div>

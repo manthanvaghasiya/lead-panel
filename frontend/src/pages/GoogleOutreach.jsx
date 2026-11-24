@@ -4,7 +4,6 @@ import {
   Star, MapPin, Sparkles, Send, RefreshCw, Filter, CheckCircle2 
 } from 'lucide-react';
 import { FaWhatsapp } from 'react-icons/fa';
-import GoogleHeader from '../components/GoogleHeader';
 import { getLeads } from '../api/apiClient';
 
 const OUTREACH_TEMPLATES = [
@@ -108,8 +107,6 @@ export default function GoogleOutreach() {
 
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6">
-      <GoogleHeader activePage="outreach" totalLeads={leads.length} />
-
       <div className="bg-white rounded-3xl border border-slate-200 p-6 md:p-8 shadow-sm space-y-6">
         <div>
           <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-50 text-amber-800 border border-amber-200 rounded-full text-[11px] font-bold mb-2">
