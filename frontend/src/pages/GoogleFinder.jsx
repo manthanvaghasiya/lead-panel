@@ -1,8 +1,8 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   MapPin, Download, Search, ExternalLink, Phone, Globe, Star, 
   RefreshCw, Zap, Sparkles, CheckCircle2, AlertCircle, LayoutGrid, 
-  List, CheckSquare, Square, ArrowRight
+  List, CheckSquare, Square, ArrowRight, Plus, X
 } from 'lucide-react';
 import { FaWhatsapp } from 'react-icons/fa';
 import Papa from 'papaparse';
@@ -107,6 +107,84 @@ export default function GoogleFinder() {
   const [selectedDirectIndexes, setSelectedDirectIndexes] = useState(new Set());
   const [savingDirect, setSavingDirect] = useState(false);
   const [saveDirectResult, setSaveDirectResult] = useState(null);
+
+  // Custom Localities Added Manually by User
+  const [customLocalitiesByCity, setCustomLocalitiesByCity] = useState(() => {
+    try {
+      const saved = localStorage.getItem('google_finder_custom_localities');
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
+  const [newLocalityInput, setNewLocalityInput] = useState('');
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('google_finder_custom_localities', JSON.stringify(customLocalitiesByCity));
+    } catch (e) {
+      console.error('Failed to save custom localities:', e);
+    }
+  }, [customLocalitiesByCity]);
+
+  // Combined preset + custom localities for active city
+  const availableLocalities = useMemo(() => {
+    const defaults = directCity.localities || [];
+    const customs = customLocalitiesByCity[directCity.name] || [];
+    return Array.from(new Set([...defaults, ...customs]));
+  }, [directCity, customLocalitiesByCity]);
+
+  const handleAddCustomLocality = (e) => {
+    if (e) e.preventDefault();
+    const trimmed = newLocalityInput.trim();
+    if (!trimmed) return;
+
+    // Check if it already exists (case-insensitive)
+    const existing = availableLocalities.find(l => l.toLowerCase() === trimmed.toLowerCase());
+    const finalLocName = existing || trimmed;
+
+    if (!existing) {
+      setCustomLocalitiesByCity(prev => {
+        const list = prev[directCity.name] || [];
+        return {
+          ...prev,
+          [directCity.name]: [...list, trimmed]
+        };
+      });
+    }
+
+    setSelectedLocality(finalLocName);
+
+    // Automatically update directQuery
+    const cityOnly = directCity.name.split(',')[0];
+    const targetArea = finalLocName.startsWith('All') ? cityOnly : `${finalLocName}, ${cityOnly}`;
+    setDirectQuery(prev => {
+      const parts = prev.split(' in ');
+      return parts.length > 1 ? `${parts[0]} in ${targetArea}` : `${prev} in ${targetArea}`;
+    });
+
+    setNewLocalityInput('');
+  };
+
+  const handleRemoveCustomLocality = (locToRemove) => {
+    setCustomLocalitiesByCity(prev => {
+      const list = (prev[directCity.name] || []).filter(l => l !== locToRemove);
+      return {
+        ...prev,
+        [directCity.name]: list
+      };
+    });
+
+    if (selectedLocality === locToRemove) {
+      const fallback = directCity.localities?.[0] || 'All Areas';
+      setSelectedLocality(fallback);
+      const cityOnly = directCity.name.split(',')[0];
+      setDirectQuery(prev => {
+        const parts = prev.split(' in ');
+        return parts.length > 1 ? `${parts[0]} in ${cityOnly}` : `${prev} in ${cityOnly}`;
+      });
+    }
+  };
 
   // Live Results Filtering states
   const [resultFilterTab, setResultFilterTab] = useState('all'); // 'all', 'mobile', 'no-site', 'has-site', 'top-rated'
@@ -301,7 +379,9 @@ export default function GoogleFinder() {
                 key={chip}
                 type="button"
                 onClick={() => {
-                  const locSuffix = selectedLocality && !selectedLocality.startsWith('All') ? ` in ${selectedLocality}` : ` in ${directCity.name.split(',')[0]}`;
+                  const locSuffix = selectedLocality && !selectedLocality.startsWith('All') 
+                    ? ` in ${selectedLocality}, ${directCity.name.split(',')[0]}` 
+                    : ` in ${directCity.name.split(',')[0]}`;
                   setDirectQuery(`${chip}${locSuffix}`);
                 }}
                 className="text-xs px-3 py-1.5 rounded-xl border border-slate-200 hover:border-rose-400 hover:bg-rose-50 text-slate-700 font-medium transition-all"
@@ -313,36 +393,85 @@ export default function GoogleFinder() {
         </div>
 
         {/* Locality Hub Chips (for active city) */}
-        {directCity.localities && directCity.localities.length > 0 && (
-          <div className="space-y-2 bg-rose-50/40 p-4 rounded-2xl border border-rose-100">
-            <label className="text-xs font-bold uppercase tracking-wider text-rose-900 flex items-center gap-1.5">
-              <MapPin size={13} className="text-rose-600" />
-              Target Locality / Commercial Hub in {directCity.name.split(',')[0]}:
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {directCity.localities.map((loc) => {
+        {availableLocalities && availableLocalities.length > 0 && (
+          <div className="space-y-3 bg-rose-50/50 p-4 rounded-2xl border border-rose-200/80 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+              <label className="text-xs font-bold uppercase tracking-wider text-rose-950 flex items-center gap-1.5">
+                <MapPin size={14} className="text-rose-600" />
+                Target Locality / Commercial Hub in {directCity.name.split(',')[0]}:
+              </label>
+
+              {/* Inline Manually Write / Add Locality Input */}
+              <div className="flex items-center gap-1.5">
+                <input
+                  type="text"
+                  value={newLocalityInput}
+                  onChange={(e) => setNewLocalityInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddCustomLocality();
+                    }
+                  }}
+                  placeholder={`Write locality in ${directCity.name.split(',')[0]} (e.g. Nanpura, Bhatar)...`}
+                  className="px-3 py-1.5 text-xs bg-white border border-rose-200 rounded-xl focus:outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 text-slate-900 placeholder-slate-400 w-56 sm:w-72 shadow-sm font-medium"
+                />
+                <button
+                  type="button"
+                  onClick={handleAddCustomLocality}
+                  disabled={!newLocalityInput.trim()}
+                  className="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-500 disabled:opacity-40 disabled:hover:bg-rose-600 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1 shadow-sm shrink-0"
+                >
+                  <Plus size={14} />
+                  Add
+                </button>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-2 pt-1">
+              {availableLocalities.map((loc) => {
                 const isSelected = selectedLocality === loc;
+                const isCustom = (customLocalitiesByCity[directCity.name] || []).includes(loc);
+
                 return (
-                  <button
-                    key={loc}
-                    type="button"
-                    onClick={() => {
-                      setSelectedLocality(loc);
-                      const cityOnly = directCity.name.split(',')[0];
-                      const targetArea = loc.startsWith('All') ? cityOnly : `${loc}, ${cityOnly}`;
-                      setDirectQuery(prev => {
-                        const parts = prev.split(' in ');
-                        return parts.length > 1 ? `${parts[0]} in ${targetArea}` : `${prev} in ${targetArea}`;
-                      });
-                    }}
-                    className={`text-xs px-3 py-1 rounded-xl font-bold transition-all ${
-                      isSelected
-                        ? 'bg-rose-600 text-white shadow-sm'
-                        : 'bg-white border border-rose-200 text-rose-800 hover:bg-rose-100'
-                    }`}
-                  >
-                    {loc}
-                  </button>
+                  <div key={loc} className="inline-flex items-center">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedLocality(loc);
+                        const cityOnly = directCity.name.split(',')[0];
+                        const targetArea = loc.startsWith('All') ? cityOnly : `${loc}, ${cityOnly}`;
+                        setDirectQuery(prev => {
+                          const parts = prev.split(' in ');
+                          return parts.length > 1 ? `${parts[0]} in ${targetArea}` : `${prev} in ${targetArea}`;
+                        });
+                      }}
+                      className={`text-xs px-3 py-1.5 rounded-xl font-bold transition-all flex items-center gap-1.5 ${
+                        isSelected
+                          ? 'bg-rose-600 text-white shadow-md shadow-rose-600/30'
+                          : 'bg-white border border-rose-200 text-rose-900 hover:bg-rose-100 shadow-sm'
+                      }`}
+                    >
+                      <span>{loc}</span>
+                      {isCustom && (
+                        <span className={`text-[9px] px-1.5 py-0.2 rounded font-extrabold uppercase ${
+                          isSelected ? 'bg-white/20 text-white' : 'bg-rose-100 text-rose-700'
+                        }`}>
+                          Custom
+                        </span>
+                      )}
+                    </button>
+                    {isCustom && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveCustomLocality(loc)}
+                        className="ml-1 p-1 text-rose-400 hover:text-rose-700 hover:bg-rose-100 rounded-lg transition-colors"
+                        title={`Remove "${loc}"`}
+                      >
+                        <X size={12} />
+                      </button>
+                    )}
+                  </div>
                 );
               })}
             </div>
